@@ -28,7 +28,7 @@
 	ignore = dirty
 [submodule "apps"]
 	path = apps
-	url = ../../cloudius-systems/osv-apps
+	url = https://github.com/wkozaczuk/osv-apps.git
 	ignore = dirty
 [submodule "external/aarch64/gcc.bin"]
 	path = external/aarch64/gcc.bin
