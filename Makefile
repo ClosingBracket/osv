@@ -261,6 +261,14 @@ INCLUDES += -isystem $(libfdt_base)
 endif
 
 INCLUDES += $(boost-includes)
+ifeq ($(gcc_include_env), host)
+# Starting in Gcc 6, the standard C++ header files (which we do not change)
+# must precede in the include path the C header files (which we replace).
+# This is explained in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70722.
+# So we are forced to list here (before include/api) the system's default
+# C++ include directories, though they are already in the default search path.
+INCLUDES += $(shell $(CXX) -E -xc++ - -v </dev/null 2>&1 | awk '/^End/ {exit} /^ .*c\+\+/ {print "-isystem" $$0}')
+endif
 INCLUDES += -isystem include/api
 INCLUDES += -isystem include/api/$(arch)
 ifeq ($(gcc_include_env), external)
@@ -465,7 +473,7 @@ acpi-defines = -DACPI_MACHINE_WIDTH=64 -DACPI_USE_LOCAL_CACHE
 acpi-source := $(shell find external/$(arch)/acpica/source/components -type f -name '*.c')
 acpi = $(patsubst %.c, %.o, $(acpi-source))
 
-$(acpi:%=$(out)/%): CFLAGS += -fno-strict-aliasing -Wno-strict-aliasing
+$(acpi:%=$(out)/%): CFLAGS += -fno-strict-aliasing
 
 endif # x64
 
@@ -492,8 +500,17 @@ $(out)/loader.img: $(out)/preboot.bin $(out)/loader-stripped.elf
 
 endif # aarch64
 
-$(out)/bsd/sys/crypto/sha2/sha2.o: CFLAGS+=-Wno-strict-aliasing
-$(out)/bsd/sys/crypto/rijndael/rijndael-api-fst.o: CFLAGS+=-Wno-strict-aliasing
+$(out)/bsd/sys/crypto/rijndael/rijndael-api-fst.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/crypto/sha2/sha2.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/net/route.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/net/rtsock.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/net/in.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/net/if.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/netinet/in_rmx.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/netinet/ip_input.o: COMMON+=-fno-strict-aliasing
+$(out)/bsd/sys/netinet/in.o: COMMON+=-fno-strict-aliasing
+
+$(out)/bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/metaslab.o: COMMON+=-Wno-tautological-compare
 
 bsd  = bsd/init.o
 bsd += bsd/net.o
@@ -744,7 +761,7 @@ $(zfs:%=$(out)/%): CFLAGS+= \
 	-Ibsd/sys/cddl/contrib/opensolaris/common/zfs
 
 $(solaris:%=$(out)/%): CFLAGS+= \
-	-Wno-strict-aliasing \
+	-fno-strict-aliasing \
 	-Wno-unknown-pragmas \
 	-Wno-unused-variable \
 	-Wno-switch \
@@ -1482,6 +1499,7 @@ musl += stdio/vwprintf.o
 musl += stdio/vwscanf.o
 musl += stdio/wprintf.o
 musl += stdio/wscanf.o
+libc += stdio/printf-hooks.o
 
 musl += stdlib/abs.o
 musl += stdlib/atof.o
