@@ -84,11 +84,11 @@ ifeq (,$(wildcard conf/$(arch).mk))
 endif
 include conf/$(arch).mk
 
-CROSS_PREFIX ?= $(if $(filter-out $(arch), $(host_arch)), $(arch)-linux-gnu-)
+CROSS_PREFIX ?= $(if $(filter-out $(arch),$(host_arch)),$(arch)-linux-gnu-)
 CXX=$(CROSS_PREFIX)g++
 CC=$(CROSS_PREFIX)gcc
 LD=$(CROSS_PREFIX)ld.bfd
-STRIP=$(CROSS_PREFIX)strip
+export STRIP=$(CROSS_PREFIX)strip
 OBJCOPY=$(CROSS_PREFIX)objcopy
 
 # Our makefile puts all compilation results in a single directory, $(out),
@@ -131,16 +131,7 @@ endif
 quiet = $(if $V, $1, @echo " $2"; $1)
 very-quiet = $(if $V, $1, @$1)
 
-# TODO: These java-targets shouldn't be compiled here, but rather in modules/java/Makefile.
-# The problem is that getting the right compilation lines there is hard :-(
-ifeq ($(arch),aarch64)
-java-targets :=
-else
-java-targets := $(out)/java/jvm/java.so $(out)/java/jni/balloon.so $(out)/java/jni/elf-loader.so $(out)/java/jni/networking.so \
-        $(out)/java/jni/stty.so $(out)/java/jni/tracepoint.so $(out)/java/jni/power.so $(out)/java/jni/monitor.so
-endif
-
-all: $(out)/loader.img $(java-targets) links
+all: $(out)/loader.img links
 .PHONY: all
 
 links:
@@ -347,7 +338,7 @@ CFLAGS = -std=gnu99 $(COMMON)
 CFLAGS += -I libc/stdio -I libc/internal -I libc/arch/$(arch) \
 	-Wno-missing-braces -Wno-parentheses -Wno-unused-but-set-variable
 
-ASFLAGS = -g $(autodepend) -DASSEMBLY
+ASFLAGS = -g $(autodepend) -D__ASSEMBLY__
 
 $(out)/fs/vfs/main.o: CXXFLAGS += -Wno-sign-compare -Wno-write-strings
 
@@ -831,6 +822,7 @@ endif # x64
 
 ifeq ($(arch),aarch64)
 drivers += drivers/pl011.o
+drivers += drivers/xenconsole.o
 drivers += drivers/virtio.o
 drivers += drivers/virtio-vring.o
 drivers += drivers/virtio-rng.o
@@ -858,6 +850,8 @@ objects += arch/$(arch)/interrupt.o
 objects += arch/$(arch)/pci.o
 objects += arch/$(arch)/msi.o
 objects += arch/$(arch)/power.o
+objects += arch/$(arch)/feexcept.o
+objects += arch/$(arch)/xen.o
 
 $(out)/arch/x64/string-ssse3.o: CXXFLAGS += -mssse3
 
@@ -866,6 +860,7 @@ objects += arch/$(arch)/psci.o
 objects += arch/$(arch)/arm-clock.o
 objects += arch/$(arch)/gic.o
 objects += arch/$(arch)/arch-dtb.o
+objects += arch/$(arch)/hypercall.o
 objects += $(libfdt)
 endif
 
@@ -877,12 +872,11 @@ objects += arch/x64/ioapic.o
 objects += arch/x64/apic.o
 objects += arch/x64/apic-clock.o
 objects += arch/x64/entry-xen.o
-objects += arch/x64/xen.o
-objects += arch/x64/xen_intr.o
 objects += core/sampler.o
 objects += $(acpi)
 endif # x64
 
+objects += core/xen_intr.o
 objects += core/math.o
 objects += core/spinlock.o
 objects += core/lfmutex.o
@@ -925,6 +919,7 @@ objects += core/net_trace.o
 objects += core/app.o
 objects += core/libaio.o
 objects += core/osv_execve.o
+objects += core/osv_c_wrappers.o
 
 #include $(src)/libc/build.mk:
 libc =
@@ -1136,7 +1131,7 @@ musl += math/exp10l.o
 musl += math/exp2.o
 musl += math/exp2f.o
 musl += math/exp2l.o
-$(out)/musl/src/math/exp2l.o: CFLAGS += -Wno-error=unused-variable
+$(out)/musl/src/math/exp2l.o: CFLAGS += -Wno-unused-variable
 musl += math/expf.o
 musl += math/expl.o
 musl += math/expm1.o
@@ -1186,12 +1181,12 @@ musl += math/ldexpf.o
 musl += math/ldexpl.o
 musl += math/lgamma.o
 musl += math/lgamma_r.o
-$(out)/musl/src/math/lgamma_r.o: CFLAGS += -Wno-error=maybe-uninitialized
+$(out)/musl/src/math/lgamma_r.o: CFLAGS += -Wno-maybe-uninitialized
 musl += math/lgammaf.o
 musl += math/lgammaf_r.o
-$(out)/musl/src/math/lgammaf_r.o: CFLAGS += -Wno-error=maybe-uninitialized
+$(out)/musl/src/math/lgammaf_r.o: CFLAGS += -Wno-maybe-uninitialized
 musl += math/lgammal.o
-$(out)/musl/src/math/lgammal.o: CFLAGS += -Wno-error=maybe-uninitialized
+$(out)/musl/src/math/lgammal.o: CFLAGS += -Wno-maybe-uninitialized
 #musl += math/llrint.o
 #musl += math/llrintf.o
 #musl += math/llrintl.o
@@ -1225,9 +1220,12 @@ musl += math/modfl.o
 musl += math/nan.o
 musl += math/nanf.o
 musl += math/nanl.o
-#musl += math/nearbyint.o
-#musl += math/nearbyintf.o
-#musl += math/nearbyintl.o
+musl += math/nearbyint.o
+$(out)/musl/src/math/nearbyint.o: CFLAGS += -Wno-unknown-pragmas
+musl += math/nearbyintf.o
+$(out)/musl/src/math/nearbyintf.o: CFLAGS += -Wno-unknown-pragmas
+musl += math/nearbyintl.o
+$(out)/musl/src/math/nearbyintl.o: CFLAGS += -Wno-unknown-pragmas
 musl += math/nextafter.o
 musl += math/nextafterf.o
 musl += math/nextafterl.o
@@ -1290,7 +1288,7 @@ libc += misc/basename.o
 musl += misc/dirname.o
 libc += misc/ffs.o
 musl += misc/get_current_dir_name.o
-musl += misc/gethostid.o
+libc += misc/gethostid.o
 musl += misc/getopt.o
 musl += misc/getopt_long.o
 musl += misc/getsubopt.o
@@ -1349,7 +1347,7 @@ musl += network/getservbyname_r.o
 musl += network/getservbyname.o
 musl += network/getservbyport_r.o
 musl += network/getservbyport.o
-musl += network/getifaddrs.o
+libc += network/getifaddrs.o
 libc += network/if_nameindex.o
 musl += network/if_freenameindex.o
 
@@ -1484,7 +1482,7 @@ musl += stdio/ungetc.o
 musl += stdio/ungetwc.o
 musl += stdio/vasprintf.o
 libc += stdio/vdprintf.o
-musl += stdio/vfprintf.o
+libc += stdio/vfprintf.o
 libc += stdio/vfscanf.o
 musl += stdio/vfwprintf.o
 libc += stdio/vfwscanf.o
@@ -1611,6 +1609,7 @@ musl += temp/__randname.o
 musl += temp/mkdtemp.o
 musl += temp/mkstemp.o
 musl += temp/mktemp.o
+musl += temp/mkostemp.o
 musl += temp/mkostemps.o
 
 libc += time/__asctime.o
@@ -1646,6 +1645,8 @@ libc += unistd/getpgrp.o
 libc += unistd/getppid.o
 libc += unistd/getsid.o
 libc += unistd/setsid.o
+libc += unistd/ttyname_r.o
+libc += unistd/ttyname.o
 
 musl += regex/fnmatch.o
 musl += regex/glob.o
@@ -1658,6 +1659,7 @@ musl += regex/tre-mem.o
 $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 
 libc += pthread.o
+libc += pthread_barrier.o
 libc += libc.o
 libc += dlfcn.o
 libc += time.o
@@ -1689,6 +1691,8 @@ musl += fenv/fegetexceptflag.o
 musl += fenv/feholdexcept.o
 musl += fenv/fesetexceptflag.o
 musl += fenv/$(musl_arch)/fenv.o
+else
+musl += fenv/fenv.o
 endif
 
 musl += crypt/crypt_blowfish.o

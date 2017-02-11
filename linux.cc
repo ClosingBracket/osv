@@ -17,14 +17,21 @@
 #include <syscall.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <signal.h>
 #include <time.h>
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <sys/socket.h>
 #include <sys/utsname.h>
 #include <sys/mman.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <sys/select.h>
+#include <sys/mman.h>
 
 #include <unordered_map>
+
+#include <musl/src/internal/ksigaction.h>
 
 extern "C" long gettid()
 {
@@ -263,10 +270,54 @@ long long_mmap(void *addr, size_t length, int prot, int flags, int fd, off_t off
         return fn(arg1, arg2, arg3, arg4, arg5, arg6);          \
         } while (0)
 
+int rt_sigaction(int sig, const struct k_sigaction * act, struct k_sigaction * oact, size_t sigsetsize)
+{
+    struct sigaction libc_act, libc_oact, *libc_act_p = nullptr;
+    memset(&libc_act, 0, sizeof(libc_act));
+    memset(&libc_oact, 0, sizeof(libc_act));
+
+    if (act) {
+        libc_act.sa_handler = act->handler;
+        libc_act.sa_flags = act->flags & ~SA_RESTORER;
+        libc_act.sa_restorer = nullptr;
+        memcpy(&libc_act.sa_mask, &act->mask, sizeof(libc_act.sa_mask));
+        libc_act_p = &libc_act;
+    }
+
+    int ret = sigaction(sig, libc_act_p, &libc_oact);
+
+    if (oact) {
+        oact->handler = libc_oact.sa_handler;
+        oact->flags = libc_oact.sa_flags;
+        oact->restorer = nullptr;
+        memcpy(oact->mask, &libc_oact.sa_mask, sizeof(oact->mask));
+    }
+
+    return ret;
+}
+
+int rt_sigprocmask(int how, sigset_t * nset, sigset_t * oset, size_t sigsetsize)
+{
+    return sigprocmask(how, nset, oset);
+}
+
+#define __NR_sys_exit __NR_exit
+
+static int sys_exit(int ret)
+{
+    exit(ret);
+    return 0;
+}
 
 long syscall(long number, ...)
 {
+    // Save FPU state and restore it at the end of this function
+    sched::fpu_lock fpu;
+    SCOPE_LOCK(fpu);
+
     switch (number) {
+    SYSCALL2(open, const char *, int);
+    SYSCALL3(read, int, char *, size_t);
     SYSCALL1(uname, struct utsname *);
     SYSCALL3(write, int, const void *, size_t);
     SYSCALL0(gettid);
@@ -284,6 +335,14 @@ long syscall(long number, ...)
     SYSCALL3(sched_getaffinity_syscall, pid_t, unsigned, unsigned long *);
     SYSCALL6(long_mmap, void *, size_t, int, int, int, off_t);
     SYSCALL2(munmap, void *, size_t);
+    SYSCALL4(rt_sigaction, int, const struct k_sigaction *, struct k_sigaction *, size_t);
+    SYSCALL4(rt_sigprocmask, int, sigset_t *, sigset_t *, size_t);
+    SYSCALL1(sys_exit, int);
+    SYSCALL2(sigaltstack, const stack_t *, stack_t *);
+    SYSCALL5(select, int, fd_set *, fd_set *, fd_set *, struct timeval *);
+    SYSCALL3(madvise, void *, size_t, int);
+    SYSCALL0(sched_yield);
+    SYSCALL3(mincore, void *, size_t, unsigned char *);
     }
 
     debug_always("syscall(): unimplemented system call %d\n", number);
@@ -291,3 +350,16 @@ long syscall(long number, ...)
     return -1;
 }
 long __syscall(long number, ...)  __attribute__((alias("syscall")));
+
+extern "C" long syscall_wrapper(long number, ...)
+{
+    int errno_backup = errno;
+    // syscall and function return value are in rax
+    auto ret = syscall(number);
+    int result = -errno;
+    errno = errno_backup;
+    if (ret < 0 && ret >= -4096) {
+	return result;
+    }
+    return ret;
+}

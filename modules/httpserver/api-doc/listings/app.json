@@ -14,7 +14,7 @@
                 {
                     "method": "PUT",
                     "summary": "Start an application",
-                    "notes": "Run an application with its command line parameters",
+                    "notes": "Run an application with its command line parameters. A space separated list of thread IDs is returned - one TID for each started application.",
                     "type": "string",
                     "nickname": "run_app",
                     "produces": [
@@ -25,6 +25,32 @@
                        {
                                      "name": "command",
                                      "description": "command with its parameters",
+                                     "required": true,
+                                     "allowMultiple":false,
+                                     "type":"string",
+                                     "paramType":"query"
+                               }
+                    ]
+                }
+            ]
+        }
+        ,{
+            "path": "/app/finished",
+            "operations": [
+                {
+                    "method": "GET",
+                    "summary": "Check if application terminated",
+                    "notes": "Check if application specified by thread ID tid finished. Invalid tid is reported as finished.",
+                    "type": "string",
+                    "nickname": "finished_app",
+                    "produces": [
+                        "application/json",
+                        "application/xml"
+                    ],
+                    "parameters": [
+                       {
+                                     "name": "tid",
+                                     "description": "application main thread ID",
                                      "required": true,
                                      "allowMultiple":false,
                                      "type":"string",

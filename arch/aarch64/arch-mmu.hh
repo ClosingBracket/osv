@@ -19,7 +19,7 @@
 namespace mmu {
 constexpr int max_phys_addr_size = 48;
 // device_range_* are used only for debug purpose
-constexpr int device_range_start = 0x8000000;
+constexpr int device_range_start = 0x3000000;
 constexpr int device_range_stop = 0x40000000;
 extern u64 mem_addr; /* set by the dtb_setup constructor */
 
@@ -37,6 +37,7 @@ public:
 
     /* false->non-shareable true->Inner Shareable */
     inline void set_share(bool v) {
+        auto& x=pt_element_common<N>::x;
         x &= ~(3ul << 8);
         if (v)
             x |= (3ul << 8);
@@ -44,12 +45,11 @@ public:
 
     // mair_el1 register defines values for each 8 indexes. See boot.S
     inline void set_attridx(unsigned char c) {
+        auto& x=pt_element_common<N>::x;
         assert(c <= 7);
         x &= ~(7ul << 2);
         x |= (c << 2);
     }
-private:
-    using pt_element_common<N>::x;
 };
 
 

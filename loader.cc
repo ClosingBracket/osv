@@ -465,7 +465,7 @@ void* do_main_thread(void *_main_args)
     // Run command lines in /init/* before the manual command line
     if (opt_init) {
         std::vector<std::vector<std::string>> init_commands;
-        struct dirent **namelist;
+        struct dirent **namelist = nullptr;
         int count = scandir("/init", &namelist, NULL, alphasort);
         for (int i = 0; i < count; i++) {
             if (!strcmp(".", namelist[i]->d_name) ||
@@ -495,6 +495,7 @@ void* do_main_thread(void *_main_args)
     // empty otherwise, to run in this thread. '&!' is the same as '&', but
     // doesn't wait for the thread to finish before exiting OSv.
     std::vector<shared_app_t> detached;
+    std::vector<shared_app_t> bg;
     for (auto &it : commands) {
         std::vector<std::string> newvec(it.begin(), std::prev(it.end()));
         auto suffix = it.back();
@@ -505,11 +506,17 @@ void* do_main_thread(void *_main_args)
                 detached.push_back(app);
             } else if (!background) {
                 app->join();
+            } else {
+                bg.push_back(app);
             }
         } catch (const launch_error& e) {
             std::cerr << e.what() << ". Powering off.\n";
             osv::poweroff();
         }
+    }
+
+    for (auto app : bg) {
+        app->join();
     }
 
     for (auto app : detached) {
@@ -586,7 +593,16 @@ void main_cont(int ac, char** av)
     pthread_t pthread;
     // run the payload in a pthread, so pthread_self() etc. work
     std::tuple<int,char**> main_args = std::make_tuple(ac,av);
-    pthread_create(&pthread, nullptr, do_main_thread, (void *) &main_args);
+    // start do_main_thread unpinned (== pinned to all cpus)
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    for (size_t ii=0; ii<sched::cpus.size(); ii++) {
+        CPU_SET(ii, &cpuset);
+    }
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setaffinity_np(&attr, sizeof(cpuset), &cpuset);
+    pthread_create(&pthread, &attr, do_main_thread, (void *) &main_args);
     void* retval;
     pthread_join(pthread, &retval);
 

@@ -70,7 +70,14 @@ class Fedora(object):
         ec2_post_install = None
         version = '23'
 
-    versions = [Fedora_19, Fedora_20, Fedora_21, Fedora_22, Fedora_23]
+    class Fedora_24(object):
+        packages = ['java-1.8.0-openjdk', 'python2-requests']
+        ec2_packages = []
+        test_packages = []
+        ec2_post_install = None
+        version = '24'
+
+    versions = [Fedora_19, Fedora_20, Fedora_21, Fedora_22, Fedora_23, Fedora_24]
 
 class RHELbased(Fedora):
     name = ['Scientific Linux', 'NauLinux', 'CentOS Linux',
@@ -83,7 +90,28 @@ class RHELbased(Fedora):
         ec2_post_install = None
         version = '7.0'
 
-    versions = [RHELbased_70]
+    class RHELbased_71(object):
+        packages = []
+        ec2_packages = []
+        test_packages = []
+        ec2_post_install = None
+        version = '7.1'
+
+    class RHELbased_72(object):
+        packages = []
+        ec2_packages = []
+        test_packages = []
+        ec2_post_install = None
+        version = '7.2'
+
+    class RHELbased_73(object):
+        packages = []
+        ec2_packages = []
+        test_packages = []
+        ec2_post_install = None
+        version = '7.3'
+
+    versions = [RHELbased_70, RHELbased_71, RHELbased_72, RHELbased_73]
 
 class Debian(object):
     name = 'debian'
@@ -111,7 +139,7 @@ class Ubuntu(object):
     name = 'Ubuntu'
     install = 'apt-get -y install'
     packages = ['build-essential', 'libboost-all-dev', 'genromfs', 'autoconf',
-                'libtool', 'openjdk-7-jdk', 'ant', 'qemu-utils', 'maven',
+                'libtool', 'ant', 'qemu-utils', 'maven',
                 'libmaven-shade-plugin-java', 'python-dpkt', 'tcpdump', 'gdb', 'qemu-system-x86',
                 'gawk', 'gnutls-bin', 'openssl', 'python-requests', 'p11-kit', 'g++-multilib',
                 'libssl-dev', 'libedit-dev', 'curl', 'libvirt-bin',
@@ -122,28 +150,28 @@ class Ubuntu(object):
     ec2_post_install = None
 
     class Ubuntu_16_04(object):
-        packages = []
+        packages = ['openjdk-8-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '16.04'
 
     class Ubuntu_15_04(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '15.04'
 
     class Ubuntu_14_04(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = ['ec2-api-tools', 'awscli']
         test_packages = []
         ec2_post_install = None
         version = '14.04'
 
     class Ubuntu_13_10(object):
-        packages = []
+        packages = ['openjdk-7-jdk']
         ec2_packages = []
         test_packages = []
         ec2_post_install = standard_ec2_post_install
