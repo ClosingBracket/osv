@@ -344,7 +344,9 @@ vmxnet3::vmxnet3(pci::device &dev)
 
     get_mac_address(macaddr);
     ether_ifattach(_ifn, macaddr);
+    debug("vmxnet3: Attached ethernet interface\n");
     enable_interrupts();
+    debug("vmxnet3: Enabled interrupts\n");
 }
 
 void vmxnet3::dump_config(void)

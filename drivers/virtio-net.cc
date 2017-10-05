@@ -289,6 +289,7 @@ net::net(pci::device& dev)
     _txq.start();
 
     ether_ifattach(_ifn, _config.mac);
+    debug("virtio-net: Attached ethernet interface\n");
 
     if (dev.is_msix()) {
         _msi.easy_register({
@@ -304,6 +305,7 @@ net::net(pci::device& dev)
     fill_rx_ring();
 
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
+    debug("virtio-net: Finished initializing\n");
 }
 
 net::~net()

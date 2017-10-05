@@ -255,12 +255,14 @@ public:
 
     u32 port_readl(u32 reg)
     {
+        debug("AHCI: port_readl: [%04X]\n", reg);
         u32 hba_reg = port2hba(reg);
         return _hba->hba_readl(hba_reg);
     }
 
     void port_writel(u32 reg, u32 val)
     {
+        debug("AHCI: port_writel: [%04X]\n", reg);
         u32 hba_reg = port2hba(reg);
         _hba->hba_writel(hba_reg, val);
     }
