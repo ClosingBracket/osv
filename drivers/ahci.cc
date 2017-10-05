@@ -60,16 +60,16 @@ port::port(u32 pnr, hba *hba)
       _hba(hba)
 {
     reset();
-    debug("AHCI:port(): after reset\n");
+    AHCI_DEBUG("port(): after reset", 1)
     setup();
-    debug("AHCI:port(): after setup\n");
+    AHCI_DEBUG("port(): after setup", 1)
     if (!linkup()) {
         return;
     }
     disk_identify();
-    debug("AHCI:port(): after disk_identify\n");
+    AHCI_DEBUG("port(): after disk_identify", 1)
     enable_irq();
-    debug("AHCI:port(): after enable_irq\n");
+    AHCI_DEBUG("port(): after enable_irq", 1)
 }
 
 void port::reset()
@@ -206,6 +206,7 @@ int port::send_cmd(u8 slot, int iswrite, void *buffer, u32 bsize)
         _cmd_active |= 1U << slot;
         port_writel(PORT_CI, 1U << slot);
     }
+    AHCI_DEBUG("port::send_cmd-> after lock", 1)
 
     return 0;
 }
@@ -461,15 +462,15 @@ hba::hba(pci::device& pci_dev)
     _driver_name = "ahci";
     parse_pci_config();
 
-    debug("AHCI: before reset\n");
+    AHCI_DEBUG("before reset", 1)
     reset();
-    debug("AHCI: before setup\n");
+    AHCI_DEBUG("before setup", 1)
     setup();
-    debug("AHCI: before enable_irq\n");
+    AHCI_DEBUG("before enable_irq", 1)
     enable_irq();
-    debug("AHCI: before scan\n");
+    AHCI_DEBUG("before scan", 1)
     scan();
-    debug("AHCI: after scan\n");
+    AHCI_DEBUG("after scan", 1)
 }
 
 hba::~hba()
@@ -521,22 +522,22 @@ void hba::scan()
     auto ports = hba_readl(HOST_PI);
     auto max = caps & 0x1f;
     for (u32 pnr = 0; pnr <= max; pnr++) {
-        debug("AHCI:scan:checking port %d!\n", pnr);
+        AHCI_DEBUG("scan:checking port %d!", pnr)
         if (!(ports & (1U << pnr)))
             continue;
 
         auto p = new port(pnr, this);
-        debug("AHCI:scan:After creating port for port %d!\n", pnr);
+        AHCI_DEBUG("scan:After creating port for port %d!", pnr)
         if (!p->linkup()) {
             delete p;
             continue;
         }
 
-        debug("AHCI:scan:About to create device for port %d!\n", pnr);
+        AHCI_DEBUG("scan:About to create device for port %d!", pnr)
         std::string dev_name("vblk");
         dev_name += std::to_string(_disk_idx++);
         auto dev = device_create(&hba_driver, dev_name.c_str(), D_BLK);
-        debug("AHCI:scan:Created device for port %d!\n", pnr);
+        AHCI_DEBUG("scan:Created device for port %d!", pnr)
         auto prv = static_cast<struct hba_priv*>(dev->private_data);
         prv->hba = this;
         prv->port = p;
@@ -544,14 +545,14 @@ void hba::scan()
         dev->size = p->get_devsize();
         dev->max_io_size = 4 * 1024 * 1024; // one PRDT entry contains 4MB at most
 
-        debug("AHCI:scan:Before adding port %d!\n", pnr);
+        AHCI_DEBUG("scan:Before adding port %d!\n", pnr)
         add_port(pnr, p);
-        debug("AHCI:scan:Before read_partition_table for port %d!\n", pnr);
+        AHCI_DEBUG("scan:Before read_partition_table for port %d!\n", pnr)
         read_partition_table(dev);
 
-        debug("AHCI: Add sata device port %d as %s, devsize=%lld\n", pnr, dev_name.c_str(), dev->size);
+        debug("AHCI:%d:Add sata device port %d as %s, devsize=%lld\n", gettid(), pnr, dev_name.c_str(), dev->size);
     }
-    debug("AHCI:scan:Finished!\n");
+    AHCI_DEBUG("scan:Finished!", 1)
 }
 
 void hba::add_port(u32 pnr, port *port)

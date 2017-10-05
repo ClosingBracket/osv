@@ -60,6 +60,7 @@ mutex sched_mutex;
 #define sched_lock()	sched_mutex.lock()
 #define sched_unlock()	sched_mutex.unlock()
 
+extern "C" long gettid();
 
 /* list head of the devices */
 static struct device *device_list = NULL;
@@ -107,14 +108,14 @@ void read_partition_table(struct device *dev)
 	unsigned long offset;
 	int index;
 
-    debugf("device:read_partition_table:Before bread() for %s!\n", dev->name);
+    debugf("device:%d:read_partition_table:Before bread() for %s!\n", gettid(), dev->name);
 	if (bread(dev, 0, &bp) != 0) {
 		debugf("read_partition_table failed for %s\n", dev->name);
 		return;
 	}
 
 	sched_lock();
-	debugf("device:read_partition_table:After acquiring lock() for %s!\n", dev->name);
+	debugf("device:%d:read_partition_table:After acquiring lock() for %s!\n", gettid(), dev->name);
 	// A real partition table (MBR) ends in the two bytes 0x55, 0xAA (see
 	// arch/x64/boot16.S on where we put those on the OSv image). If we
 	// don't find those, this is an unpartitioned disk.
@@ -135,22 +136,22 @@ void read_partition_table(struct device *dev)
 		}
 
 		snprintf(dev_name, MAXDEVNAME, "%s.%d", dev->name, index);
-		debugf("device:read_partition_table:Before creating device for %s!\n", dev->name);
+		debugf("device:%d:read_partition_table:Before creating device for %s!\n", gettid(), dev->name);
 		new_dev = device_create(dev->driver, dev_name, dev->flags);
-		debugf("device:read_partition_table:After creating device for %s!\n", dev->name);
+		debugf("device:%d:read_partition_table:After creating device for %s!\n", gettid(), dev->name);
 		free(new_dev->private_data);
 
 		new_dev->offset = (off_t)entry->rela_sector << 9;
 		new_dev->size = (off_t)entry->total_sectors << 9;
 		new_dev->max_io_size = dev->max_io_size;
 		new_dev->private_data = dev->private_data;
-		debugf("device:read_partition_table:Before device_set_softc for %s!\n", dev->name);
+		debugf("device:%d:read_partition_table:Before device_set_softc for %s!\n", gettid(), dev->name);
 		device_set_softc(new_dev, device_get_softc(dev));
 	}
 
-	debugf("device:read_partition_table:Before releasing lock() for %s!\n", dev->name);
+	debugf("device:%d:read_partition_table:Before releasing lock() for %s!\n", gettid(), dev->name);
 	sched_unlock();
-	debugf("device:read_partition_table:Before brelse for %s!\n", dev->name);
+	debugf("device:%d:read_partition_table:Before brelse for %s!\n", gettid(), dev->name);
 	brelse(bp);
 }
 
