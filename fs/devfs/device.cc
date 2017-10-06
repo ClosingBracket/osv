@@ -51,7 +51,7 @@
 #include <osv/prex.h>
 #include <osv/mutex.h>
 #include <osv/device.h>
-#include <osv/debug.h>
+#include <osv/debug.hh>
 #include <osv/buf.h>
 
 #include <geom/geom_disk.h>
@@ -61,6 +61,7 @@ mutex sched_mutex;
 #define sched_unlock()	sched_mutex.unlock()
 
 extern "C" long gettid();
+#define DEVICE_DEBUG1(message,arg) debug("device:%d:" message "\n", gettid(), arg);
 
 /* list head of the devices */
 static struct device *device_list = NULL;
@@ -108,14 +109,15 @@ void read_partition_table(struct device *dev)
 	unsigned long offset;
 	int index;
 
-    debugf("device:%d:read_partition_table:Before bread() for %s!\n", gettid(), dev->name);
+    DEVICE_DEBUG1("read_partition_table:Before bread() for %s!", dev->name)
 	if (bread(dev, 0, &bp) != 0) {
-		debugf("read_partition_table failed for %s\n", dev->name);
+        DEVICE_DEBUG1("read_partition_table failed for %s", dev->name)
 		return;
 	}
 
+    DEVICE_DEBUG1("read_partition_table:Before acquiring lock() for %s!", dev->name)
 	sched_lock();
-	debugf("device:%d:read_partition_table:After acquiring lock() for %s!\n", gettid(), dev->name);
+    DEVICE_DEBUG1("read_partition_table:After acquiring lock() for %s!", dev->name)
 	// A real partition table (MBR) ends in the two bytes 0x55, 0xAA (see
 	// arch/x64/boot16.S on where we put those on the OSv image). If we
 	// don't find those, this is an unpartitioned disk.
@@ -136,22 +138,22 @@ void read_partition_table(struct device *dev)
 		}
 
 		snprintf(dev_name, MAXDEVNAME, "%s.%d", dev->name, index);
-		debugf("device:%d:read_partition_table:Before creating device for %s!\n", gettid(), dev->name);
+        DEVICE_DEBUG1("read_partition_table:Before creating device for %s!", dev->name)
 		new_dev = device_create(dev->driver, dev_name, dev->flags);
-		debugf("device:%d:read_partition_table:After creating device for %s!\n", gettid(), dev->name);
+        DEVICE_DEBUG1("read_partition_table:After creating device for %s!", dev->name)
 		free(new_dev->private_data);
 
 		new_dev->offset = (off_t)entry->rela_sector << 9;
 		new_dev->size = (off_t)entry->total_sectors << 9;
 		new_dev->max_io_size = dev->max_io_size;
 		new_dev->private_data = dev->private_data;
-		debugf("device:%d:read_partition_table:Before device_set_softc for %s!\n", gettid(), dev->name);
+        DEVICE_DEBUG1("read_partition_table:Before device_set_softc for %s!", dev->name)
 		device_set_softc(new_dev, device_get_softc(dev));
 	}
 
-	debugf("device:%d:read_partition_table:Before releasing lock() for %s!\n", gettid(), dev->name);
+    DEVICE_DEBUG1("read_partition_table:Before releasing lock() for %s!", dev->name)
 	sched_unlock();
-	debugf("device:%d:read_partition_table:Before brelse for %s!\n", gettid(), dev->name);
+    DEVICE_DEBUG1("read_partition_table:Before brelse for %s!", dev->name);
 	brelse(bp);
 }
 

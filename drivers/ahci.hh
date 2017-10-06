@@ -21,7 +21,9 @@
 #include <osv/types.h>
 
 extern "C" long gettid();
-#define AHCI_DEBUG(message,arguments) debug("AHCI:%d:" message "\n", gettid(), arguments);
+#define AHCI_DEBUG0(message) debug("AHCI:%d:" message "\n", gettid());
+#define AHCI_DEBUG1(message,arg) debug("AHCI:%d:" message "\n", gettid(), arg);
+#define AHCI_DEBUG3(message,arg1,arg2,arg3) debug("AHCI:%d:" message "\n", gettid(), arg1, arg2, arg3);
 
 namespace ahci {
 
@@ -258,14 +260,14 @@ public:
 
     u32 port_readl(u32 reg)
     {
-        AHCI_DEBUG("port_readl: [%04X]", reg)
+        AHCI_DEBUG1("port_readl: [%04X]", reg)
         u32 hba_reg = port2hba(reg);
         return _hba->hba_readl(hba_reg);
     }
 
     void port_writel(u32 reg, u32 val)
     {
-        AHCI_DEBUG("port_writel: [%04X]", reg)
+        AHCI_DEBUG1("port_writel: [%04X]", reg)
         u32 hba_reg = port2hba(reg);
         _hba->hba_writel(hba_reg, val);
     }
