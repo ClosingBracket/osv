@@ -255,22 +255,27 @@ u32 port::done_mask()
 
 void port::req_done()
 {
+    AHCI_DEBUG0("port::req_done:Interrupt called")
     while (1) {
         u32 mask;
 
         WITH_LOCK(_cmd_lock) {
             sched::thread::wait_until(_cmd_lock, [&] { mask = this->done_mask(); return mask != 0x0; });
         }
+        AHCI_DEBUG0("port::req_done:After lock")
 
         while (mask) {
             u8 slot = ffs(mask) - 1;
             assert(slot >= 0 && slot < 32);
 
             struct bio *bio = _bios[slot].load(std::memory_order_relaxed);
+            AHCI_DEBUG0("port::req_done:After load")
             _bios[slot] = nullptr;
             assert(bio != nullptr);
 
+            AHCI_DEBUG0("port::req_done:Before biodone")
             biodone(bio, true);
+            AHCI_DEBUG0("port::req_done:After biodone")
 
             mask &= ~(1U << slot);
 
