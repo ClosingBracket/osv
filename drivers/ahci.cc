@@ -348,7 +348,9 @@ void port::disk_rw(struct bio *bio, bool iswrite)
     _bios[slot] = bio;
     send_cmd(slot, iswrite, buf, len);
 
+    AHCI_DEBUG0("port::disk_rw:Before poll_mode_done")
     poll_mode_done(bio, slot);
+    AHCI_DEBUG0("port::disk_rw:After poll_mode_done")
 }
 
 void port::disk_flush(struct bio *bio)

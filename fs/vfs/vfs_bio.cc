@@ -70,6 +70,9 @@ boost::intrusive::list<struct buf, boost::intrusive::base_hook<struct buf>> free
 
 static sem_t free_sem;
 
+extern "C" long gettid();
+#define VFS_DEBUG0(message) debug("vfs_bio:%d:" message "\n", gettid());
+
 /*
  * Insert buffer to the head of free list
  */
@@ -130,7 +133,10 @@ rw_buf(struct buf *bp, int rw)
 	bio->bio_bcount = BSIZE;
 
 	bio->bio_dev->driver->devops->strategy(bio);
+    VFS_DEBUG0("BEFORE bio_wait")
+
 	ret = bio_wait(bio);
+    VFS_DEBUG0("AFTER bio_wait")
 
 	destroy_bio(bio);
 	return ret;
