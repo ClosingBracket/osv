@@ -21,9 +21,9 @@
 #include <osv/types.h>
 
 extern "C" long gettid();
-#define AHCI_DEBUG0(message) debug("AHCI:%d:" message "\n", gettid());
-#define AHCI_DEBUG1(message,arg) debug("AHCI:%d:" message "\n", gettid(), arg);
-#define AHCI_DEBUG3(message,arg1,arg2,arg3) debug("AHCI:%d:" message "\n", gettid(), arg1, arg2, arg3);
+#define AHCI_DEBUG0(message) debug("AHCI :%d:" message "\n", gettid());
+#define AHCI_DEBUG1(message,arg) debug("AHCI :%d:" message "\n", gettid(), arg);
+#define AHCI_DEBUG3(message,arg1,arg2,arg3) debug("AHCI :%d:" message "\n", gettid(), arg1, arg2, arg3);
 
 namespace ahci {
 

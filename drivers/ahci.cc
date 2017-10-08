@@ -242,20 +242,25 @@ void port::wait_cmd_poll(u8 slot)
 
 u32 port::done_mask()
 {
-    if (_cmd_active == 0x0)
+    AHCI_DEBUG0("port::done_mask:In")
+    if (_cmd_active == 0x0) {
+        AHCI_DEBUG0("port::done_mask:_cmd_active = 0")
         return 0x0;
+    }
 
+    AHCI_DEBUG0("port::done_mask:_cmd_active = 1")
     if (!used_slot())
         return 0x0;
-
+    AHCI_DEBUG0("port::done_mask:Before port_readl")
     auto ci = port_readl(PORT_CI);
+    AHCI_DEBUG1("port::done_mask:port_readl read %d",ci)
 
     return _cmd_active & (~ci);
 }
 
 void port::req_done()
 {
-    AHCI_DEBUG0("port::req_done:Interrupt called")
+    AHCI_DEBUG0("port::req_done:Interrupt handler thread started !!!")
     while (1) {
         u32 mask;
 
