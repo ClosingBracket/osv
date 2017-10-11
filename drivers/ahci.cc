@@ -448,6 +448,8 @@ u8 port::get_slot_wait()
 
 void hba::enable_irq()
 {
+    AHCI_DEBUG0("hba::enable_irq(): in")
+    debug("In enable_irq\n");
     if (poll_mode()) {
         return;
     }
@@ -458,8 +460,12 @@ void hba::enable_irq()
     hba_writel(HOST_GHC, ghc);
 
     if (_pci_dev.is_msix() || _pci_dev.is_msi() ) {
+        AHCI_DEBUG0("hba::enable_irq(): msi enabled")
+        debug("enable_irq(): msi enabled\n");
         _msi.easy_register({ { 0, [=] { ack_irq(); }, nullptr} });
     } else {
+        AHCI_DEBUG0("hba::enable_irq(): gsi enabled")
+        debug("enable_irq(): gsi enabled\n");
         _gsi.reset(new gsi_level_interrupt(_pci_dev.get_interrupt_line(),
                                            [=] { return ack_irq(); }, [] {}));
     }
@@ -595,6 +601,7 @@ bool hba::parse_pci_config()
 
 bool hba::ack_irq()
 {
+    AHCI_DEBUG0("hba::ack_irq():in")
     bool handled = false;
 
     if (poll_mode())

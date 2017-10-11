@@ -133,10 +133,10 @@ rw_buf(struct buf *bp, int rw)
 	bio->bio_bcount = BSIZE;
 
 	bio->bio_dev->driver->devops->strategy(bio);
-    VFS_DEBUG0("BEFORE bio_wait")
+    //VFS_DEBUG0("BEFORE bio_wait")
 
 	ret = bio_wait(bio);
-    VFS_DEBUG0("AFTER bio_wait")
+    //VFS_DEBUG0("AFTER bio_wait")
 
 	destroy_bio(bio);
 	return ret;
