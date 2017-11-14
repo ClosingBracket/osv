@@ -45,6 +45,7 @@ void init(routes& routes)
         return res;
     });
 
+#if !defined(READONLY)
     setEnv.set_handler([](const_req req) {
         string param = req.param.at("var").substr(1);
         if (setenv(param.c_str(),
@@ -61,7 +62,7 @@ void init(routes& routes)
             }
             return "";
         });
-
+#endif
 }
 
 }

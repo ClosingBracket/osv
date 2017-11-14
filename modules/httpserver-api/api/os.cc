@@ -83,6 +83,7 @@ void init(routes& routes)
         return memory::get_balloon_size();
     });
 
+#if !defined(READONLY)
     os_shutdown.set_handler([](const_req req) {
         osv::shutdown();
         return "";
@@ -97,6 +98,7 @@ void init(routes& routes)
         osv::reboot();
         return "";
     });
+#endif
 
     os_dmesg.set_handler([](const_req req) {
         return debug_buffer;
@@ -109,11 +111,13 @@ void init(routes& routes)
         return json_return_type(hostname);
     });
 
+#if !defined(READONLY)
     os_set_hostname.set_handler([](const_req req) {
         string hostname = req.get_query_param("name");
         sethostname(hostname.c_str(), hostname.size());
         return "";
     });
+#endif
 
     os_threads.set_handler([](const_req req) {
         using namespace std::chrono;
@@ -143,6 +147,7 @@ void init(routes& routes)
         return osv::getcmdline();
     });
 
+#if !defined(READONLY)
     os_set_cmdline.set_handler([](const_req req) {
         string newcmd = req.get_query_param("cmdline");
 
@@ -157,6 +162,7 @@ void init(routes& routes)
         return osv::getcmdline();
 
     });
+#endif
 
 }
 
