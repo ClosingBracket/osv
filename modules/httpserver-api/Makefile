@@ -64,21 +64,21 @@ all: lib$(TARGET).so api_api api_app api_env api_file api_fs api_hardware api_ne
 	$(call quiet, cat _usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
 
 readonly: readonly/lib$(TARGET).so readonly_api_api readonly_api_app readonly_api_env readonly_api_file readonly_api_fs readonly_api_hardware readonly_api_network readonly_api_os readonly_api_trace
-	$(call quiet, cat _usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
+	$(call quiet, cat readonly/_usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
 
 add_api_to_manifest = \
-	echo "/usr/mgmt/plugins/libhttpserver-$(1).so: `realpath libhttpserver-$(1).so`" > _usr_$(1).manifest
+	echo "/usr/mgmt/plugins/libhttpserver-$(1).so: `realpath $(2)libhttpserver-$(1).so`" > $(2)_usr_$(1).manifest
 
 add_boost_dependencies_to_manifest = \
-	ldd libhttpserver-$(1).so | grep boost | sed 's/ *[^ ] *\(.*\) => \(.*\) .*/\/usr\/lib\/\1: \2/' > _usr_$(1)_boost.manifest
+	ldd $(2)libhttpserver-$(1).so | grep boost | sed 's/ *[^ ] *\(.*\) => \(.*\) .*/\/usr\/lib\/\1: \2/' > $(2)_usr_$(1)_boost.manifest
 
 api_%: libhttpserver-api_%.so
-	$(call quiet, $(call add_api_to_manifest,$@), APPEND_TO_MANIFEST $@)
-	$(call very-quiet, $(call add_boost_dependencies_to_manifest,$@))
+	$(call quiet, $(call add_api_to_manifest,$@,""), APPEND_TO_MANIFEST $@)
+	$(call very-quiet, $(call add_boost_dependencies_to_manifest,$@,""))
 
-readonly_api_%: readonly/libhttpserver-api_%.so
-	$(call quiet, $(call add_api_to_manifest,$@), APPEND_TO_MANIFEST $@)
-	$(call very-quiet, $(call add_boost_dependencies_to_manifest,$@))
+readonly_api_%: readonly/libhttpserver-readonly_api_%.so
+	$(call quiet, $(call add_api_to_manifest,$@,"readonly/"), APPEND_TO_MANIFEST $@)
+	$(call very-quiet, $(call add_boost_dependencies_to_manifest,$@,"readonly/"))
 
 stub-lib: $(STUB_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared -o $(TARGET)-stub.so $^, LINK $@)
@@ -100,7 +100,7 @@ readonly/lib$(TARGET).so: $(READONLY_OBJ_FILES)
 libhttpserver-api_%.so: obj/autogen/%.json.o obj/api/%.o
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 
-readonly/libhttpserver-api_%.so: obj/readonly/autogen/%.json.o obj/readonly/api/%.o
+readonly/libhttpserver-readonly_api_%.so: obj/readonly/autogen/%.json.o obj/readonly/api/%.o
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 
 ifneq ($(MAKECMDGOALS),clean)

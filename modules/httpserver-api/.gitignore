@@ -2,3 +2,4 @@
 autogen/*
 obj/*
 *.manifest
+readonly/*
