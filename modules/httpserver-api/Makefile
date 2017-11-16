@@ -56,15 +56,14 @@ quiet = $(if $V, $1, @echo " $2"; $1)
 very-quiet = $(if $V, $1, @$1)
 
 DEPS := $(OBJ_FILES:.o=.d)
-#READONLY_DEPS := $(obj/autogen/readonly/%.json.o obj/api/readonly/%:.o=.d)
 
 module: all
 
-all: lib$(TARGET).so api_api api_app api_env api_file api_fs api_hardware api_network api_os api_trace
+all: lib$(TARGET).so api_api api_app api_env api_file api_fs api_hardware api_network api_os api_trace read-only
 	$(call quiet, cat _usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
 
-readonly: readonly/lib$(TARGET).so readonly_api_api readonly_api_app readonly_api_env readonly_api_file readonly_api_fs readonly_api_hardware readonly_api_network readonly_api_os readonly_api_trace
-	$(call quiet, cat readonly/_usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
+read-only: readonly/lib$(TARGET).so readonly_api_api readonly_api_app readonly_api_env readonly_api_file readonly_api_fs readonly_api_hardware readonly_api_network readonly_api_os readonly_api_trace
+	$(call quiet, cat readonly/_usr_*.manifest | sort | uniq > readonly/usr.manifest, CREATE_READONLY_MANIFEST)
 
 add_api_to_manifest = \
 	echo "/usr/mgmt/plugins/libhttpserver-$(1).so: `realpath $(2)libhttpserver-$(1).so`" > $(2)_usr_$(1).manifest
@@ -82,12 +81,6 @@ readonly_api_%: readonly/libhttpserver-readonly_api_%.so
 
 stub-lib: $(STUB_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared -o $(TARGET)-stub.so $^, LINK $@)
-
-$(TARGET): $(OBJ_FILES) $(STUB_FILES)
-	$(call quiet, $(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS), LINK $@)
-
-readonly/$(TARGET): $(READONLY_OBJ_FILES) $(STUB_FILES)
-	$(call quiet, $(CXX) $(CXXFLAGS) -o $@ $^ $(LIBS), LINK $@)
 
 lib$(TARGET).so: $(OBJ_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
@@ -107,10 +100,6 @@ ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
 endif
 
-#ifeq ($(MAKECMDGOAL),readonly)
-#-include $(READONLY_DEPS)
-#endif
-
 autogen/%.cc: api-doc/listings/% json2code.py
 	$(call very-quiet, mkdir -p autogen)
 	$(call quiet,./json2code.py -f $< -ns json, GEN $@)
@@ -123,10 +112,7 @@ init_obj = \
 	$(call very-quiet, mkdir -p obj/stub) \
 	$(call very-quiet, mkdir -p obj/json) \
 	$(call very-quiet, mkdir -p obj/api) \
-	$(call very-quiet, mkdir -p obj/autogen) \
-	$(call very-quiet, mkdir -p obj/readonly/autogen) \
-	$(call very-quiet, mkdir -p obj/readonly/api) \
-	$(call very-quiet, mkdir -p readonly/autogen)
+	$(call very-quiet, mkdir -p obj/autogen)
 
 obj/%.o: %.cc
 	$(call init_obj)
@@ -134,6 +120,14 @@ obj/%.o: %.cc
 
 obj/readonly/api/%.o: api/%.cc
 	$(call init_obj)
+	$(call very-quiet, mkdir -p obj/readonly/api)
+	$(call very-quiet, mkdir -p readonly/autogen)
+	$(call quiet, $(CXX) $(READONLY_CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+obj/readonly/autogen/%.o: readonly/autogen/%.cc
+	$(call init_obj)
+	$(call very-quiet, mkdir -p obj/readonly/autogen)
+	$(call very-quiet, mkdir -p readonly/autogen)
 	$(call quiet, $(CXX) $(READONLY_CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
 
 clean:
