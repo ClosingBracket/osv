@@ -3,6 +3,8 @@ from osv.modules.api import *
 from osv.modules.filemap import FileMap
 from osv.modules import api
 
+provides = ['httpserver-api']
+
 _module = '${OSV_BASE}/modules/httpserver-readonly-api'
 
 _exe = '/libhttpserver-api.so'
