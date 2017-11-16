@@ -1,11 +1,11 @@
-INCLUDES = -I. -I../../include -I../../arch/$(ARCH) -I../.. \
+INCLUDES = -I. -I../httpserver-api -I../../include -I../../arch/$(ARCH) -I../.. \
 	-I../../build/$(mode)/gen/include
 
 # compiler flags:
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 autodepend = -MD -MT $@ -MP
-CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend)
+CXXFLAGS = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DREADONLY
 src = $(shell readlink -f ../..)
 
 ifndef ARCH
@@ -23,14 +23,14 @@ miscbase = $(src)/external/$(ARCH)/misc.bin
 libs-dir = $(miscbase)/usr/lib64
 boost-libs := -lboost_system -lboost_filesystem -lboost_regex
 
-STUB_CPP_FILES := $(wildcard stub/*.cc)
-STUB_FILES := $(addprefix obj/,$(STUB_CPP_FILES:.cc=.o))
+STUB_CPP_FILES := $(notdir $(wildcard ../httpserver-api/stub/*.cc))
+STUB_FILES := $(addprefix obj/stub/,$(STUB_CPP_FILES:.cc=.o))
 
 # the build target executable:
 TARGET = httpserver-api
 JSON_FILES := $(wildcard api-doc/listings/*.json)
 JSON_CC_FILES := $(subst .json,.json.cc,$(subst api-doc/listings/,autogen/,$(JSON_FILES)))
-CPP_FILES := $(JSON_CC_FILES) $(wildcard *.cc) $(wildcard json/*.cc)
+CPP_FILES := $(notdir $(wildcard ../httpserver-api/*.cc)) $(addprefix json/,$(notdir $(wildcard ../httpserver-api/json/*.cc)))
 OBJ_FILES := $(addprefix obj/,$(CPP_FILES:.cc=.o))
 
 DYN_LIBS = -lpthread -ldl -L../libtools -ltools $(boost-libs) -lyaml-cpp
@@ -51,7 +51,7 @@ DEPS := $(OBJ_FILES:.o=.d)
 
 module: all
 
-all: lib$(TARGET).so api_api api_app api_env api_file api_fs api_hardware api_network api_os api_trace
+all: lib$(TARGET).so api_api api_app api_env api_file api_fs api_hardware api_network api_os api_trace 
 	$(call quiet, cat _usr_*.manifest | sort | uniq > usr.manifest, CREATE_MANIFEST)
 
 add_api_to_manifest = \
@@ -67,7 +67,7 @@ api_%: libhttpserver-api_%.so
 stub-lib: $(STUB_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared -o $(TARGET)-stub.so $^, LINK $@)
 
-lib$(TARGET).so: $(OBJ_FILES) #$(STUB_FILES)
+lib$(TARGET).so: $(OBJ_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 	$(call very-quiet, ldd $@ | grep boost | sed 's/ *[^ ] *\(.*\) => \(.*\) .*/\/usr\/lib\/\1: \2/' > _usr_$(TARGET).manifest)
 
@@ -78,9 +78,9 @@ ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
 endif
 
-autogen/%.cc: api-doc/listings/% json2code.py
+autogen/%.cc: api-doc/listings/% ../httpserver-api/json2code.py
 	$(call very-quiet, mkdir -p autogen)
-	$(call quiet,./json2code.py -f $< -ns json, GEN $@)
+	$(call quiet,../httpserver-api/json2code.py -outdir autogen -f $< -ns json, GEN $@)
 
 init_obj = \
 	$(call very-quiet, mkdir -p obj/stub) \
@@ -88,7 +88,20 @@ init_obj = \
 	$(call very-quiet, mkdir -p obj/api) \
 	$(call very-quiet, mkdir -p obj/autogen)
 
-obj/%.o: %.cc
+obj/autogen/%.o: autogen/%.cc
+	$(call init_obj)
+	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+obj/api/%.o: ../httpserver-api/api/%.cc
+	$(call init_obj)
+	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+obj/json/%.o: ../httpserver-api/json/%.cc
+	$(call init_obj)
+	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+$(OBJ_FILES): obj/%.o: ../httpserver-api/%.cc
+#	echo $(OBJ_FILES)
 	$(call init_obj)
 	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
 
@@ -104,13 +117,13 @@ check: check-http check-ssl
 check-http:
 	# Test plain HTTP
 	cd $(src) && \
-	make image=httpserver-api,jetty && \
+	make image=httpserver-readonly-api,jetty && \
 	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-api.py
 
 check-ssl:
 	# Test SSL
 	cd $(src) && \
-	make image=httpserver-api.fg_ssl,certs,jetty && \
+	make image=httpserver-readonly-api.fg_ssl,certs,jetty && \
 	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-api.py \
 		--cert modules/certs/build/client.pem \
 		--key modules/certs/build/client.key \
