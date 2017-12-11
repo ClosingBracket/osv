@@ -249,10 +249,12 @@ void init(routes& routes)
     api_json_init_path("Advanced API options");
 
     api_batch.set_handler(new api_param_handler(routes));
+#if !defined(READONLY)
     stop_api.set_handler([](const_req req){
         global_server::stop();
         return "";
     });
+#endif
 
 }
 
