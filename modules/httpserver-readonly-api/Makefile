@@ -112,23 +112,12 @@ clean:
 	$(call very-quiet, $(RM) -rf autogen)
 	$(call very-quiet, $(RM) -f *usr*.manifest)
 
-check: check-http check-ssl
-
-check-http:
-	# Test plain HTTP
+check:
+	# Test plain readonly HTTP
 	cd $(src) && \
-	make image=httpserver-readonly-api,jetty && \
-	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-api.py
+	make image=httpserver-readonly-api.fg,jetty && \
+	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-readonly-api.py
 
-check-ssl:
-	# Test SSL
-	cd $(src) && \
-	make image=httpserver-readonly-api.fg_ssl,certs,jetty && \
-	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-api.py \
-		--cert modules/certs/build/client.pem \
-		--key modules/certs/build/client.key \
-		--cacert modules/certs/build/cacert.pem
-
-.PHONY: check check-http check-ssl
+.PHONY: check
 
 .SECONDARY:
