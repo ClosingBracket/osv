@@ -18,12 +18,13 @@
 #include <osv/prio.hh>
 #include <chrono>
 
+/*
 extern "C" {
 void arc_unshare_buf(arc_buf_t*);
 void arc_share_buf(arc_buf_t*);
 void arc_buf_accessed(const uint64_t[4]);
 void arc_buf_get_hashkey(arc_buf_t*, uint64_t[4]);
-}
+}*/
 
 namespace std {
 template<>
@@ -269,7 +270,7 @@ public:
     cached_page_arc(hashkey key, void* page, arc_buf_t* ab) : cached_page(key, page), _ab(ref(ab, this)) {}
     ~cached_page_arc() {
         if (!_removed && unref(_ab, this)) {
-            arc_unshare_buf(_ab);
+            //arc_unshare_buf(_ab);
         }
     }
     arc_buf_t* arcbuf() {
@@ -380,7 +381,7 @@ void map_arc_buf(hashkey *key, arc_buf_t* ab, void *page)
     SCOPE_LOCK(arc_lock);
     cached_page_arc* pc = new cached_page_arc(*key, page, ab);
     read_cache.emplace(*key, pc);
-    arc_share_buf(ab);
+    //arc_share_buf(ab);
 }
 
 static int create_read_cached_page(vfs_file* fp, hashkey& key)
@@ -570,9 +571,9 @@ private:
         if (accessed.empty()) {
             return false;
         }
-        for (auto&& arc_hashkey: accessed) {
+        /*for (auto&& arc_hashkey: accessed) {
             arc_buf_accessed(arc_hashkey.key);
-        }
+        }*/
         accessed.clear();
         return true;
     }
@@ -602,11 +603,11 @@ private:
                     }
                     std::for_each(cached_page_arc::arc_cache_map.begin(current_bucket), cached_page_arc::arc_cache_map.end(current_bucket),
                             [&accessed, &scanned, &cleared](cached_page_arc::arc_map::value_type& p) {
-                        auto arcbuf = p.first;
+                        //auto arcbuf = p.first;
                         auto cp = p.second;
                         if (cp->clear_accessed()) {
                             arc_hashkey arc_hashkey;
-                            arc_buf_get_hashkey(arcbuf, arc_hashkey.key);
+                            //arc_buf_get_hashkey(arcbuf, arc_hashkey.key);
                             accessed.emplace(arc_hashkey);
                             cleared++;
                         }

@@ -315,7 +315,8 @@ void jvm_balloon_shrinker::_thread_loop()
                 size_t freed = 1;
                 while ((memory::jvm_heap_reserved() < static_cast<ssize_t>(balloon_size)) && (freed != 0)) {
                     uint64_t to_free = balloon_size - memory::jvm_heap_reserved();
-                    freed = arc_sized_adjust(to_free);
+                    //freed = arc_sized_adjust(to_free);
+                    freed = to_free;
                 }
 
                 if (memory::jvm_heap_reserved() >= static_cast<ssize_t>(balloon_size)) {

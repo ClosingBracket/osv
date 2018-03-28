@@ -630,38 +630,39 @@ bsd += bsd/sys/dev/random/live_entropy_sources.o
 $(out)/bsd/sys/%.o: COMMON += -Wno-sign-compare -Wno-narrowing -Wno-write-strings -Wno-parentheses -Wno-unused-but-set-variable
 
 solaris :=
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_atomic.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_cmn_err.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kmem.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kobj.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kstat.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_policy.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sunddi.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_string.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sysevent.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_taskq.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_uio.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/acl/acl_common.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/avl/avl.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/fnvpair.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair_alloc_fixed.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/unicode/u8_textprep.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/callb.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/fm.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/list.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/nvpair_alloc_system.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/adler32.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/deflate.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inffast.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inflate.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inftrees.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/opensolaris_crc32.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/trees.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod_subr.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zutil.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_atomic.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_cmn_err.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kmem.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kobj.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kstat.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_policy.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sunddi.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_string.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sysevent.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_taskq.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_uio.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/acl/acl_common.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/avl/avl.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/fnvpair.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair_alloc_fixed.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/unicode/u8_textprep.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/callb.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/fm.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/list.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/nvpair_alloc_system.o
+
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/adler32.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/deflate.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inffast.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inflate.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inftrees.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/opensolaris_crc32.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/trees.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod_subr.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zutil.o
 
 zfs += bsd/sys/cddl/contrib/opensolaris/common/zfs/zfeature_common.o
 zfs += bsd/sys/cddl/contrib/opensolaris/common/zfs/zfs_comutil.o
@@ -755,13 +756,13 @@ zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zrlock.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zvol.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/lz4.o
 
-solaris += $(zfs)
+#solaris += $(zfs)
 
-$(zfs:%=$(out)/%): CFLAGS+= \
-	-DBUILDING_ZFS \
-	-Wno-array-bounds \
-	-Ibsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs \
-	-Ibsd/sys/cddl/contrib/opensolaris/common/zfs
+#$(zfs:%=$(out)/%): CFLAGS+= \
+#	-DBUILDING_ZFS \
+#	-Wno-array-bounds \
+#	-Ibsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs \
+#	-Ibsd/sys/cddl/contrib/opensolaris/common/zfs
 
 $(solaris:%=$(out)/%): CFLAGS+= \
 	-fno-strict-aliasing \
@@ -799,7 +800,7 @@ drivers += java/jvm/jvm_balloon.o
 drivers += java/jvm/java_api.o
 drivers += java/jvm/jni_helpers.o
 drivers += drivers/random.o
-drivers += drivers/zfs.o
+#drivers += drivers/zfs.o
 drivers += drivers/null.o
 drivers += drivers/device.o
 drivers += drivers/pci-generic.o

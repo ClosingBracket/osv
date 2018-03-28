@@ -49,9 +49,9 @@ void bsd_init(void)
 
     arc4_init();
     eventhandler_init(NULL);
-    opensolaris_load(NULL);
-    callb_init(NULL);
-    system_taskq_init(NULL);
+    //opensolaris_load(NULL);
+    //callb_init(NULL);
+    //system_taskq_init(NULL);
 
     debug(" - done\n");
 }

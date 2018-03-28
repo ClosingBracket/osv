@@ -350,7 +350,7 @@ void* do_main_thread(void *_main_args)
         if(mount_rofs_rootfs(opt_pivot) != 0) {
             //
             // Failed -> try to mount zfs
-            zfsdev::zfsdev_init();
+            //zfsdev::zfsdev_init();
             mount_zfs_rootfs(opt_pivot);
             bsd_shrinker_init();
 
