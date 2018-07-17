@@ -27,10 +27,15 @@ public:
     virtual s64 time() __attribute__((no_instrument_function));
     virtual s64 uptime() override __attribute__((no_instrument_function));
     virtual s64 boot_time() override __attribute__((no_instrument_function));
+    virtual u64 processor_to_nano(u64 ticks) override __attribute__((no_instrument_function));
+    virtual void calibrate() override __attribute__((no_instrument_function));
 private:
     mmioaddr_t _addr;
     uint64_t _wall;
     uint64_t _period;
+    uint64_t _wall_in_ticks;
+    uint64_t _calibration_point;
+    uint64_t _calibration_point_in_ticks;
 };
 
 #define HPET_CAP        0x000
@@ -76,6 +81,7 @@ hpetclock::hpetclock(uint64_t hpet_address)
         mmio_setl(_addr + HPET_COUNTER + 4, 0);
 
         _wall = r->wallclock_ns();
+        _wall_in_ticks = processor::rdtsc();
 
         // We got them all, now we restart the HPET.
         cfg |= 0x1;
@@ -97,6 +103,18 @@ s64 hpetclock::boot_time()
 {
     // The following is time()-uptime():
     return _wall;
+}
+
+u64 hpetclock::processor_to_nano(u64 ticks)
+{
+    //return pvclock::processor_to_nano(&*_sys, ticks);
+    return ((_calibration_point - _wall) * ticks) / (_calibration_point_in_ticks - _wall_in_ticks);
+}
+
+void hpetclock::calibrate()
+{
+    _calibration_point = this->time();
+    _calibration_point_in_ticks = processor::rdtsc();
 }
 
 void __attribute__((constructor(init_prio::hpet))) hpet_init()

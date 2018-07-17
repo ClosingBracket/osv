@@ -99,6 +99,8 @@ public:
      * Not all clocks are required to implement it.
      */
     virtual u64 processor_to_nano(u64 ticks) { return 0; }
+
+    virtual void calibrate() {}
 private:
     static clock* _c;
 };

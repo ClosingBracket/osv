@@ -55,6 +55,7 @@
 #include "drivers/null.hh"
 
 #include "libc/network/__dns.hh"
+#include "drivers/clock.hh"
 
 using namespace osv;
 using namespace osv::clock::literals;
@@ -431,6 +432,7 @@ void* do_main_thread(void *_main_args)
     }
 
     boot_time.event("Total time");
+    ::clock::get()->calibrate();
 
     if (opt_bootchart) {
         boot_time.print_chart();
