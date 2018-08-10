@@ -272,6 +272,28 @@ static int rofs_getattr(struct vnode *vnode, struct vattr *attr)
     return 0;
 }
 
+int rofs_get_page_address(struct vnode *vnode, off_t offset, void **addr) {
+    struct rofs_info *rofs = (struct rofs_info *) vnode->v_mount->m_data;
+    struct rofs_super_block *sb = rofs->sb;
+    struct rofs_inode *inode = (struct rofs_inode *) vnode->v_data;
+    struct device *device = vnode->v_mount->m_dev;
+
+    if (vnode->v_type == VDIR)
+        return EISDIR;
+    /* Cant read anything but reg */
+    if (vnode->v_type != VREG)
+        return EINVAL;
+    /* Cant start reading before the first byte */
+    if (offset < 0)
+        return EINVAL;
+    /* Cant read after the end of the file */
+    if (offset >= (off_t)vnode->v_size)
+        return 0;
+    //TODO: Check if offset is page aligned
+
+    return rofs::cache_get_page_address(inode,device,sb,offset,addr);
+}
+
 #define rofs_write       ((vnop_write_t)vop_erofs)
 #define rofs_seek        ((vnop_seek_t)vop_nullop)
 #define rofs_ioctl       ((vnop_ioctl_t)vop_nullop)

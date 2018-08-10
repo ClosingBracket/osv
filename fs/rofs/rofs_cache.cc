@@ -74,6 +74,10 @@ public:
         return this->block_count * this->cache->sb->block_size;
     }
 
+    void* memory_address(off_t offset) {
+        return this->data + offset;
+    }
+
     bool is_data_ready() {
         return this->data_ready;
     }
@@ -275,6 +279,49 @@ cache_read(struct rofs_inode *inode, struct device *device, struct rofs_super_bl
     print("[rofs] [%d] rofs_cache_read completed for i-node [%d]\n", sched::thread::current()->id(),
           inode->inode_no);
     return error;
+}
+
+int
+cache_get_page_address(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, off_t offset, void **addr)
+{
+    //
+    // Find existing one or create new file cache
+    struct file_cache *cache = get_or_create_file_cache(inode, sb);
+
+    struct uio _uio;
+    _uio.uio_offset = offset;
+    _uio.uio_resid = 4096;
+    //
+    // Prepare list of cache transactions (copy from memory
+    // or read from disk into cache memory and then copy into memory)
+    // --> THERE SHOULD BE ONLY one TRANSACTION
+    auto segment_transactions = plan_cache_transactions(cache, &_uio);
+    print("[rofs] [%d] rofs_get_page_address called for i-node [%d] at %d with %d ops\n",
+          sched::thread::current()->id(), inode->inode_no, offset, segment_transactions.size());
+
+    int error = 0;
+
+    auto it = segment_transactions.begin();
+    assert(it != segment_transactions.end()); // There should be at least ONE transaction
+    auto transaction = *it;
+#if defined(ROFS_DIAGNOSTICS_ENABLED)
+    rofs_cache_reads += 1;
+#endif
+    if (transaction.transaction_type == CacheTransactionType::READ_FROM_DISK) {
+        // Read from disk into segment missing in cache or empty segment that was in cache but had not data because
+        // of failure to read
+        error = transaction.segment->read_from_disk(device);
+#if defined(ROFS_DIAGNOSTICS_ENABLED)
+        rofs_cache_misses += 1;
+#endif
+   }
+
+   if( !error)
+       *addr = transaction.segment->memory_address(transaction.segment_offset);
+   else
+       *addr = nullptr;
+
+   return error;
 }
 
 }
