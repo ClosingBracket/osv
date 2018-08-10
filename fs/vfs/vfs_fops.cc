@@ -182,7 +182,7 @@ std::unique_ptr<mmu::file_vma> vfs_file::mmap(addr_range range, unsigned flags, 
 {
 	auto fp = this;
 	struct vnode *vp = fp->f_dentry->d_vnode;
-	if (!vp->v_op->vop_cache || (vp->v_size < (off_t)mmu::page_size)) {
+	if ((!vp->v_op->vop_cache && !vp->v_op->vop_get_page_addr) || (vp->v_size < (off_t)mmu::page_size)) {
 		return mmu::default_file_mmap(this, range, flags, perm, offset);
 	}
 	return mmu::map_file_mmap(this, range, flags, perm, offset);

@@ -288,7 +288,7 @@ static int rofs_getattr(struct vnode *vnode, struct vattr *attr)
 #define rofs_fallocate   ((vnop_fallocate_t)vop_erofs)
 #define rofs_fsync       ((vnop_fsync_t)vop_nullop)
 #define rofs_symlink     ((vnop_symlink_t)vop_erofs)
-#define rofs_get_page_addr ((vnop_get_page_addr_t)vop_nullop)
+#define rofs_get_page_addr ((vnop_get_page_addr_t)nullptr)
 
 struct vnops rofs_vnops = {
     rofs_open,               /* open */
