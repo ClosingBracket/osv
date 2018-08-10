@@ -140,7 +140,19 @@ int vfs_file::chmod(mode_t mode)
 
 bool vfs_file::map_page(uintptr_t off, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pte, bool write, bool shared)
 {
-    return pagecache::get(this, off, ptep, pte, write, shared);
+    auto fp = this;
+    struct vnode *vp = fp->f_dentry->d_vnode;
+    if (vp->v_op->vop_get_page_addr) {
+        void *page_address = nullptr;
+        vn_lock(vp);
+        assert(VOP_GET_PAGE_ADDR(vp, off, &page_address) == 0);
+        vn_unlock(vp);
+        assert(page_address != 0);
+        //debugf("vfs_file::map_page got page at %08x\n", page_address);
+        return mmu::write_pte(page_address, ptep, pte);
+    }
+    else
+        return pagecache::get(this, off, ptep, pte, write, shared);
 }
 
 bool vfs_file::put_page(void *addr, uintptr_t off, mmu::hw_ptep<0> ptep)

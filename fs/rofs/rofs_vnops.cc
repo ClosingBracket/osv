@@ -272,7 +272,7 @@ static int rofs_getattr(struct vnode *vnode, struct vattr *attr)
     return 0;
 }
 
-int rofs_get_page_address(struct vnode *vnode, off_t offset, void **addr) {
+static int rofs_get_page_address(struct vnode *vnode, off_t offset, void **addr) {
     struct rofs_info *rofs = (struct rofs_info *) vnode->v_mount->m_data;
     struct rofs_super_block *sb = rofs->sb;
     struct rofs_inode *inode = (struct rofs_inode *) vnode->v_data;
@@ -310,7 +310,7 @@ int rofs_get_page_address(struct vnode *vnode, off_t offset, void **addr) {
 #define rofs_fallocate   ((vnop_fallocate_t)vop_erofs)
 #define rofs_fsync       ((vnop_fsync_t)vop_nullop)
 #define rofs_symlink     ((vnop_symlink_t)vop_erofs)
-#define rofs_get_page_addr ((vnop_get_page_addr_t)nullptr)
+//#define rofs_get_page_addr ((vnop_get_page_addr_t)nullptr)
 
 struct vnops rofs_vnops = {
     rofs_open,               /* open */
@@ -336,7 +336,7 @@ struct vnops rofs_vnops = {
     rofs_fallocate,          /* fallocate - returns error when called*/
     rofs_readlink,           /* read link */
     rofs_symlink,            /* symbolic link - returns error when called*/
-    rofs_get_page_addr       /* return memory page address of file offset*/
+    rofs_get_page_address    /* return memory page address of file offset*/
 };
 
 extern "C" void rofs_disable_cache() {
