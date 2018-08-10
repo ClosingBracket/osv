@@ -149,6 +149,7 @@ typedef int (*vnop_cache_t) (struct vnode *, struct file *, struct uio *);
 typedef int (*vnop_fallocate_t) (struct vnode *, int, loff_t, loff_t);
 typedef int (*vnop_readlink_t)  (struct vnode *, struct uio *);
 typedef int (*vnop_symlink_t)   (struct vnode *, char *, char *);
+typedef int (*vnop_get_page_addr_t)   (struct vnode *, off_t);
 
 /*
  * vnode operations
@@ -177,6 +178,7 @@ struct vnops {
 	vnop_fallocate_t	vop_fallocate;
 	vnop_readlink_t		vop_readlink;
 	vnop_symlink_t		vop_symlink;
+	vnop_get_page_addr_t	vop_get_page_addr;
 };
 
 /*
@@ -206,6 +208,7 @@ struct vnops {
 #define VOP_FALLOCATE(VP, M, OFF, LEN) ((VP)->v_op->vop_fallocate)(VP, M, OFF, LEN)
 #define VOP_READLINK(VP, U)        ((VP)->v_op->vop_readlink)(VP, U)
 #define VOP_SYMLINK(DVP, OP, NP)   ((DVP)->v_op->vop_symlink)(DVP, OP, NP)
+#define VOP_GET_PAGE_ADDR(VP, OFF) ((VP)->v_op->vop_get_page_addr)(VP, OFF)
 
 int	 vop_nullop(void);
 int	 vop_einval(void);

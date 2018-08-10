@@ -288,6 +288,7 @@ static int rofs_getattr(struct vnode *vnode, struct vattr *attr)
 #define rofs_fallocate   ((vnop_fallocate_t)vop_erofs)
 #define rofs_fsync       ((vnop_fsync_t)vop_nullop)
 #define rofs_symlink     ((vnop_symlink_t)vop_erofs)
+#define rofs_get_page_addr ((vnop_get_page_addr_t)vop_nullop)
 
 struct vnops rofs_vnops = {
     rofs_open,               /* open */
@@ -312,7 +313,8 @@ struct vnops rofs_vnops = {
     rofs_arc,                /* arc */ //TODO: Implement to allow memory re-use when mapping files
     rofs_fallocate,          /* fallocate - returns error when called*/
     rofs_readlink,           /* read link */
-    rofs_symlink             /* symbolic link - returns error when called*/
+    rofs_symlink,            /* symbolic link - returns error when called*/
+    rofs_get_page_addr       /* return memory page address of file offset*/
 };
 
 extern "C" void rofs_disable_cache() {
