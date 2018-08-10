@@ -12,6 +12,7 @@
 #include <include/osv/uio.h>
 #include <osv/debug.h>
 #include <osv/sched.hh>
+#include <sys/mman.h>
 
 /*
  * From cache perspective let us divide each file into sequence of contiguous 32K segments.
@@ -56,7 +57,10 @@ public:
         this->starting_block = _starting_block;
         this->block_count = _block_count;
         this->data_ready = false;   // Data has to be loaded from disk
-        this->data = malloc(_cache->sb->block_size * _block_count);
+        //this->data = malloc(_cache->sb->block_size * _block_count);
+        //this->data = mmap(NULL, cache->sb->block_size * _block_count, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED | MAP_POPULATE, -1, 0);
+        this->data = memalign(4096, _cache->sb->block_size * _block_count);
+        assert(this->data > 0);
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
         rofs_block_allocated += block_count;
 #endif
@@ -100,6 +104,8 @@ public:
         if (error) {
             print("!!!!! Error reading from disk\n");
         }
+        //Cannot mprotect something that was malloc-ed or mem-aligned
+        //mprotect( this->data, this->cache->sb->block_size * this->block_count, PROT_READ | PROT_EXEC);
         return error;
     }
 };
