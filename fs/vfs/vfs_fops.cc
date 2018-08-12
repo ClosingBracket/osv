@@ -157,7 +157,15 @@ bool vfs_file::map_page(uintptr_t off, mmu::hw_ptep<0> ptep, mmu::pt_element<0> 
 
 bool vfs_file::put_page(void *addr, uintptr_t off, mmu::hw_ptep<0> ptep)
 {
-    return pagecache::release(this, addr, off, ptep);
+    auto fp = this;
+    struct vnode *vp = fp->f_dentry->d_vnode;
+    if (vp->v_op->vop_get_page_addr) {
+        mmu::clear_pte(ptep);
+        return true;
+    }
+    else {
+        return pagecache::release(this, addr, off, ptep);
+    }
 }
 
 void vfs_file::sync(off_t start, off_t end)
