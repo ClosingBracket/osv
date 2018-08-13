@@ -60,7 +60,7 @@ public:
         this->data_ready = false;   // Data has to be loaded from disk
         //this->data = malloc(_cache->sb->block_size * _block_count);
         //this->data = mmap(NULL, cache->sb->block_size * _block_count, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED | MAP_POPULATE, -1, 0);
-        this->data = memalign(4096, _cache->sb->block_size * _block_count);
+        this->data = aligned_alloc(4096, _cache->sb->block_size * _block_count);
         assert(this->data > 0);
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
         rofs_block_allocated += block_count;
