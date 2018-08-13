@@ -28,6 +28,7 @@
 extern std::atomic<long> rofs_block_allocated;
 extern std::atomic<long> rofs_cache_reads;
 extern std::atomic<long> rofs_cache_misses;
+extern std::atomic<long> rofs_page_accesses;
 #endif
 
 namespace rofs {
@@ -306,6 +307,7 @@ cache_get_page_address(struct rofs_inode *inode, struct device *device, struct r
     auto transaction = *it;
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
     rofs_cache_reads += 1;
+    rofs_page_accesses += 1;
 #endif
     if (transaction.transaction_type == CacheTransactionType::READ_FROM_DISK) {
         // Read from disk into segment missing in cache or empty segment that was in cache but had not data because

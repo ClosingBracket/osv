@@ -42,6 +42,7 @@ std::atomic<long> rofs_block_read_count(0);
 std::atomic<long> rofs_block_allocated(0);
 std::atomic<long> rofs_cache_reads(0);
 std::atomic<long> rofs_cache_misses(0);
+std::atomic<long> rofs_page_accesses(0);
 #endif
 
 struct vfsops rofs_vfsops = {
@@ -215,6 +216,7 @@ rofs_unmount(struct mount *mp, int flags)
     debugf("ROFS: spent %.2f ms reading from disk\n", ((double) rofs_block_read_ms.load()) / 1000);
     debugf("ROFS: read %d 512-byte blocks from disk\n", rofs_block_read_count.load());
     debugf("ROFS: allocated %d 512-byte blocks of cache memory\n", rofs_block_allocated.load());
+    debugf("ROFS: accessed through mmap() %d\n", rofs_page_accesses.load());
     long total_cache_reads = rofs_cache_reads.load();
     double hit_ratio = total_cache_reads > 0 ? (rofs_cache_reads.load() - rofs_cache_misses.load()) / ((double)total_cache_reads) : 0;
     debugf("ROFS: hit ratio is %.2f%%\n", hit_ratio * 100);
