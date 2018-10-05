@@ -132,6 +132,9 @@ quiet = $(if $V, $1, @echo " $2"; $1)
 very-quiet = $(if $V, $1, @$1)
 
 all: $(out)/loader.img links
+ifeq ($(arch),x64)
+all: $(out)/loader.bin
+endif
 .PHONY: all
 
 links:
@@ -369,7 +372,7 @@ $(out)/%.o: %.c | generated-headers
 
 $(out)/%.o: %.S
 	$(makedir)
-	$(call quiet, $(CXX) $(CXXFLAGS) $(ASFLAGS) -c -o $@ $<, AS $*.s)
+	$(call quiet, $(CXX) $(CXXFLAGS) $(ASFLAGS) -c -o $@ $<, AS $*.S)
 
 $(out)/%.o: %.s
 	$(makedir)
@@ -416,14 +419,8 @@ ifeq ($(arch),x64)
 
 # kernel_base is where the kernel will be loaded after uncompression.
 # lzkernel_base is where the compressed kernel is loaded from disk.
-# As issue #872 explains, lzkernel_base must be chosen high enough for
-# (lzkernel_base - kernel_base) to be bigger than the kernel's size.
-# On the other hand, don't increase lzkernel_base too much, because it puts
-# a lower limit on the VM's RAM size.
-# Below we verify that the compiled kernel isn't too big given the current
-# setting of these paramters; Otherwise we recommend to increase lzkernel_base.
 kernel_base := 0x200000
-lzkernel_base := 0x1800000
+lzkernel_base := 0x100000
 
 
 $(out)/boot.bin: arch/x64/boot16.ld $(out)/arch/x64/boot16.o
@@ -442,7 +439,8 @@ $(out)/loader.bin: $(out)/arch/x64/boot32.o arch/x64/loader32.ld
 	$(call quiet, $(LD) -nostartfiles -static -nodefaultlibs -o $@ \
 	                $(filter-out %.bin, $(^:%.ld=-T %.ld)), LD $@)
 
-$(out)/arch/x64/boot32.o: $(out)/loader.elf
+$(out)/arch/x64/boot32.o: $(out)/loader-stripped.elf
+$(out)/arch/x64/boot32.o: ASFLAGS += -I$(out)
 
 $(out)/fastlz/fastlz.o:
 	$(makedir)
@@ -462,9 +460,9 @@ $(out)/fastlz/lzloader.o: fastlz/lzloader.cc | generated-headers
 
 $(out)/lzloader.elf: $(out)/loader-stripped.elf.lz.o $(out)/fastlz/lzloader.o arch/x64/lzloader.ld \
 	$(out)/fastlz/fastlz.o
-	$(call very-quiet, scripts/check-image-size.sh $(out)/loader-stripped.elf $(shell bash -c 'echo $$(($(lzkernel_base)-$(kernel_base)))'))
+	$(call very-quiet, scripts/check-image-size.sh $(out)/loader-stripped.elf)
 	$(call quiet, $(LD) -o $@ --defsym=OSV_LZKERNEL_BASE=$(lzkernel_base) \
-		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags \
+		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -z max-page-size=4096 \
 		-T arch/x64/lzloader.ld \
 		$(filter %.o, $^), LINK lzloader.elf)
 	$(call quiet, truncate -s %32768 $@, ALIGN lzloader.elf)
@@ -512,6 +510,13 @@ $(out)/bsd/sys/netinet/ip_input.o: COMMON+=-fno-strict-aliasing
 $(out)/bsd/sys/netinet/in.o: COMMON+=-fno-strict-aliasing
 
 $(out)/bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/metaslab.o: COMMON+=-Wno-tautological-compare
+
+# A lot of the BSD code used to be C code, which commonly bzero()ed or
+# memcpy()ed objects. In C++, this should not be done (objects have
+# constructors and assignments), and gcc 8 starts to warn about it.
+# Instead of fixing all these occurances, let's ask gcc to ignore this
+# warning. At least for now.
+$(out)/bsd/%.o: CXXFLAGS += -Wno-class-memaccess
 
 bsd  = bsd/init.o
 bsd += bsd/net.o
@@ -1382,6 +1387,7 @@ musl += network/getservbyport.o
 libc += network/getifaddrs.o
 libc += network/if_nameindex.o
 musl += network/if_freenameindex.o
+libc += network/res_init.o
 
 musl += prng/rand.o
 musl += prng/rand_r.o
@@ -1394,6 +1400,7 @@ musl += prng/lrand48.o
 musl += prng/mrand48.o
 musl += prng/seed48.o
 musl += prng/srand48.o
+libc += random.o
 
 libc += process/execve.o
 libc += process/execle.o
@@ -1618,6 +1625,7 @@ libc += string/wcscat.o
 musl += string/wcschr.o
 musl += string/wcscmp.o
 libc += string/wcscpy.o
+libc += string/__wcscpy_chk.o
 musl += string/wcscspn.o
 musl += string/wcsdup.o
 musl += string/wcslen.o
@@ -1741,6 +1749,7 @@ musl += crypt/crypt_md5.o
 musl += crypt/crypt_r.o
 musl += crypt/crypt_sha256.o
 musl += crypt/crypt_sha512.o
+libc += crypt/encrypt.o
 
 #include $(src)/fs/build.mk:
 
