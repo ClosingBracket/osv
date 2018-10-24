@@ -48,8 +48,8 @@ int main(int ac, char** av)
         report(true, "Run nonexistant");
     }
 
-    bool b2 = (bool)osv::run("/tests/misc-non-fpic.so", 2, child_args, &ret);
-    report(b2 == true, "Run non-PIC");
+    b = (bool)osv::run("/tests/misc-non-fpic.so", 0, nullptr, nullptr);
+    report(b == true, "Run non-PIC with non-writable relocations");
 
     return 0;
 }

@@ -630,7 +630,6 @@ symbol_module object::symbol_other(unsigned idx)
 void object::relocate_rela()
 {
     if(has_non_writable_text_relocations()) {
-        debugf("--> Fixing text permissions\n");
         make_text_writable(true);
     }
 
