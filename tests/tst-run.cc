@@ -48,6 +48,9 @@ int main(int ac, char** av)
         report(true, "Run nonexistant");
     }
 
+    bool b2 = (bool)osv::run("/tests/misc-non-fpic.so", 2, child_args, &ret);
+    report(b2 == true, "Run non-PIC");
+
     return 0;
 }
 

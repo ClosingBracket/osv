@@ -60,6 +60,13 @@ $(out)/tests/rofs/%.o: $(src)/tests/%.c
 $(out)/%.so: $(out)/%.o
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared -o $@ $< $(LIBS), LD $*.so)
 
+NON_FPIC_CXXFLAGS = $(autodepend) $(INCLUDES) -g -O2 -mcmodel=large -fno-pie -DBOOST_TEST_DYN_LINK \
+	-U _FORTIFY_SOURCE -D_KERNEL -D__OSV__ -DCONF_debug_memory=0 \
+	-Wall -Wno-pointer-arith -Wformat=0 -Wno-format-security
+$(out)/tests/misc-non-fpic.so: $(src)/tests/misc-non-fpic.cc
+	$(makedir)
+	$(call quiet, $(CXX) -shared $(NON_FPIC_CXXFLAGS) -o $@ $<, LD $*.so)
+
 # The rofs test image mounts /tmp as ramfs and 4 tests that exercise file system
 # fail due to some unresolved bugs or other shortcomings of the ramfs implementation
 # and are temporarily removed from the rofs-only-tests list. The tests tst-readdir.so
@@ -93,7 +100,7 @@ tests := tst-pthread.so misc-ramdisk.so tst-vblk.so tst-bsd-evh.so \
 	misc-tcp-sendonly.so tst-tcp-nbwrite.so misc-tcp-hash-srv.so \
 	misc-loadbalance.so misc-scheduler.so tst-console.so tst-app.so \
 	misc-setpriority.so misc-timeslice.so misc-tls.so misc-gtod.so \
-	tst-dns-resolver.so tst-kill.so tst-truncate.so \
+	tst-dns-resolver.so tst-kill.so tst-truncate.so misc-non-fpic.so \
 	misc-panic.so tst-utimes.so tst-utimensat.so tst-futimesat.so \
 	misc-tcp.so tst-strerror_r.so misc-random.so misc-urandom.so \
 	tst-commands.so tst-threadcomplete.so tst-timerfd.so \
