@@ -510,7 +510,7 @@ $(out)/bsd/sys/netinet/in_rmx.o: COMMON+=-fno-strict-aliasing
 $(out)/bsd/sys/netinet/ip_input.o: COMMON+=-fno-strict-aliasing
 $(out)/bsd/sys/netinet/in.o: COMMON+=-fno-strict-aliasing
 
-$(out)/bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/metaslab.o: COMMON+=-Wno-tautological-compare
+#$(out)/bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/metaslab.o: COMMON+=-Wno-tautological-compare
 
 # A lot of the BSD code used to be C code, which commonly bzero()ed or
 # memcpy()ed objects. In C++, this should not be done (objects have
@@ -636,38 +636,39 @@ bsd += bsd/sys/dev/random/live_entropy_sources.o
 $(out)/bsd/sys/%.o: COMMON += -Wno-sign-compare -Wno-narrowing -Wno-write-strings -Wno-parentheses -Wno-unused-but-set-variable
 
 solaris :=
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_atomic.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_cmn_err.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kmem.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kobj.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kstat.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_policy.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sunddi.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_string.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sysevent.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_taskq.o
-solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_uio.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/acl/acl_common.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/avl/avl.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/fnvpair.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair_alloc_fixed.o
-solaris += bsd/sys/cddl/contrib/opensolaris/common/unicode/u8_textprep.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/callb.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/fm.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/list.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/nvpair_alloc_system.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/adler32.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/deflate.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inffast.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inflate.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inftrees.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/opensolaris_crc32.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/trees.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod_subr.o
-solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zutil.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_atomic.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_cmn_err.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kmem.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kobj.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_kstat.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_policy.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sunddi.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_string.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_sysevent.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_taskq.o
+#solaris += bsd/sys/cddl/compat/opensolaris/kern/opensolaris_uio.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/acl/acl_common.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/avl/avl.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/fnvpair.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/nvpair/nvpair_alloc_fixed.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/common/unicode/u8_textprep.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/callb.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/fm.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/list.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/os/nvpair_alloc_system.o
+
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/adler32.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/deflate.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inffast.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inflate.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/inftrees.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/opensolaris_crc32.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/trees.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zmod_subr.o
+#solaris += bsd/sys/cddl/contrib/opensolaris/uts/common/zmod/zutil.o
 
 zfs += bsd/sys/cddl/contrib/opensolaris/common/zfs/zfeature_common.o
 zfs += bsd/sys/cddl/contrib/opensolaris/common/zfs/zfs_comutil.o
@@ -761,13 +762,13 @@ zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zrlock.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zvol.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/lz4.o
 
-solaris += $(zfs)
+#solaris += $(zfs)
 
-$(zfs:%=$(out)/%): CFLAGS+= \
-	-DBUILDING_ZFS \
-	-Wno-array-bounds \
-	-Ibsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs \
-	-Ibsd/sys/cddl/contrib/opensolaris/common/zfs
+#$(zfs:%=$(out)/%): CFLAGS+= \
+#	-DBUILDING_ZFS \
+#	-Wno-array-bounds \
+#	-Ibsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs \
+#	-Ibsd/sys/cddl/contrib/opensolaris/common/zfs
 
 $(solaris:%=$(out)/%): CFLAGS+= \
 	-fno-strict-aliasing \
@@ -805,7 +806,7 @@ drivers += java/jvm/jvm_balloon.o
 drivers += java/jvm/java_api.o
 drivers += java/jvm/jni_helpers.o
 drivers += drivers/random.o
-drivers += drivers/zfs.o
+#drivers += drivers/zfs.o
 drivers += drivers/null.o
 drivers += drivers/device.o
 drivers += drivers/pci-generic.o
@@ -1905,7 +1906,7 @@ $(bootfs_manifest_dep): phony
 	fi
 
 $(out)/bootfs.bin: scripts/mkbootfs.py $(bootfs_manifest) $(bootfs_manifest_dep) $(tools:%=$(out)/%) \
-		$(out)/zpool.so $(out)/zfs.so $(out)/libenviron.so $(out)/libvdso.so
+		$(out)/libenviron.so $(out)/libvdso.so
 	$(call quiet, olddir=`pwd`; cd $(out); $$olddir/scripts/mkbootfs.py -o bootfs.bin -d bootfs.bin.d -m $$olddir/$(bootfs_manifest) \
 		-D jdkbase=$(jdkbase) -D gccbase=$(gccbase) -D \
 		glibcbase=$(glibcbase) -D miscbase=$(miscbase), MKBOOTFS $@)
@@ -1913,13 +1914,13 @@ $(out)/bootfs.bin: scripts/mkbootfs.py $(bootfs_manifest) $(bootfs_manifest_dep)
 $(out)/bootfs.o: $(out)/bootfs.bin
 $(out)/bootfs.o: ASFLAGS += -I$(out)
 
-$(out)/tools/mkfs/mkfs.so: $(out)/tools/mkfs/mkfs.o $(out)/libzfs.so
-	$(makedir)
-	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/mkfs/mkfs.o -L$(out) -lzfs, LINK mkfs.so)
+#$(out)/tools/mkfs/mkfs.so: $(out)/tools/mkfs/mkfs.o $(out)/libzfs.so
+#	$(makedir)
+#	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/mkfs/mkfs.o -L$(out) -lzfs, LINK mkfs.so)
 
-$(out)/tools/cpiod/cpiod.so: $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o $(out)/libzfs.so
-	$(makedir)
-	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs, LINK cpiod.so)
+#$(out)/tools/cpiod/cpiod.so: $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o $(out)/libzfs.so
+#	$(makedir)
+#	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs, LINK cpiod.so)
 
 ################################################################################
 # The dependencies on header files are automatically generated only after the
@@ -1989,7 +1990,7 @@ $(out)/libuutil.so: $(libuutil-objects)
 	$(makedir)
 	$(q-build-so)
 
-#include $(src)/bsd/cddl/contrib/opensolaris/lib/libzfs/common/build.mk:
+# #include $(src)/bsd/cddl/contrib/opensolaris/lib/libzfs/common/build.mk:
 
 libzfs-file-list = changelist config dataset diff import iter mount pool status util
 libzfs-objects = $(foreach file, $(libzfs-file-list), $(out)/bsd/cddl/contrib/opensolaris/lib/libzfs/common/libzfs_$(file).o)
@@ -2047,9 +2048,9 @@ $(out)/bsd/cddl/contrib/opensolaris/lib/libzfs/common/zprop_common.o: bsd/sys/cd
 	$(makedir)
 	$(call quiet, $(CC) $(CFLAGS) -c -o $@ $<, CC $<)
 
-$(out)/libzfs.so: $(libzfs-objects) $(out)/libuutil.so
-	$(makedir)
-	$(call quiet, $(CC) $(CFLAGS) -o $@ $(libzfs-objects) -L$(out) -luutil, LINK libzfs.so)
+#$(out)/libzfs.so: $(libzfs-objects) $(out)/libuutil.so
+#	$(makedir)
+#	$(call quiet, $(CC) $(CFLAGS) -o $@ $(libzfs-objects) -L$(out) -luutil, LINK libzfs.so)
 
 #include $(src)/bsd/cddl/contrib/opensolaris/cmd/zpool/build.mk:
 zpool-cmd-file-list = zpool_iter  zpool_main  zpool_util  zpool_vdev
@@ -2069,9 +2070,9 @@ $(zpool-cmd-objects): CFLAGS += -Wno-switch -D__va_list=__builtin_va_list '-DTEX
 			-Wno-maybe-uninitialized -Wno-unused-variable -Wno-unknown-pragmas -Wno-unused-function
 
 
-$(out)/zpool.so: $(zpool-cmd-objects) $(out)/libzfs.so
-	$(makedir)
-	$(call quiet, $(CC) $(CFLAGS) -o $@ $(zpool-cmd-objects) -L$(out) -lzfs, LINK zpool.so)
+#$(out)/zpool.so: $(zpool-cmd-objects) $(out)/libzfs.so
+#	$(makedir)
+#	$(call quiet, $(CC) $(CFLAGS) -o $@ $(zpool-cmd-objects) -L$(out) -lzfs, LINK zpool.so)
 
 #include $(src)/bsd/cddl/contrib/opensolaris/cmd/zfs/build.mk:
 zfs-cmd-file-list = zfs_iter zfs_main
@@ -2091,6 +2092,6 @@ $(zfs-cmd-objects): CFLAGS += -Wno-switch -D__va_list=__builtin_va_list '-DTEXT_
 			-Wno-maybe-uninitialized -Wno-unused-variable -Wno-unknown-pragmas -Wno-unused-function
 
 
-$(out)/zfs.so: $(zfs-cmd-objects) $(out)/libzfs.so
-	$(makedir)
-	$(call quiet, $(CC) $(CFLAGS) -o $@ $(zfs-cmd-objects) -L$(out) -lzfs, LINK zfs.so)
+#$(out)/zfs.so: $(zfs-cmd-objects) $(out)/libzfs.so
+#	$(makedir)
+#	$(call quiet, $(CC) $(CFLAGS) -o $@ $(zfs-cmd-objects) -L$(out) -lzfs, LINK zfs.so)
