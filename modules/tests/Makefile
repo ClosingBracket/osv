@@ -60,6 +60,8 @@ $(out)/tests/rofs/%.o: $(src)/tests/%.c
 $(out)/%.so: $(out)/%.o
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared -o $@ $< $(LIBS), LD $*.so)
 
+$(out)/tests/tst-non-fpic.o: CXXFLAGS:=$(subst -fPIC,-mcmodel=large,$(CXXFLAGS))
+
 # The rofs test image mounts /tmp as ramfs and 4 tests that exercise file system
 # fail due to some unresolved bugs or other shortcomings of the ramfs implementation
 # and are temporarily removed from the rofs-only-tests list. The tests tst-readdir.so
@@ -114,7 +116,7 @@ tests := tst-pthread.so misc-ramdisk.so tst-vblk.so tst-bsd-evh.so \
 	tst-ifaddrs.so tst-pthread-affinity-inherit.so tst-sem-timed-wait.so \
 	tst-ttyname.so tst-pthread-barrier.so tst-feexcept.so tst-math.so \
 	tst-sigaltstack.so tst-fread.so tst-tcp-cork.so tst-tcp-v6.so \
-	tst-calloc.so tst-crypt.so
+	tst-calloc.so tst-crypt.so tst-non-fpic.so
 
 #	libstatic-thread-variable.so tst-static-thread-variable.so \
 
