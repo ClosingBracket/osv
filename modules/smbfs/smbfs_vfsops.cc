@@ -10,6 +10,8 @@
 #include <osv/mount.h>
 #include <osv/dentry.h>
 
+#include "smbfs.hh"
+
 static int
 smbfs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 {
@@ -29,7 +31,7 @@ struct vfsops smbfs_vfsops = {
     smbfs_mount,	/* mount */
     smbfs_unmount,	/* unmount */
     smbfs_sync,		/* sync */
-    smbfs_vget,     /* vget */
+    smbfs_vget,		/* vget */
     smbfs_statfs,	/* statfs */
     &smbfs_vnops	/* vnops */
 };

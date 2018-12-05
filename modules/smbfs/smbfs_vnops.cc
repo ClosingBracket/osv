@@ -10,6 +10,18 @@
 #include <dirent.h>
 #include <sys/param.h>
 
+#include <errno.h>
+#include <string.h>
+#include <stdlib.h>
+#include <fcntl.h>
+
+#include <osv/prex.h>
+#include <osv/vnode.h>
+#include <osv/file.h>
+
+#include <sys/types.h>
+#include "smbfs.hh"
+
 static int smbfs_open(struct file *fp)
 {
 }
@@ -66,27 +78,27 @@ static int smbfs_getattr(struct vnode *vnode, struct vattr *attr)
 #define smbfs_symlink     ((vnop_symlink_t)vop_erofs)
 
 struct vnops smbfs_vnops = {
-    smbfs_open,               /* open */
-    smbfs_close,              /* close */
-    smbfs_read_with_cache,    /* read */
-    smbfs_write,              /* write - returns error when called */
-    smbfs_seek,               /* seek */
-    smbfs_ioctl,              /* ioctl */
-    smbfs_fsync,              /* fsync */
-    smbfs_readdir,            /* readdir */
-    smbfs_lookup,             /* lookup */
-    smbfs_create,             /* create - returns error when called */
-    smbfs_remove,             /* remove - returns error when called */
-    smbfs_rename,             /* rename - returns error when called */
-    smbfs_mkdir,              /* mkdir - returns error when called */
-    smbfs_rmdir,              /* rmdir - returns error when called */
-    smbfs_getattr,            /* getattr */
-    smbfs_setattr,            /* setattr - returns error when called */
-    smbfs_inactive,           /* inactive */
-    smbfs_truncate,           /* truncate - returns error when called*/
-    smbfs_link,               /* link - returns error when called*/
-    smbfs_arc,                /* arc */ //TODO: Implement to allow memory re-use when mapping files
-    smbfs_fallocate,          /* fallocate - returns error when called*/
-    smbfs_readlink,           /* read link */
-    smbfs_symlink             /* symbolic link - returns error when called*/
+    smbfs_open,       /* open */
+    smbfs_close,      /* close */
+    smbfs_read,       /* read */
+    smbfs_write,      /* write - returns error when called */
+    smbfs_seek,       /* seek */
+    smbfs_ioctl,      /* ioctl */
+    smbfs_fsync,      /* fsync */
+    smbfs_readdir,    /* readdir */
+    smbfs_lookup,     /* lookup */
+    smbfs_create,     /* create - returns error when called */
+    smbfs_remove,     /* remove - returns error when called */
+    smbfs_rename,     /* rename - returns error when called */
+    smbfs_mkdir,      /* mkdir - returns error when called */
+    smbfs_rmdir,      /* rmdir - returns error when called */
+    smbfs_getattr,    /* getattr */
+    smbfs_setattr,    /* setattr - returns error when called */
+    smbfs_inactive,   /* inactive */
+    smbfs_truncate,   /* truncate - returns error when called*/
+    smbfs_link,       /* link - returns error when called*/
+    smbfs_arc,        /* arc */
+    smbfs_fallocate,  /* fallocate - returns error when called*/
+    smbfs_readlink,   /* read link */
+    smbfs_symlink     /* symbolic link - returns error when called*/
 };
