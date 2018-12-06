@@ -163,6 +163,34 @@ static int smbfs_read(struct vnode *vp, struct file *fp, struct uio *uio, int io
 // under rofs->dir_entries table
 static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 {
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    auto handle = get_dir_handle(vp);
+
+    if (err_no) {
+        return err_no;
+    }
+
+    // query the SMBFS server about this directory entry.
+    auto smb2dirent = smb2_readdir(smb2, handle);
+
+    // We finished iterating on the directory.
+    if (!smb2dirent) {
+        return ENOENT;
+    }
+
+    // Fill dirent infos
+    assert(sizeof(ino_t) == sizeof(smb2dirent->st.smb2_ino));
+    dir->d_ino = smb2dirent->st.smb2_ino;
+    // FIXME: not filling dir->d_off
+    // FIXME: not filling dir->d_reclen
+    //TODO: dir->d_type = IFTODT(smb2dirent->mode & S_IFMT);
+    strlcpy((char *) &dir->d_name, smb2dirent->name, sizeof(dir->d_name));
+
+    // iterate
+    fp->f_offset++;
+
+    return 0;
 }
 
 //
