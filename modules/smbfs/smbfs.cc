@@ -22,7 +22,7 @@ mount_context::mount_context(const char *url)
     /* Create SMB context */
     _smbfs.reset(smb2_init_context());
     if (!_smbfs) {
-        debug("mount_context(): failed to create SMBFS context\n");
+        debug("mount_context(): failed to create SMB2/3 context\n");
         _errno = ENOMEM;
         return;
     }
