@@ -134,12 +134,6 @@ static int smbfs_close(struct vnode *vp, struct file *fp)
 }
 
 //
-// This function reads symbolic link information
-static int smbfs_readlink(struct vnode *vnode, struct uio *uio)
-{
-}
-
-//
 // This function reads as much data as requested per uio
 static int smbfs_read(struct vnode *vnode, struct file *fp, struct uio *uio, int ioflag)
 {
@@ -179,6 +173,7 @@ static int smbfs_getattr(struct vnode *vnode, struct vattr *attr)
 #define smbfs_fallocate   ((vnop_fallocate_t)vop_erofs)
 #define smbfs_fsync       ((vnop_fsync_t)vop_nullop)
 #define smbfs_symlink     ((vnop_symlink_t)vop_erofs)
+#define smbfs_readlink    ((vnop_readlink_t)vop_nullop)
 
 struct vnops smbfs_vnops = {
     smbfs_open,       /* open */
