@@ -1,4 +1,5 @@
-INCLUDES = -I. -I../../include -I../../arch/$(ARCH) -I../.. -I../../build/$(mode)/gen/include
+INCLUDES = -I. -I../../apps/libsmb2/upstream/libsmb2/include -I../../include
+INCLUDES += -I../../arch/$(ARCH) -I../.. -I../../build/$(mode)/gen/include
 INCLUDES += -isystem ../../include/glibc-compat
 #Only for host, not external
 INCLUDES += $(shell $(CXX) -E -xc++ - -v </dev/null 2>&1 | awk '/^End/ {exit} /^ .*c\+\+/ {print "-isystem" $$0}')
