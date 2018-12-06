@@ -156,6 +156,45 @@ static int smbfs_close(struct vnode *vp, struct file *fp)
 // This function reads as much data as requested per uio
 static int smbfs_read(struct vnode *vp, struct file *fp, struct uio *uio, int ioflag)
 {
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    if (err_no) {
+        return err_no;
+    }
+
+    auto handle = get_file_handle(vp);
+
+    if (vp->v_type == VDIR) {
+        return EISDIR;
+    }
+    if (vp->v_type != VREG) {
+        return EINVAL;
+    }
+    if (uio->uio_offset < 0) {
+        return EINVAL;
+    }
+    if (uio->uio_resid == 0) {
+        return 0;
+    }
+
+    if (uio->uio_offset >= (off_t)vp->v_size) {
+        return 0;
+    }
+
+    size_t len;
+    if (vp->v_size - uio->uio_offset < uio->uio_resid)
+        len = vp->v_size - uio->uio_offset;
+    else
+        len = uio->uio_resid;
+
+    // FIXME: remove this temporary buffer
+    auto buf = std::unique_ptr<unsigned char>(new unsigned char[len + 1]());
+    int ret = smb2_pread(smb2, handle, buf.get(), len, uio->uio_offset);
+    if (ret < 0) {
+        return -ret;
+    }
+
+    return uiomove(buf.get(), ret, uio);
 }
 
 //
