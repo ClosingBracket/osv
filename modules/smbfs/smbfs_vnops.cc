@@ -204,13 +204,12 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 {
     int err_no;
     auto smb2 = get_smb2_context(vp, err_no);
-    auto handle = get_dir_handle(vp);
-
     if (err_no) {
         return err_no;
     }
 
     // query the SMBFS server about this directory entry.
+    auto handle = get_dir_handle(vp);
     auto smb2dirent = smb2_readdir(smb2, handle);
 
     // We finished iterating on the directory.
@@ -235,8 +234,69 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 //
 // This functions looks up directory entry based on the directory information stored in memory
 // under rofs->dir_entries table
-static int smbfs_lookup(struct vnode *vp, char *name, struct vnode **vpp)
+static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
 {
+    int err_no;
+    auto smb2 = get_smb2_context(dvp, err_no);
+    if (err_no) {
+        return err_no;
+    }
+
+    std::string path = mkpath(dvp, name);
+    struct vnode *vp;
+
+    // Make sure we don't accidentally return garbage.
+    *vpp = nullptr;
+
+    // Following 4 checks inspired by ZFS code
+    if (!path.size())
+        return ENOENT;
+
+    if (dvp->v_type != VDIR)
+        return ENOTDIR;
+
+    assert(path != ".");
+    assert(path != "..");
+
+    // We must get the inode number so we query the NFS server.
+    struct smb2_stat_64 st;
+    int ret = smb2_stat(smb2, path.c_str(), &st);
+    if (ret) {
+        return -ret;
+    }
+
+    // Get the file type.
+    uint64_t type = st.nfs_mode & S_IFMT;
+
+    // Filter by inode type: only keep files, directories and symbolic links.
+    if (S_ISCHR(type) || S_ISBLK(type) || S_ISFIFO(type) || S_ISSOCK(type)) {
+        // FIXME: Not sure it's the right error code.
+        return EINVAL;
+    }
+
+    // Create the new vnode or get it from the cache.
+    if (vget(dvp->v_mount, st.nfs_ino, &vp)) {
+        // Present in the cache
+        *vpp = vp;
+        return 0;
+    }
+
+    if (!vp) {
+        return ENOMEM;
+    }
+
+    uint64_t mode = st.nfs_mode & ~S_IFMT;
+
+    // Fill in the new vnode informations.
+    vp->v_type = IFTOVT(type);
+    vp->v_mode = mode;
+    vp->v_size = st.nfs_size;
+    vp->v_mount = dvp->v_mount;
+    vp->v_data = nullptr;
+
+    *vpp = vp;
+
+    return 0;
 }
 
 static int smbfs_getattr(struct vnode *vp, struct vattr *attr)
