@@ -22,8 +22,70 @@
 #include <sys/types.h>
 #include "smbfs.hh"
 
+static inline struct smb2_context *get_smb2_context(struct vnode *node,
+                                                    int &err_no)
+{
+    return smbfs::get_mount_context(node->v_mount, err_no)->smbfs();
+}
+
 static int smbfs_open(struct file *fp)
 {
+    struct vnode *vp = file_dentry(fp)->d_vnode;
+    std::string path(fp->f_dentry->d_path);
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    int flags = file_flags(fp);
+    //int ret = 0;
+
+    if (err_no) {
+        return err_no;
+    }
+
+    // already opened reuse the nfs handle
+    if (vp->v_data) {
+        return 0;
+    }
+
+    int type = vp->v_type;
+
+    // clear read write flags
+    flags &= ~(O_RDONLY | O_WRONLY | O_RDWR);
+
+    // check our rights
+    bool read  = !vn_access(vp, VREAD);
+    bool write = !vn_access(vp, VWRITE);
+
+    // Set updated flags
+    if (read && write) {
+        flags |= O_RDWR;
+    } else if (read) {
+        flags |= O_RDONLY;
+    } else if (write) {
+        flags |= O_WRONLY;
+    }
+
+    // It's a directory or a file.
+    if (type == VDIR) {
+        struct smb2dir *handle = smb2_opendir(smb2, path.c_str());
+        if (handle) {
+            vp->v_data = handle;
+        }
+        //TODO pass error and set errno
+    } else if (type == VREG) {
+        struct smb2fh *handle = smb2_open(smb2, path.c_str(), flags);
+        if (handle) {
+            vp->v_data = handle;
+        }
+        //TODO pass error and set errno
+    } else {
+        return EIO;
+    }
+    /*
+    if (ret) {
+        return -ret;
+    }*/
+
+    return 0;
 }
 
 static int smbfs_close(struct vnode *vp, struct file *fp)

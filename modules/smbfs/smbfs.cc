@@ -57,7 +57,7 @@ std::unique_ptr<mount_context>> _map;
 struct mount_context *get_mount_context(struct mount *mp, int &err_no) {
     auto m_path = static_cast<const char *>(mp->m_path);
     std::string mount_point(m_path);
-    err_no = 0;
+    err_no = 0; //TODO Check when err_no is set as not zero
 
     SCOPE_LOCK(_lock);
 
