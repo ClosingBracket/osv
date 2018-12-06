@@ -28,6 +28,16 @@ static inline struct smb2_context *get_smb2_context(struct vnode *node,
     return smbfs::get_mount_context(node->v_mount, err_no)->smbfs();
 }
 
+static inline struct smb2fh *get_file_handle(struct vnode *node)
+{
+    return static_cast<struct smb2fh *>(node->v_data);
+}
+
+static inline struct smb2dir *get_dir_handle(struct vnode *node)
+{
+    return static_cast<struct smb2dir *>(node->v_data);
+}
+
 static int smbfs_open(struct file *fp)
 {
     struct vnode *vp = file_dentry(fp)->d_vnode;
@@ -90,6 +100,37 @@ static int smbfs_open(struct file *fp)
 
 static int smbfs_close(struct vnode *vp, struct file *fp)
 {
+    // not opened - return error
+    if (!vp->v_data) {
+        return -1; //TODO: Set proper errno
+    }
+
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    if (err_no) {
+        return err_no;
+    }
+
+    int type = vp->v_type;
+    //
+    // It's a directory or a file.
+    if (type == VDIR) {
+        smb2_closedir(smb2, get_dir_handle(vp));
+        vp->v_data = nullptr;
+        //TODO set errno
+    } else if (type == VREG) {
+        smb2_close(smb2, get_file_handle(vp));
+        vp->v_data = nullptr;
+        //TODO set errno
+    } else {
+        return EIO;
+    }
+    /*
+    if (ret) {
+        return -ret;
+    }*/
+
+    return 0;
 }
 
 //
