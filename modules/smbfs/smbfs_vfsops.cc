@@ -59,3 +59,7 @@ struct vfsops smbfs_vfsops = {
     smbfs_statfs,	/* statfs */
     &smbfs_vnops	/* vnops */
 };
+
+extern "C" struct vfsops* get_vfsops() {
+    return &smbfs_vfsops;
+}
