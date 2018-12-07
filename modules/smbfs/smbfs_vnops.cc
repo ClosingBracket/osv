@@ -66,24 +66,14 @@ static inline struct timespec to_timespec(uint64_t sec, uint64_t nsec)
 static int smbfs_open(struct file *fp)
 {
     struct vnode *vp = file_dentry(fp)->d_vnode;
-    std::string path(fp->f_dentry->d_path);
-    int err_no;
-    auto smb2 = get_smb2_context(vp, err_no);
-    int flags = file_flags(fp);
-    //int ret = 0;
-
-    if (err_no) {
-        return err_no;
-    }
 
     // already opened reuse the nfs handle
     if (vp->v_data) {
         return 0;
     }
 
-    int type = vp->v_type;
-
     // clear read write flags
+    int flags = file_flags(fp);
     flags &= ~(O_RDONLY | O_WRONLY | O_RDWR);
 
     // check our rights
@@ -99,7 +89,16 @@ static int smbfs_open(struct file *fp)
         flags |= O_WRONLY;
     }
 
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    if (err_no) {
+        return err_no;
+    }
+
+    std::string path(fp->f_dentry->d_path);
+    //
     // It's a directory or a file.
+    int type = vp->v_type;
     if (type == VDIR) {
         struct smb2dir *handle = smb2_opendir(smb2, path.c_str());
         if (handle) {
@@ -162,14 +161,6 @@ static int smbfs_close(struct vnode *vp, struct file *fp)
 // This function reads as much data as requested per uio
 static int smbfs_read(struct vnode *vp, struct file *fp, struct uio *uio, int ioflag)
 {
-    int err_no;
-    auto smb2 = get_smb2_context(vp, err_no);
-    if (err_no) {
-        return err_no;
-    }
-
-    auto handle = get_file_handle(vp);
-
     if (vp->v_type == VDIR) {
         return EISDIR;
     }
@@ -193,6 +184,14 @@ static int smbfs_read(struct vnode *vp, struct file *fp, struct uio *uio, int io
     else
         len = uio->uio_resid;
 
+    int err_no;
+    auto smb2 = get_smb2_context(vp, err_no);
+    if (err_no) {
+        return err_no;
+    }
+
+    auto handle = get_file_handle(vp);
+
     // FIXME: remove this temporary buffer
     auto buf = std::unique_ptr<unsigned char>(new unsigned char[len + 1]());
     int ret = smb2_pread(smb2, handle, buf.get(), len, uio->uio_offset);
@@ -208,6 +207,10 @@ static int smbfs_read(struct vnode *vp, struct file *fp, struct uio *uio, int io
 // under rofs->dir_entries table
 static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 {
+    if (vp->v_type != VDIR) {
+        return ENOTDIR;
+    }
+
     int err_no;
     auto smb2 = get_smb2_context(vp, err_no);
     if (err_no) {
@@ -226,9 +229,15 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
     // Fill dirent infos
     assert(sizeof(ino_t) == sizeof(smb2dirent->st.smb2_ino));
     dir->d_ino = smb2dirent->st.smb2_ino;
+    if (smb2dirent->st.smb2_type == SMB2_TYPE_DIRECTORY ) {
+        dir->d_type = DT_DIR;
+    }
+    else {
+        dir->d_type = DT_REG;
+    }
     // FIXME: not filling dir->d_off
     // FIXME: not filling dir->d_reclen
-    //TODO: dir->d_type = IFTODT(smb2dirent->mode & S_IFMT);
+
     strlcpy((char *) &dir->d_name, smb2dirent->name, sizeof(dir->d_name));
 
     // iterate
