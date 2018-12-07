@@ -47,6 +47,12 @@ static const char *get_node_name(struct vnode *node)
     return LIST_FIRST(&node->v_names)->d_path;
 }
 
+static inline std::string mkpath(struct vnode *node, const char *name)
+{
+    std::string path(get_node_name(node));
+    return path + "/" + name;
+}
+
 static inline struct timespec to_timespec(uint64_t sec, uint64_t nsec)
 {
     struct timespec t;
@@ -266,7 +272,7 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
     }
 
     // Get the file type.
-    uint64_t type = st.nfs_mode & S_IFMT;
+    uint64_t type = 0;//TODO: Probably just distinguish between file and directory st.nfs_mode & S_IFMT;
 
     // Filter by inode type: only keep files, directories and symbolic links.
     if (S_ISCHR(type) || S_ISBLK(type) || S_ISFIFO(type) || S_ISSOCK(type)) {
@@ -275,7 +281,7 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
     }
 
     // Create the new vnode or get it from the cache.
-    if (vget(dvp->v_mount, st.nfs_ino, &vp)) {
+    if (vget(dvp->v_mount, st.smb2_ino, &vp)) {
         // Present in the cache
         *vpp = vp;
         return 0;
@@ -285,12 +291,12 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
         return ENOMEM;
     }
 
-    uint64_t mode = st.nfs_mode & ~S_IFMT;
+    //TODO: uint64_t mode = st.nfs_mode & ~S_IFMT;
 
     // Fill in the new vnode informations.
     vp->v_type = IFTOVT(type);
-    vp->v_mode = mode;
-    vp->v_size = st.nfs_size;
+    //TODO: vp->v_mode = mode;
+    vp->v_size = st.smb2_size;
     vp->v_mount = dvp->v_mount;
     vp->v_data = nullptr;
 
