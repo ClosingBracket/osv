@@ -273,11 +273,9 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
         return -ret;
     }
 
-    // Get the file type.
-    uint64_t type = 0;//TODO: Probably just distinguish between file and directory st.nfs_mode & S_IFMT;
-
-    // Filter by inode type: only keep files, directories and symbolic links.
-    if (S_ISCHR(type) || S_ISBLK(type) || S_ISFIFO(type) || S_ISSOCK(type)) {
+    // Filter by inode type: only keep files and directories 
+    // Symbolic links for now do not seem to be supported by smb2/3 or this library
+    if (st.smb2_type != SMB2_TYPE_DIRECTORY && st.smb2_type != SMB2_TYPE_FILE) {
         // FIXME: Not sure it's the right error code.
         return EINVAL;
     }
@@ -293,14 +291,20 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
         return ENOMEM;
     }
 
-    //TODO: uint64_t mode = st.nfs_mode & ~S_IFMT;
-
     // Fill in the new vnode informations.
-    vp->v_type = IFTOVT(type);
-    //TODO: vp->v_mode = mode;
     vp->v_size = st.smb2_size;
     vp->v_mount = dvp->v_mount;
     vp->v_data = nullptr;
+
+    // Get the entry type.
+    if (st.smb2_type == SMB2_TYPE_DIRECTORY) {
+        vp->v_type = VDIR;
+    } else if (st.smb2_type == SMB2_TYPE_FILE) {
+        vp->v_type = VREG;
+    }
+
+    //TODO: vp->v_mode -> It looks like high level API does not have a way to rerieve flags or any other security info
+    // needs to use raw API
 
     *vpp = vp;
 
