@@ -104,29 +104,29 @@ static int smbfs_open(struct file *fp)
         if (handle) {
             vp->v_data = handle;
         }
-        //TODO pass error and set errno
+        else {
+            return EIO;
+        }
     } else if (type == VREG) {
         struct smb2fh *handle = smb2_open(smb2, path.c_str(), flags);
         if (handle) {
             vp->v_data = handle;
         }
-        //TODO pass error and set errno
+        else {
+            return EIO;
+        }
     } else {
         return EIO;
     }
-    /*
-    if (ret) {
-        return -ret;
-    }*/
 
     return 0;
 }
 
 static int smbfs_close(struct vnode *vp, struct file *fp)
 {
-    // not opened - return error
+    // not opened - ignore
     if (!vp->v_data) {
-        return -1; //TODO: Set proper errno
+        return 0;
     }
 
     int err_no;
@@ -141,18 +141,12 @@ static int smbfs_close(struct vnode *vp, struct file *fp)
     if (type == VDIR) {
         smb2_closedir(smb2, get_dir_handle(vp));
         vp->v_data = nullptr;
-        //TODO set errno
     } else if (type == VREG) {
         smb2_close(smb2, get_file_handle(vp));
         vp->v_data = nullptr;
-        //TODO set errno
     } else {
         return EIO;
     }
-    /*
-    if (ret) {
-        return -ret;
-    }*/
 
     return 0;
 }
@@ -247,8 +241,7 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 }
 
 //
-// This functions looks up directory entry based on the directory information stored in memory
-// under rofs->dir_entries table
+// This functions looks up directory entry
 static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
 {
     int err_no;
@@ -334,25 +327,20 @@ static int smbfs_getattr(struct vnode *vp, struct vattr *attr)
         return -ret;
     }
 
-    //uint32_t smb2_type;
+    if (st.smb2_type == SMB2_TYPE_DIRECTORY) {
+        attr->va_type = VDIR;
+    } else if (st.smb2_type == SMB2_TYPE_FILE) {
+        attr->va_type = VREG;
+    }
 
-    //uint64_t type = st.nfs_mode & S_IFMT;
-    //uint64_t mode = st.nfs_mode & ~S_IFMT;
-
-    // Copy the file infos.
-    //attr->va_mask    =;
-    //TODO: attr->va_type    = IFTOVT(type);
-    //TODO: attr->va_mode    = mode;
+    //TODO: attr->va_mode -> It looks like high level API does not have a way to rerieve flags or any other security info
+    // needs to use raw API
+    attr->va_mode    = 0777;
     attr->va_nlink   = st.smb2_nlink;
-    //attr->va_uid     = st.smb2_uid;
-    //attr->va_gid     = st.smb2_gid;
-    //attr->va_fsid    = st.smb2_dev; // FIXME: not sure about this one
     attr->va_nodeid  = st.smb2_ino;
     attr->va_atime   = to_timespec(st.smb2_atime, st.smb2_atime_nsec);
     attr->va_mtime   = to_timespec(st.smb2_mtime, st.smb2_mtime_nsec);
     attr->va_ctime   = to_timespec(st.smb2_ctime, st.smb2_ctime_nsec);
-    //attr->va_rdev    = st.smb2_rdev;
-    //attr->va_nblocks = st.smb2_blocks;
     attr->va_size    = st.smb2_size;
 
     return 0;
