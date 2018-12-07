@@ -1,0 +1,1 @@
+/usr/lib/smbfs.so: ${MODULE_DIR}/smbfs.so

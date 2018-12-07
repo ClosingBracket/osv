@@ -16,7 +16,7 @@ CPP_FILES := $(wildcard *.cc)
 OBJ_FILES := $(addprefix obj/,$(CPP_FILES:.cc=.o))
 DEPS := $(OBJ_FILES:.o=.d)
 
-#LIBS = -lpthread
+LIBS = -L../../apps/libsmb2/upstream/libsmb2/lib -lsmb2
 ifndef ARCH
 	ARCH = x64
 endif
