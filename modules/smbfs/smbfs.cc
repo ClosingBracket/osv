@@ -30,7 +30,8 @@ mount_context::mount_context(const char *url)
     // parse the url while taking care of freeing it when needed
     _url.reset(smb2_parse_url(_smbfs.get(), url));
     if (!_url) {
-        debug(std::string("mount_context(): failed to parse URL:g: ") +
+        debug(std::string("mount_context(): failed to parse URL: ") +
+              std::string(url) + ":" +
               smb2_get_error(_smbfs.get()) + "\n");
         _errno = EINVAL;
         return;

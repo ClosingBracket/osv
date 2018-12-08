@@ -51,7 +51,7 @@ smbfs_unmount(struct mount *mp, int flags)
 #define smbfs_vget    ((vfsop_vget_t)vfs_nullop)
 #define smbfs_statfs  ((vfsop_statfs_t)vfs_nullop)
 
-struct vfsops smbfs_vfsops = {
+static struct vfsops internal_smbfs_vfsops = {
     smbfs_mount,	/* mount */
     smbfs_unmount,	/* unmount */
     smbfs_sync,		/* sync */
@@ -61,5 +61,5 @@ struct vfsops smbfs_vfsops = {
 };
 
 extern "C" struct vfsops* get_vfsops() {
-    return &smbfs_vfsops;
+    return &internal_smbfs_vfsops;
 }

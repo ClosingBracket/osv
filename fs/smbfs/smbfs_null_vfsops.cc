@@ -34,14 +34,23 @@ struct vfsops smbfs_vfsops = {
 
 int smbfs_init(void)
 {
+    return 0;
+}
+
+int smbfs_set_vfsops(void)
+{
+    debug("VFS: Starting to initialize SMBFS\n");
+
     void* module = dlopen("smbfs.so", RTLD_LAZY);
     if (module == nullptr) {
+        debug("VFS: Failed to find smbfs.so\n");
         return 0;
     }
 
     using get_vfsops_func_t = struct vfsops* ();
     get_vfsops_func_t* get_vfsops = reinterpret_cast<get_vfsops_func_t*>(dlsym(module, "get_vfsops"));
     if (get_vfsops == nullptr) {
+        debug("VFS: Failed to find function get_vfsops in smbfs.so\n");
         dlclose(module);
         return 0;
     }
@@ -53,8 +62,9 @@ int smbfs_init(void)
        smbfs_vfsops.vfs_sync = _vfsops->vfs_sync;
        smbfs_vfsops.vfs_vget = _vfsops->vfs_vget;
        smbfs_vfsops.vfs_statfs = _vfsops->vfs_statfs;
-       debug("VFS: Initialized SMBFS");
+       debug("VFS: Initialized SMBFS\n");
     }
 
+    debug("VFS: Done initializing SMBFS\n");
     return 0;
 }

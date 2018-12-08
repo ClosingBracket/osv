@@ -2261,6 +2261,8 @@ static void import_extra_zfs_pools(void)
     }
 }
 
+extern int smbfs_set_vfsops(void);
+
 void pivot_rootfs(const char* path)
 {
     int ret = sys_pivot_root(path, "/");
@@ -2280,6 +2282,12 @@ void pivot_rootfs(const char* path)
 
         if ((m->mnt_opts != nullptr) && strcmp(m->mnt_opts, MNTOPT_DEFAULTS)) {
             printf("Warning: opts %s, ignored for fs %s\n", m->mnt_opts, m->mnt_type);
+        }
+
+        //debug("!!! -> Bula: %s\n", m->mnt_type);
+        if (!strcmp(m->mnt_type, "smbfs")) {
+            //debug("!!! -> Found smbfs\n");
+            smbfs_set_vfsops();
         }
 
         // FIXME: Right now, ignoring mntops. In the future we may have an option parser
