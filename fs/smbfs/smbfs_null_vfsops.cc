@@ -62,6 +62,7 @@ int smbfs_set_vfsops(void)
        smbfs_vfsops.vfs_sync = _vfsops->vfs_sync;
        smbfs_vfsops.vfs_vget = _vfsops->vfs_vget;
        smbfs_vfsops.vfs_statfs = _vfsops->vfs_statfs;
+       smbfs_vfsops.vfs_vnops = _vfsops->vfs_vnops;
        debug("VFS: Initialized SMBFS\n");
     }
 

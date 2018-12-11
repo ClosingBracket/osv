@@ -2269,6 +2269,8 @@ void pivot_rootfs(const char* path)
     if (ret)
         kprintf("failed to pivot root, error = %s\n", strerror(ret));
 
+    smbfs_set_vfsops();
+
     auto ent = setmntent("/etc/fstab", "r");
     if (!ent) {
         return;
@@ -2282,12 +2284,6 @@ void pivot_rootfs(const char* path)
 
         if ((m->mnt_opts != nullptr) && strcmp(m->mnt_opts, MNTOPT_DEFAULTS)) {
             printf("Warning: opts %s, ignored for fs %s\n", m->mnt_opts, m->mnt_type);
-        }
-
-        //debug("!!! -> Bula: %s\n", m->mnt_type);
-        if (!strcmp(m->mnt_type, "smbfs")) {
-            //debug("!!! -> Found smbfs\n");
-            smbfs_set_vfsops();
         }
 
         // FIXME: Right now, ignoring mntops. In the future we may have an option parser

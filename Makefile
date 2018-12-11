@@ -396,7 +396,7 @@ tools += tools/uush/uush.so
 tools += tools/uush/ls.so
 tools += tools/uush/mkdir.so
 
-tools += tools/mount/mount-nfs.so
+tools += tools/mount/mount-fs.so
 tools += tools/mount/umount.so
 
 ifeq ($(arch),aarch64)
