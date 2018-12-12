@@ -18,6 +18,7 @@
 #include <osv/prex.h>
 #include <osv/vnode.h>
 #include <osv/file.h>
+#include <osv/debug.h>
 
 #include <sys/types.h>
 #include "smbfs.hh"
@@ -44,13 +45,21 @@ static const char *get_node_name(struct vnode *node)
         return nullptr;
     }
 
-    return LIST_FIRST(&node->v_names)->d_path;
+    auto name = LIST_FIRST(&node->v_names)->d_path;
+    if (name && *name == '/')
+        return name + 1;
+    else
+        return name;
 }
 
 static inline std::string mkpath(struct vnode *node, const char *name)
 {
     std::string path(get_node_name(node));
-    return path + "/" + name;
+    debugf("mkpath [%s] / [%s]\n", path.c_str(), name);
+    if (path.length() > 0) 
+       return path + "/" + name;
+    else
+       return name;
 }
 
 static inline struct timespec to_timespec(uint64_t sec, uint64_t nsec)
@@ -100,19 +109,21 @@ static int smbfs_open(struct file *fp)
     // It's a directory or a file.
     int type = vp->v_type;
     if (type == VDIR) {
-        struct smb2dir *handle = smb2_opendir(smb2, path.c_str());
+        struct smb2dir *handle = smb2_opendir(smb2, path.c_str() + 1);
         if (handle) {
             vp->v_data = handle;
         }
         else {
+            debugf("smbfs_open [%s]: smb2_opendir failed\n", path.c_str());
             return EIO;
         }
     } else if (type == VREG) {
-        struct smb2fh *handle = smb2_open(smb2, path.c_str(), flags);
+        struct smb2fh *handle = smb2_open(smb2, path.c_str() + 1, flags);
         if (handle) {
             vp->v_data = handle;
         }
         else {
+            debugf("smbfs_open [%s]: smb2_open failed\n", path.c_str());
             return EIO;
         }
     } else {
@@ -244,6 +255,8 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 // This functions looks up directory entry
 static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
 {
+    debugf("smbfs_lookup [%s]\n", name);
+
     int err_no;
     auto smb2 = get_smb2_context(dvp, err_no);
     if (err_no) {
@@ -270,12 +283,15 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
     struct smb2_stat_64 st;
     int ret = smb2_stat(smb2, path.c_str(), &st);
     if (ret) {
+        debugf("smbfs_lookup [%s]: smb2_stat failed with %d\n", name, ret);
         return -ret;
     }
 
     // Filter by inode type: only keep files and directories 
     // Symbolic links for now do not seem to be supported by smb2/3 or this library
+    debugf("smbfs_lookup [%s]: before checking type\n", name);
     if (st.smb2_type != SMB2_TYPE_DIRECTORY && st.smb2_type != SMB2_TYPE_FILE) {
+        debugf("smbfs_lookup [%s]: wrong type\n", name);
         // FIXME: Not sure it's the right error code.
         return EINVAL;
     }
@@ -328,6 +344,7 @@ static int smbfs_getattr(struct vnode *vp, struct vattr *attr)
     struct smb2_stat_64 st;
     int ret = smb2_stat(smb2, path, &st);
     if (ret) {
+        debugf("smbfs_getattr [%s]: smb2_stat failed with %d\n", path, ret);
         return -ret;
     }
 
