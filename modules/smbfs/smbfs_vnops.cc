@@ -289,7 +289,6 @@ static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
 
     // Filter by inode type: only keep files and directories 
     // Symbolic links for now do not seem to be supported by smb2/3 or this library
-    debugf("smbfs_lookup [%s]: before checking type\n", name);
     if (st.smb2_type != SMB2_TYPE_DIRECTORY && st.smb2_type != SMB2_TYPE_FILE) {
         debugf("smbfs_lookup [%s]: wrong type\n", name);
         // FIXME: Not sure it's the right error code.
