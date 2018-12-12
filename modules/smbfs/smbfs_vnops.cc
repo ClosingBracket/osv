@@ -255,7 +255,7 @@ static int smbfs_readdir(struct vnode *vp, struct file *fp, struct dirent *dir)
 // This functions looks up directory entry
 static int smbfs_lookup(struct vnode *dvp, char *name, struct vnode **vpp)
 {
-    debugf("smbfs_lookup [%s]\n", name);
+    //debugf("smbfs_lookup [%s]\n", name);
 
     int err_no;
     auto smb2 = get_smb2_context(dvp, err_no);

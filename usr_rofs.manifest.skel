@@ -11,3 +11,4 @@
 /dev: ../../static
 /proc: ../../static
 /tmp: ../../static
+/samba: ../../static
