@@ -1,4 +1,4 @@
-INCLUDES = -I. -I../../apps/libsmb2/upstream/libsmb2/include -I../../include
+INCLUDES = -I. -I../libsmb2/upstream/libsmb2/include -I../../include
 INCLUDES += -I../../arch/$(ARCH) -I../.. -I../../build/$(mode)/gen/include
 INCLUDES += -isystem ../../include/glibc-compat
 #Only for host, not external
@@ -16,7 +16,7 @@ CPP_FILES := $(wildcard *.cc)
 OBJ_FILES := $(addprefix obj/,$(CPP_FILES:.cc=.o))
 DEPS := $(OBJ_FILES:.o=.d)
 
-LIBS = -L../../apps/libsmb2/upstream/libsmb2/lib -lsmb2
+LIBS = -L../libsmb2/upstream/libsmb2/lib -lsmb2
 ifndef ARCH
 	ARCH = x64
 endif
