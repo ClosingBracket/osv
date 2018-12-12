@@ -39,7 +39,7 @@ init:
 .PHONY: init
 
 module: init $(TARGET).so
-	echo '/usr/lib/smbfs.so: $${MODULE_DIR}/smbfs.so' > usr.manifest
+	echo '/usr/lib/fs/smbfs.so: $${MODULE_DIR}/smbfs.so' > usr.manifest
 	echo '/ntlm_user_file: $${MODULE_DIR}/ntlm_user_file' >> usr.manifest
 
 clean:

@@ -55,7 +55,7 @@ static const char *get_node_name(struct vnode *node)
 static inline std::string mkpath(struct vnode *node, const char *name)
 {
     std::string path(get_node_name(node));
-    debugf("mkpath [%s] / [%s]\n", path.c_str(), name);
+    //debugf("mkpath [%s] / [%s]\n", path.c_str(), name);
     if (path.length() > 0) 
        return path + "/" + name;
     else

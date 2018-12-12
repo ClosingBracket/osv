@@ -53,6 +53,7 @@
 #include <fcntl.h>
 #undef open
 #undef fcntl
+#include <dlfcn.h>
 
 #include <osv/prex.h>
 #include <osv/vnode.h>
@@ -2261,15 +2262,27 @@ static void import_extra_zfs_pools(void)
     }
 }
 
-extern int smbfs_set_vfsops(void);
-
 void pivot_rootfs(const char* path)
 {
     int ret = sys_pivot_root(path, "/");
     if (ret)
         kprintf("failed to pivot root, error = %s\n", strerror(ret));
 
-    smbfs_set_vfsops();
+    //Initialize other filesystem libraries if present
+    auto fs_lib_dir = opendir("/usr/lib/fs");
+    if (fs_lib_dir) {
+        while (auto dirent = readdir(fs_lib_dir)) {
+            auto len = strlen(dirent->d_name);
+            if (len >= 3 && strcmp(dirent->d_name + (len - 3), ".so") == 0) {
+                auto lib_path = std::string("/usr/lib/fs/") + dirent->d_name;
+                auto module = dlopen(lib_path.c_str(), RTLD_LAZY);
+                if (module)
+                    debugf("VFS: Initialized filesystem library: %s\n", lib_path.c_str());
+            }
+        }
+
+        closedir(fs_lib_dir);
+    }
 
     auto ent = setmntent("/etc/fstab", "r");
     if (!ent) {
