@@ -61,11 +61,21 @@ void fpu_state_init_fxsave(processor::fpu_state *s) {
 extern "C"
 void fpu_state_save_xsave(processor::fpu_state *s) {
     processor::xsave(s, -1);
+    // Reset FPU state after saving it as the thread we are about
+    // to switch from might have been using MMX registers and
+    // the thread scheduler that does FPU calculations needs
+    // FPU to be a clean state
+    asm volatile("emms");
 }
 
 extern "C"
 void fpu_state_save_fxsave(processor::fpu_state *s) {
     processor::fxsave(s);
+    // Reset FPU state after saving it as the thread we are about
+    // to switch from might have been using MMX registers and
+    // the thread scheduler that does FPU calculations needs
+    // FPU to be a clean state
+    asm volatile("emms");
 }
 
 extern "C"

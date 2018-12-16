@@ -102,7 +102,15 @@ void thread::switch_to()
            [rbp]"i"(offsetof(thread_state, rbp)),
            [rip]"i"(offsetof(thread_state, rip))
          : "rbx", "rdx", "rsi", "rdi", "r8", "r9",
-           "r10", "r11", "r12", "r13", "r14", "r15", "memory");
+           "r10", "r11", "r12", "r13", "r14", "r15", "memory")
+    // As the catch-all solution, reset FPU state and more specifically
+    // its status word as the old thread we have just switched from due to voluntary
+    // or involuntary reason may have been using MMX or caused FPU to get
+    // in a state where it needs to be cleared. Otherwise the new thread we have
+    // just switched to, may experience FPU overflow exceptions leading
+    // to very nasty bugs like infinite loop or printing wrong floating
+    // point number
+    asm volatile ("emms");
     processor::fldcw(fpucw);
     processor::ldmxcsr(mxcsr);
 }
