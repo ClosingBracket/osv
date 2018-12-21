@@ -22,6 +22,12 @@
 #include <osv/commands.hh>
 #include "dmi.hh"
 
+#define ZERO_PAGE_START      0x7000
+#define SETUP_HEADER_OFFSET  0x1f1   // look at bootparam.h in linux
+#define BOOT_FLAG_OFFSET     sizeof(u8) + 4 * sizeof(u16) + sizeof(u32)
+#define E820_ENTRIES_OFFSET  0x1e8   // look at bootparam.h in linux
+#define E820_TABLE_OFFSET    0x2d0   // look at bootparam.h in linux
+
 struct multiboot_info_type {
     u32 flags;
     u32 mem_lower;
@@ -56,6 +62,12 @@ struct osv_multiboot_info_type {
 
 struct e820ent {
     u32 ent_size;
+    u64 addr;
+    u64 size;
+    u32 type;
+} __attribute__((packed));
+
+struct _e820ent {
     u64 addr;
     u64 size;
     u32 type;
@@ -121,28 +133,55 @@ void arch_setup_free_memory()
 {
     static ulong edata;
     asm ("movl $.edata, %0" : "=rm"(edata));
+
+    void *zero_page = reinterpret_cast<void*>(ZERO_PAGE_START);
+    void *setup_header = zero_page + SETUP_HEADER_OFFSET;
+    u16 boot_flag = *static_cast<u16*>(setup_header + BOOT_FLAG_OFFSET);
+    debug_early_u64("arch_setup_free_memory - bootflag: ", boot_flag);
+
+    u8 e820_entries = *static_cast<u8*>(zero_page + E820_ENTRIES_OFFSET);
+    debug_early_u64("arch_setup_free_memory - e820 entries: ", e820_entries);
+
     // copy to stack so we don't free it now
-    auto omb = *osv_multiboot_info;
-    auto mb = omb.mb;
-    auto e820_buffer = alloca(mb.mmap_length);
-    auto e820_size = mb.mmap_length;
-    memcpy(e820_buffer, reinterpret_cast<void*>(mb.mmap_addr), e820_size);
+    //auto omb = *osv_multiboot_info;
+    //auto mb = omb.mb;
+    //memcpy(e820_buffer, reinterpret_cast<void*>(mb.mmap_addr), e820_size);
+    struct _e820ent *e820_table = static_cast<struct _e820ent *>(zero_page + E820_TABLE_OFFSET);
+
+    auto e820_size = 48;
+    auto e820_buffer = alloca(e820_size);
+    {
+       struct e820ent *lower = reinterpret_cast<struct e820ent*>(e820_buffer);
+       lower->ent_size = 20;
+       lower->type = 1;
+       lower->addr = e820_table[0].addr;
+       lower->size = e820_table[0].size;
+       debug_early_u64("arch_setup_free_memory - lower e820 entry size: ", e820_table[0].size);
+
+       struct e820ent *upper = lower + 1;
+       upper->ent_size = 20;
+       upper->type = 1;
+       upper->addr = e820_table[1].addr;
+       upper->size = e820_table[1].size;
+       debug_early_u64("arch_setup_free_memory - upper e820 entry size: ", e820_table[1].size);
+    }
+
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
         memory::phys_mem_size += ent.size;
     });
     constexpr u64 initial_map = 1 << 30; // 1GB mapped by startup code
-
-    u64 time;
-    time = omb.tsc_init_hi;
-    time = (time << 32) | omb.tsc_init;
+    
+    u64 time = 0;
+    //time = omb.tsc_init_hi;
+    //time = (time << 32) | omb.tsc_init;
     boot_time.event(0, "", time );
 
-    time = omb.tsc_disk_done_hi;
-    time = (time << 32) | omb.tsc_disk_done;
+    //time = omb.tsc_disk_done_hi;
+    //time = (time << 32) | omb.tsc_disk_done;
     boot_time.event(1, "disk read (real mode)", time );
 
-    time = omb.tsc_uncompress_done_hi;
-    time = (time << 32) | omb.tsc_uncompress_done;
+    //time = omb.tsc_uncompress_done_hi;
+    //time = (time << 32) | omb.tsc_uncompress_done;
     boot_time.event(2, "uncompress lzloader.elf", time );
 
     auto c = processor::cpuid(0x80000000);
@@ -185,7 +224,7 @@ void arch_setup_free_memory()
     elf_size = edata - elf_phys;
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
-    parse_cmdline(mb);
+    //parse_cmdline(mb);
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -202,6 +241,7 @@ void arch_setup_free_memory()
         }
         mmu::free_initial_memory_range(ent.addr, ent.size);
     });
+    debug_early("arch_setup_free_memory - DONE!");
 }
 
 void arch_setup_tls(void *tls, const elf::tls_data& info)
