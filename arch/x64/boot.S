@@ -97,15 +97,43 @@ start64:
     sub %rdi, %rcx
     xor %eax, %eax
     rep stosb
+    mov $0x200000, %rbp
     mov %rbp, elf_header
     # %ebx is set by boot16.S before running the loader
-    mov %rbx, osv_multiboot_info
+    //mov %rbx, osv_multiboot_info
     lea init_stack_top, %rsp
+    //mov $0x4000, %rsp
     call premain
     mov __loader_argc, %edi
     mov __loader_argv, %rsi
     call main
     .cfi_endproc
+
+.code64
+.global _start64
+_start64:
+    //lgdt gdt_desc
+    //mov $0x10, %eax
+    //mov %eax, %ds
+    //mov %eax, %es
+    //mov %eax, %fs
+    //mov %eax, %gs
+    //mov %eax, %ss
+    // Disable paging and enable PAE
+    mov $BOOT_CR4, %eax
+    mov %eax, %cr4
+    // Setup page tables
+    lea ident_pt_l4, %eax
+    mov %eax, %cr3
+    // Write contents of EDX:EAX to Model Specific Register specified by ECX register
+    mov $0xc0000080, %ecx
+    mov $0x00000900, %eax
+    xor %edx, %edx
+    wrmsr
+    // Enable paging
+    mov $BOOT_CR0, %eax
+    mov %eax, %cr0
+    jmp start64
 
 # The smp trampoline must be in the lower 1MB, so we manually relocate
 # it to address 0 by subtracting smpboot from any offset

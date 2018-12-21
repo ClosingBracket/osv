@@ -102,7 +102,7 @@ void thread::switch_to()
            [rbp]"i"(offsetof(thread_state, rbp)),
            [rip]"i"(offsetof(thread_state, rip))
          : "rbx", "rdx", "rsi", "rdi", "r8", "r9",
-           "r10", "r11", "r12", "r13", "r14", "r15", "memory")
+           "r10", "r11", "r12", "r13", "r14", "r15", "memory");
     // As the catch-all solution, reset FPU state and more specifically
     // its status word as the old thread we have just switched from due to voluntary
     // or involuntary reason may have been using MMX or caused FPU to get
