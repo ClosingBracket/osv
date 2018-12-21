@@ -1425,20 +1425,15 @@ const Elf64_Sym *init_dyn_tabs::lookup(u32 sym)
 
 init_table get_init(Elf64_Ehdr* header)
 {
-    debug_early("--> In get_init() 0\n");
+    debug_early("--> In get_init(): Start\n");
     void* pbase = static_cast<void*>(header);
-    debug_early("--> In get_init() 1\n");
     void* base = pbase;
     auto phdr = static_cast<Elf64_Phdr*>(pbase + header->e_phoff);
-    debug_early("--> In get_init() 2\n");
     auto n = header->e_phnum;
-    debug_early("--> In get_init() 3\n");
     bool base_adjusted = false;
-    debug_early("--> In get_init() 4\n");
     init_table ret = { 0 };
-    debug_early("--> In get_init() 5\n");
     for (auto i = 0; i < n; ++i, ++phdr) {
-        debug_early("--> get_init() header\n");
+        debug_early_u64("--> get_init(): Loading segment at file offset: ", phdr->p_vaddr);
         if (!base_adjusted && phdr->p_type == PT_LOAD) {
             base_adjusted = true;
             base -= phdr->p_vaddr;
@@ -1512,6 +1507,7 @@ init_table get_init(Elf64_Ehdr* header)
             ret.tls.size = phdr->p_memsz;
         }
     }
+    debug_early("--> In get_init(): End\n");
     return ret;
 }
 
