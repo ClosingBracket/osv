@@ -275,9 +275,9 @@ extern "C" {
 
     void debug_early_u64(const char *msg, unsigned long long val)
     {
-        char nr[8] = { 0 };
+        char nr[16] = { 0 };
 
-        for (int i = 7; i >= 0; i--) {
+        for (int i = 15; i >= 0; i--) {
             unsigned char nibble = val & 0x0f;
             if (nibble <= 9) {
                 nr[i] = nibble + '0';
@@ -287,20 +287,8 @@ extern "C" {
             val >>= 4;
         }
 
-        char nr2[8] = { 0 };
-        for (int i = 7; i >= 0; i--) {
-            unsigned char nibble = val & 0x0f;
-            if (nibble <= 9) {
-                nr2[i] = nibble + '0';
-            } else {
-                nr2[i] = nibble - 0x0a + 'a';
-            }
-            val >>= 4;
-        }
-
         debug_early(msg);
-        console::arch_early_console.write(nr2, 8);
-        console::arch_early_console.write(nr, 8);
+        console::arch_early_console.write(nr, 16);
         console::arch_early_console.write("\r\n", 2);
         console::arch_early_console.flush();
     }
