@@ -74,7 +74,16 @@ void parse_madt()
 
 void smp_init()
 {
-    parse_madt();
+    debug_early("In smp_init()\n");
+    //parse_madt();
+
+    auto c = new sched::cpu(0);
+    c->arch.apic_id = 0;//lapic->Id;
+    c->arch.acpi_id = 0;//lapic->ProcessorId;
+    c->arch.initstack.next = smp_stack_free;
+    smp_stack_free = &c->arch.initstack;
+    sched::cpus.push_back(c);
+
     sched::current_cpu = sched::cpus[0];
     for (auto c : sched::cpus) {
         c->incoming_wakeups = aligned_array_new<sched::cpu::incoming_wakeup_queue>(sched::cpus.size());

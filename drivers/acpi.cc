@@ -537,38 +537,43 @@ namespace acpi {
 
 #define ACPI_MAX_INIT_TABLES 16
 
-static ACPI_TABLE_DESC TableArray[ACPI_MAX_INIT_TABLES];
+//static ACPI_TABLE_DESC TableArray[ACPI_MAX_INIT_TABLES];
 
 void early_init()
 {
-    ACPI_STATUS status;
+    //ACPI_STATUS status;
 
-    status = AcpiInitializeTables(TableArray, ACPI_MAX_INIT_TABLES, TRUE);
+    debug_early("acpi::early_init() START\n");
+    /*status = AcpiInitializeTables(TableArray, ACPI_MAX_INIT_TABLES, TRUE);
     if (ACPI_FAILURE(status)) {
+        debug_early("acpi::early_init() failed AcpiInitializeTables\n");
         acpi_e("AcpiInitializeTables failed: %s\n", AcpiFormatException(status));
         return;
-    }
+    }*/
 
     // Initialize ACPICA subsystem
-    status = AcpiInitializeSubsystem();
+    /*status = AcpiInitializeSubsystem();
     if (ACPI_FAILURE(status)) {
+        debug_early("acpi::early_init() failed AcpiInitializeSubsystem\n");
         acpi_e("AcpiInitializeSubsystem failed: %s\n", AcpiFormatException(status));
         return;
-    }
+    }*/
 
     // Copy the root table list to dynamic memory
-    status = AcpiReallocateRootTable();
+    /*status = AcpiReallocateRootTable();
     if (ACPI_FAILURE(status)) {
+        debug_early("acpi::early_init() failed AcpiReallocateRootTable\n");
         acpi_e("AcpiReallocateRootTable failed: %s\n", AcpiFormatException(status));
         return;
-    }
+    }*/
 
     // Create the ACPI namespace from ACPI tables
-    status = AcpiLoadTables();
+    /*status = AcpiLoadTables();
     if (ACPI_FAILURE(status)) {
+        debug_early("acpi::early_init() failed AcpiLoadTables\n");
         acpi_e("AcpiLoadTables failed: %s\n", AcpiFormatException(status));
         return;
-    }
+    }*/
 }
 
 UINT32 acpi_poweroff(void *unused)
@@ -581,26 +586,26 @@ UINT32 acpi_poweroff(void *unused)
 // The following function comes from the documentation example page 262
 void init()
 {
-    ACPI_STATUS status;
+    //ACPI_STATUS status;
 
 
     // TODO: Installation of Local handlers
 
     // Initialize the ACPI hardware
-    status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
-    if (ACPI_FAILURE(status)) {
-        acpi_e("AcpiEnableSubsystem failed: %s\n", AcpiFormatException(status));
-        return;
-    }
+    //status = AcpiEnableSubsystem(ACPI_FULL_INITIALIZATION);
+    //if (ACPI_FAILURE(status)) {
+    //    acpi_e("AcpiEnableSubsystem failed: %s\n", AcpiFormatException(status));
+    //    return;
+    //}
 
     // Complete the ACPI namespace object initialization
-    status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
+    /*status = AcpiInitializeObjects(ACPI_FULL_INITIALIZATION);
     if (ACPI_FAILURE(status)) {
         acpi_e("AcpiInitializeObjects failed: %s\n", AcpiFormatException(status));
     }
 
     AcpiInstallFixedEventHandler(ACPI_EVENT_POWER_BUTTON, acpi_poweroff, nullptr);
-    AcpiEnableEvent(ACPI_EVENT_POWER_BUTTON, 0);
+    AcpiEnableEvent(ACPI_EVENT_POWER_BUTTON, 0);*/
 }
 
 }

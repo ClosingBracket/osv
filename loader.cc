@@ -121,6 +121,7 @@ void premain()
     debug_early("After setup tls\n");
     boot_time.event(3,"TLS initialization");
     for (auto init = inittab.start; init < inittab.start + inittab.count; ++init) {
+        //debug_early_u64("--> Init symbol: ", reinterpret_cast<u64>(*init));
         (*init)();
     }
     debug_early("After init tab\n");
