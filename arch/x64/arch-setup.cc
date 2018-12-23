@@ -77,8 +77,8 @@ osv_multiboot_info_type* osv_multiboot_info;
 
 void parse_cmdline(multiboot_info_type& mb)
 {
-    //auto p = reinterpret_cast<char*>(mb.cmdline);
-    osv::parse_cmdline("--verbose /hello");
+    auto p = reinterpret_cast<char*>(mb.cmdline);
+    osv::parse_cmdline(p);
 }
 
 void setup_temporary_phys_map()
@@ -135,12 +135,12 @@ void arch_setup_free_memory()
     asm ("movl $.edata, %0" : "=rm"(edata));
 
     void *zero_page = reinterpret_cast<void*>(ZERO_PAGE_START);
-    void *setup_header = zero_page + SETUP_HEADER_OFFSET;
-    u16 boot_flag = *static_cast<u16*>(setup_header + BOOT_FLAG_OFFSET);
-    debug_early_u64("arch_setup_free_memory - bootflag: ", boot_flag);
+    //void *setup_header = zero_page + SETUP_HEADER_OFFSET;
+    //u16 boot_flag = *static_cast<u16*>(setup_header + BOOT_FLAG_OFFSET);
+    //debug_early_u64("arch_setup_free_memory - bootflag: ", boot_flag);
 
-    u8 e820_entries = *static_cast<u8*>(zero_page + E820_ENTRIES_OFFSET);
-    debug_early_u64("arch_setup_free_memory - e820 entries: ", e820_entries);
+    //u8 e820_entries = *static_cast<u8*>(zero_page + E820_ENTRIES_OFFSET);
+    //debug_early_u64("arch_setup_free_memory - e820 entries: ", e820_entries);
 
     // copy to stack so we don't free it now
     //auto omb = *osv_multiboot_info;
@@ -225,7 +225,7 @@ void arch_setup_free_memory()
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
     //parse_cmdline(0);
-    osv::parse_cmdline("--verbose --bootchart /hello");
+    osv::parse_cmdline("--verbose /hello");
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -242,7 +242,7 @@ void arch_setup_free_memory()
         }
         mmu::free_initial_memory_range(ent.addr, ent.size);
     });
-    debug_early("arch_setup_free_memory - DONE!\n");
+    //debug_early("arch_setup_free_memory - DONE!\n");
 }
 
 void arch_setup_tls(void *tls, const elf::tls_data& info)

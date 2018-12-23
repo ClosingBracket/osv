@@ -103,11 +103,11 @@ void premain()
     arch_init_premain();
     debug_early("After arch_init_premain\n");
     //elf_header = reinterpret_cast<elf::Elf64_Ehdr*>(0x200000);
-    debug_early_u64("--> elf_header: ", (u64)elf_header);
-    int x = 5;
-    debug_early_u64("--> stack top: ", (u64)&x);
+    //debug_early_u64("--> elf_header: ", (u64)elf_header);
+    //int x = 5;
+    //debug_early_u64("--> stack top: ", (u64)&x);
 
-    debug_early("--> Before elf::get_init\n");
+    //debug_early("--> Before elf::get_init\n");
 
     auto inittab = elf::get_init(elf_header);
 

@@ -1425,7 +1425,7 @@ const Elf64_Sym *init_dyn_tabs::lookup(u32 sym)
 
 init_table get_init(Elf64_Ehdr* header)
 {
-    debug_early("--> In get_init(): Start\n");
+    //debug_early("--> In get_init(): Start\n");
     void* pbase = static_cast<void*>(header);
     void* base = pbase;
     auto phdr = static_cast<Elf64_Phdr*>(pbase + header->e_phoff);
@@ -1507,7 +1507,7 @@ init_table get_init(Elf64_Ehdr* header)
             ret.tls.size = phdr->p_memsz;
         }
     }
-    debug_early("--> In get_init(): End\n");
+    //debug_early("--> In get_init(): End\n");
     return ret;
 }
 

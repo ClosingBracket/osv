@@ -110,6 +110,7 @@ void xapic::enable()
 {
     wrmsr(msr::IA32_APIC_BASE, rdmsr(msr::IA32_APIC_BASE) | APIC_BASE_GLOBAL_ENABLE);
     software_enable();
+    debug_early_u64("xapic enabled at: ", _apic_base);
 }
 
 void xapic::nmi_allbutself()
@@ -171,6 +172,7 @@ void x2apic::enable()
 {
     wrmsr(msr::IA32_APIC_BASE, rdmsr(msr::IA32_APIC_BASE) | APIC_BASE_GLOBAL_ENABLE | (1 << 10));
     software_enable();
+    debug_early_u64("x2apic enabled at: ", _apic_base);
 }
 
 void x2apic::self_ipi(unsigned vector)
