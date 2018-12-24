@@ -316,7 +316,8 @@ void arch_init_drivers()
     boot_time.event("pvpanic done");
 
     // Enumerate PCI devices
-    pci::pci_device_enumeration();
+    //pci::pci_device_enumeration();
+    debug_early("Disabled PCI\n");
     boot_time.event("pci enumerated");
 
     // Initialize all drivers

@@ -74,6 +74,7 @@ bool check_bus(u16 bus)
             }
 
             found = true;
+            //debug_early_u64("PCI check_bus found function on bus: ", bus);
 
             function * dev = nullptr;
             if (function::is_bridge(bus, slot, func)) {
@@ -82,6 +83,7 @@ bool check_bus(u16 bus)
                 check_bus(sec_bus);
             } else {
                 dev = new device(bus, slot, func);
+                //debug_early_u64("PCI check_bus created device with function: ", func);
             }
 
             bool parse_ok = dev->parse_pci_config();
@@ -92,6 +94,7 @@ bool check_bus(u16 bus)
                 delete dev;
                 break;
             }
+            //debug_early_u64("PCI check_bus parsed PCI config with function: ", func);
 
             if (!device_manager::instance()->register_device(dev)) {
                 pci_e("Error: couldn't register device %02x:%02x.%x",
@@ -99,6 +102,7 @@ bool check_bus(u16 bus)
                 //TODO: Need to beautify it as multiple instances of the device may exist
                 delete dev;
             }
+            debug_early_u64("PCI check_bus registered device at slot: ", slot);
 
             // test for multiple functions
             if (func == 0 &&
@@ -112,6 +116,7 @@ bool check_bus(u16 bus)
 
 void pci_device_enumeration()
 {
+    debug_early("pci_device_enumeration ...\n");
     for (u16 bus = 0; bus < 256; bus++) {
         if (check_bus(bus))
             break;

@@ -857,7 +857,9 @@ u32 net::get_driver_features()
 hw_driver* net::probe(hw_device* dev)
 {
     if (auto pci_dev = dynamic_cast<pci::device*>(dev)) {
+        //debug_early("virtio-net: probing PCI device ...\n");
         if (pci_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_NET_DEVICE_ID)) {
+            debug_early("virtio-net: found virtio-net device ...\n");
             if (opt_maxnic && maxnic-- <= 0) {
                 return nullptr;
             } else {

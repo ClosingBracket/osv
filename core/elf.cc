@@ -1433,7 +1433,7 @@ init_table get_init(Elf64_Ehdr* header)
     bool base_adjusted = false;
     init_table ret = { 0 };
     for (auto i = 0; i < n; ++i, ++phdr) {
-        debug_early_u64("--> get_init(): Loading segment at file offset: ", phdr->p_vaddr);
+        //debug_early_u64("--> get_init(): Loading segment at file offset: ", phdr->p_vaddr);
         if (!base_adjusted && phdr->p_type == PT_LOAD) {
             base_adjusted = true;
             base -= phdr->p_vaddr;
@@ -1507,7 +1507,7 @@ init_table get_init(Elf64_Ehdr* header)
             ret.tls.size = phdr->p_memsz;
         }
     }
-    //debug_early("--> In get_init(): End\n");
+    debug_early("--> In elf::get_init(): End\n");
     return ret;
 }
 
