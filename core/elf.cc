@@ -1507,7 +1507,7 @@ init_table get_init(Elf64_Ehdr* header)
             ret.tls.size = phdr->p_memsz;
         }
     }
-    debug_early("--> In elf::get_init(): End\n");
+    //debug_early("--> In elf::get_init(): End\n");
     return ret;
 }
 

@@ -301,6 +301,7 @@ void arch_init_premain()
 #include "drivers/virtio-net.hh"
 #include "drivers/virtio-assign.hh"
 #include "drivers/virtio-rng.hh"
+#include "drivers/virtio-mmio.hh"
 #include "drivers/xenplatform-pci.hh"
 #include "drivers/ahci.hh"
 #include "drivers/vmw-pvscsi.hh"
@@ -338,6 +339,9 @@ void arch_init_drivers()
     boot_time.event("drivers probe");
     drvman->load_all();
     drvman->list_drivers();
+
+    virtio::mmio_device mmio_device(0xd0000000,4096,5);
+    mmio_device.parse_config();
 }
 
 #include "drivers/console.hh"
