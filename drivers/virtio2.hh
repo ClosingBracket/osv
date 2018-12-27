@@ -45,7 +45,7 @@ public:
     u64 get_device_features();
     bool get_device_feature_bit(int bit);
 
-    void set_drv_features(u32 features);
+    void set_drv_features(u64 features);
     u32 get_drv_features();
     bool get_drv_feature_bit(int bit);
 
@@ -89,6 +89,7 @@ protected:
     //interrupt_manager _msi;
     vring* _queues[max_virtqueues_nr];
     u32 _num_queues;
+    u64 _enabled_features;
     //pci::bar* _bar1;
     bool _cap_indirect_buf;
     bool _cap_event_idx = false;
