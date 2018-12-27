@@ -15,6 +15,48 @@ hw_device_id mmio_device::get_id()
 void mmio_device::print() {}
 void mmio_device::reset() {}
 
+u8 mmio_device::get_status() {
+    return mmio_getl(_addr_mmio + VIRTIO_MMIO_STATUS) & 0xff;
+}
+
+void mmio_device::set_status(u8 status) {
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_STATUS, status);
+}
+
+void mmio_device::add_status(u8 status) {
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_STATUS, status | get_status());
+}
+
+void mmio_device::kick(int queue_num) {
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, queue_num);
+}
+
+void mmio_device::select_queue(int queue_num) {
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_SEL, queue_num);
+}
+
+u16 mmio_device::get_queue_size() {
+    return mmio_getl(_addr_mmio + VIRTIO_MMIO_QUEUE_NUM_MAX) & 0xffff;
+}
+
+void mmio_device::activate_queue(vring* queue) {
+    // Set size
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NUM, queue->size());
+    //
+    // Pass other parameters
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_LOW, 0 );
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_HIGH, 0 );
+
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_LOW, 0 );
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_HIGH, 0 );
+
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_LOW, 0 );
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_HIGH, 0 );
+    //
+    // Make it ready
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_READY, 1 );
+}
+
 bool mmio_device::parse_config() {
     _addr_mmio = mmio_map(_address, _size);
 

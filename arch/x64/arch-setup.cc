@@ -225,7 +225,7 @@ void arch_setup_free_memory()
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
     //parse_cmdline(0);
-    osv::parse_cmdline("--verbose /hello");
+    osv::parse_cmdline("--bootchart /hello");
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
