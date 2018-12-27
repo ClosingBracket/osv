@@ -104,7 +104,16 @@ enum {
 
 const unsigned max_virtqueues_nr = 64;
 
-class virtio_driver : public hw_driver {
+class vdriver {
+public:
+    virtual ~vdriver() {};
+
+    virtual bool get_indirect_buf_cap() = 0;
+    virtual bool get_event_idx_cap() = 0;
+    virtual bool kick(int queue) = 0;
+};
+
+class virtio_driver : public hw_driver, public vdriver {
 public:
     explicit virtio_driver(pci::device& dev);
     virtual ~virtio_driver();

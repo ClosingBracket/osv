@@ -65,6 +65,7 @@ void mmio_device::activate_queue(vring* queue) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NUM, queue->size());
     //
     // Pass other parameters
+    //TODO: Pass real parameters
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_LOW, 0 );
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_HIGH, 0 );
 

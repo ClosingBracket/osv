@@ -29,7 +29,7 @@ TRACEPOINT(trace_vring_update_used_event, "vring=%p: _used_ring_host_head %d",
 namespace virtio {
 
 class virtio_vring;
-class virtio_driver;
+class vdriver;
 
     // Buffer descriptors in the ring
     class vring_desc {
@@ -122,7 +122,7 @@ class virtio_driver;
     class vring {
     public:
 
-        vring(virtio_driver* const dev, u16 num, u16 q_index);
+        vring(vdriver* const driver, u16 num, u16 q_index);
         virtual ~vring();
 
         u64 get_paddr();
@@ -240,7 +240,7 @@ class virtio_driver;
     private:
 
         // Up pointer
-        virtio_driver* _dev;
+        vdriver* _driver;
         u16 _q_index;
         // The physical of the physical address handed to the virtio device
         void* _vring_ptr;

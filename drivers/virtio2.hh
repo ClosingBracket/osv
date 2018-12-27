@@ -17,7 +17,7 @@
 
 namespace virtio {
 
-class virtio_mmio_driver : public hw_driver {
+class virtio_mmio_driver : public hw_driver, public vdriver {
 public:
     explicit virtio_mmio_driver(mmio_device& dev);
     virtual ~virtio_mmio_driver();

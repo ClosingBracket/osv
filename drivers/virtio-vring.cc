@@ -38,9 +38,9 @@ TRACEPOINT(trace_vring_get_buf_ret, "vring=%p _avail_count %d", void*, int);
 
 namespace virtio {
 
-    vring::vring(virtio_driver* const dev, u16 num, u16 q_index)
+    vring::vring(vdriver* const driver, u16 num, u16 q_index)
     {
-        _dev = dev;
+        _driver = driver;
         _q_index = q_index;
         // Alloc enough pages for the vring...
         unsigned sz = VIRTIO_ALIGN(vring::get_size(num, VIRTIO_PCI_VRING_ALIGN));
@@ -102,7 +102,7 @@ namespace virtio {
     inline bool vring::use_indirect(int desc_needed)
     {
         return _use_indirect &&
-               _dev->get_indirect_buf_cap() &&
+               _driver->get_indirect_buf_cap() &&
                // don't let the posting fail due to low available buffers number
                (desc_needed > _avail_count ||
                // no need to use indirect for a single descriptor
@@ -280,7 +280,7 @@ namespace virtio {
     vring::kick() {
         bool kicked = true;
 
-        if (_dev->get_event_idx_cap()) {
+        if (_driver->get_event_idx_cap()) {
 
             std::atomic_thread_fence(std::memory_order_seq_cst);
 
@@ -310,7 +310,7 @@ namespace virtio {
         // and _avail_added_since_kick might wrap around due to this bulking.
         //
         if (kicked || (_avail_added_since_kick >= (u16)(~0) / 2)) {
-            _dev->kick(_q_index);
+            _driver->kick(_q_index);
             _avail_added_since_kick = 0;
             return true;
         }
