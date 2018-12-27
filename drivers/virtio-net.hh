@@ -16,7 +16,8 @@
 #include <osv/percpu_xmit.hh>
 
 #include "drivers/virtio.hh"
-#include "drivers/pci-device.hh"
+#include "drivers/virtio2.hh"
+#include "drivers/virtio-mmio.hh"
 
 namespace virtio {
 
@@ -24,7 +25,7 @@ namespace virtio {
  * @class net
  * virtio net device class
  */
-class net : public virtio_driver {
+class net : public virtio_mmio_driver {
 public:
 
     // The feature bitmap for virtio net
@@ -204,7 +205,7 @@ public:
             u16 virtqueue_pairs;
     };
 
-    explicit net(pci::device& dev);
+    explicit net(mmio_device& dev);
     virtual ~net();
 
     virtual std::string get_name() const { return _driver_name; }
@@ -269,7 +270,8 @@ private:
 
     u32 _hdr_size;
 
-    std::unique_ptr<pci_interrupt> _irq;
+    //TODO: Figure out non-PCI interrupt stuff
+    //std::unique_ptr<pci_interrupt> _irq;
 
     struct rxq_stats {
         u64 rx_packets; /* if_ipackets */
