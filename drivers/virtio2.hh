@@ -42,11 +42,10 @@ public:
     // LEGACY NOTE:
     //      guest equivalent to driver
     //      host equivalent to device
-    u32 get_device_features();
+    u64 get_device_features();
     bool get_device_feature_bit(int bit);
 
     void set_drv_features(u32 features);
-    void set_drv_feature_bit(int bit, bool on);
     u32 get_drv_features();
     bool get_drv_feature_bit(int bit);
 
@@ -57,12 +56,12 @@ public:
     void del_dev_status(u8 status);
 
     // Access the virtio conf address space set by pci bar 1
-    bool get_virtio_config_bit(u32 offset, int bit);
-    void set_virtio_config_bit(u32 offset, int bit, bool on);
+    //bool get_virtio_config_bit(u32 offset, int bit);
+    //void set_virtio_config_bit(u32 offset, int bit, bool on);
 
     // Access virtio config space
-    void virtio_conf_read(u32 offset, void* buf, int length);
-    void virtio_conf_write(u32 offset, void* buf, int length);
+    //void virtio_conf_read(u32 offset, void* buf, int length);
+    //void virtio_conf_write(u32 offset, void* buf, int length);
     //u8 virtio_conf_readb(u32 offset) { return _bar1->readb(offset);};
     //u16 virtio_conf_readw(u32 offset) { return _bar1->readw(offset);};
     //u32 virtio_conf_readl(u32 offset) { return _bar1->readl(offset);};

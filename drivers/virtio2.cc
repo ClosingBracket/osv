@@ -218,24 +218,22 @@ void virtio_mmio_driver::wait_for_queue(vring* queue, bool (vring::*pred)() cons
     });
 }
 
-u32 virtio_mmio_driver::get_device_features()
+u64 virtio_mmio_driver::get_device_features()
 {
-    return virtio_conf_readl(VIRTIO_PCI_HOST_FEATURES);
+    return _dev.get_features();
+    //PCI: return virtio_conf_readl(VIRTIO_PCI_HOST_FEATURES);
 }
 
 bool virtio_mmio_driver::get_device_feature_bit(int bit)
 {
-    return get_virtio_config_bit(VIRTIO_PCI_HOST_FEATURES, bit);
+    return (_dev.get_features() & (1 << bit)) != 0;
+    //PCI: return get_virtio_config_bit(VIRTIO_PCI_HOST_FEATURES, bit);
 }
 
 void virtio_mmio_driver::set_drv_features(u32 features)
 {
-    virtio_conf_writel(VIRTIO_PCI_GUEST_FEATURES, features);
-}
-
-void virtio_mmio_driver::set_drv_feature_bit(int bit, bool on)
-{
-    set_virtio_config_bit(VIRTIO_PCI_GUEST_FEATURES, bit, on);
+    _dev.set_features(features);
+    //PCI: virtio_conf_writel(VIRTIO_PCI_GUEST_FEATURES, features);
 }
 
 u32 virtio_mmio_driver::get_drv_features()
@@ -247,7 +245,6 @@ bool virtio_mmio_driver::get_drv_feature_bit(int bit)
 {
     return get_virtio_config_bit(VIRTIO_PCI_GUEST_FEATURES, bit);
 }
-
 
 u8 virtio_mmio_driver::get_dev_status()
 {
@@ -270,6 +267,10 @@ void virtio_mmio_driver::del_dev_status(u8 status)
 {
     set_dev_status(get_dev_status() & ~status);
 }
+
+
+
+/*
 
 bool virtio_mmio_driver::get_virtio_config_bit(u32 offset, int bit)
 {
@@ -295,6 +296,6 @@ void virtio_mmio_driver::virtio_conf_read(u32 offset, void* buf, int length)
     unsigned char* ptr = reinterpret_cast<unsigned char*>(buf);
     for (int i = 0; i < length; i++)
         ptr[i] = _bar1->readb(offset + i);
-}
+}*/
 
 }

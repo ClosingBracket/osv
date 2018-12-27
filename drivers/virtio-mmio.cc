@@ -27,6 +27,27 @@ void mmio_device::add_status(u8 status) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_STATUS, status | get_status());
 }
 
+u64 mmio_device::get_features() {
+    u64 features;
+
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DEVICE_FEATURES_SEL, 1);
+    features = mmio_getl(_addr_mmio + VIRTIO_MMIO_DEVICE_FEATURES);
+    features <<= 32;
+
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DEVICE_FEATURES_SEL, 0);
+    features |= mmio_getl(_addr_mmio + VIRTIO_MMIO_DEVICE_FEATURES);
+
+    return features;
+}
+
+void mmio_device::set_features(u64 features) {
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DRIVER_FEATURES_SEL, 1);
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DRIVER_FEATURES, (u32)(features >> 32));
+
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DRIVER_FEATURES_SEL, 0);
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_DRIVER_FEATURES, (u32)features);
+}
+
 void mmio_device::kick(int queue_num) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, queue_num);
 }

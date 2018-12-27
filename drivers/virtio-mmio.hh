@@ -99,6 +99,9 @@ public:
     void set_status(u8 status);
     void add_status(u8 status);
 
+    u64 get_features();
+    void set_features(u64 features);
+
     void kick(int queue);
     void select_queue(int queue);
     u16 get_queue_size();
