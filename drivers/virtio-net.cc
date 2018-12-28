@@ -306,6 +306,7 @@ net::net(mmio_device& dev)
     fill_rx_ring();
 
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
+    debug("Created instance of virtio::net driver\n");
 }
 
 net::~net()
@@ -330,7 +331,7 @@ void net::read_config()
     //virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
 
     if (get_drv_feature_bit(VIRTIO_NET_F_MAC))
-        net_i("The mac addr of the device is %x:%x:%x:%x:%x:%x",
+        debugf("The mac addr of the device is %x:%x:%x:%x:%x:%x\n",
                 (u32)_config.mac[0],
                 (u32)_config.mac[1],
                 (u32)_config.mac[2],
@@ -348,10 +349,10 @@ void net::read_config()
     _host_tso4 = get_drv_feature_bit(VIRTIO_NET_F_HOST_TSO4);
     _guest_ufo = get_drv_feature_bit(VIRTIO_NET_F_GUEST_UFO);
 
-    net_i("Features: %s=%d,%s=%d", "Status", _status, "TSO_ECN", _tso_ecn);
-    net_i("Features: %s=%d,%s=%d", "Host TSO ECN", _host_tso_ecn, "CSUM", _csum);
-    net_i("Features: %s=%d,%s=%d", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
-    net_i("Features: %s=%d", "host tso4", _host_tso4);
+    debugf("Features: %s=%d,%s=%d\n", "Status", _status, "TSO_ECN", _tso_ecn);
+    debugf("Features: %s=%d,%s=%d\n", "Host TSO ECN", _host_tso_ecn, "CSUM", _csum);
+    debugf("Features: %s=%d,%s=%d\n", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
+    debugf("Features: %s=%d\n", "host tso4", _host_tso4);
 }
 
 /**
@@ -873,7 +874,7 @@ hw_driver* net::probe(hw_device* dev)
     }*/
 
     if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
-        debug_early("virtio-net: probing MMIO device ...\n");
+        //debug_early("virtio-net: probing MMIO device ...\n");
         if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_NET)) {
             debug_early("virtio-net: found virtio-mmio device ...\n");
             if (opt_maxnic && maxnic-- <= 0) {

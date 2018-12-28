@@ -64,16 +64,15 @@ void mmio_device::activate_queue(vring* queue) {
     // Set size
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NUM, queue->size());
     //
-    // Pass other parameters
-    //TODO: Pass real parameters
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_LOW, 0 );
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_HIGH, 0 );
+    // Pass addresses
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_LOW, (u32)queue->get_desc_addr());
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_DESC_HIGH, (u32)(queue->get_desc_addr() >> 32));
 
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_LOW, 0 );
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_HIGH, 0 );
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_LOW, (u32)queue->get_avail_addr());
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_AVAIL_HIGH, (u32)(queue->get_avail_addr() >> 32));
 
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_LOW, 0 );
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_HIGH, 0 );
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_LOW, (u32)queue->get_used_addr());
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_USED_HIGH, (u32)(queue->get_used_addr() >> 32));
     //
     // Make it ready
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_READY, 1 );

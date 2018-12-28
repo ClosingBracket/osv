@@ -225,7 +225,7 @@ void arch_setup_free_memory()
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
     //parse_cmdline(0);
-    osv::parse_cmdline("--bootchart /hello");
+    osv::parse_cmdline("--verbose --bootchart /hello");
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -321,6 +321,10 @@ void arch_init_drivers()
     debug_early("Disabled PCI\n");
     boot_time.event("pci enumerated");
 
+    auto mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
+    mmio_device->parse_config();
+    device_manager::instance()->register_device(mmio_device);
+
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();
     drvman->register_driver(virtio::blk::probe);
@@ -339,9 +343,6 @@ void arch_init_drivers()
     boot_time.event("drivers probe");
     drvman->load_all();
     drvman->list_drivers();
-
-    virtio::mmio_device mmio_device(0xd0000000,4096,5);
-    mmio_device.parse_config();
 }
 
 #include "drivers/console.hh"
