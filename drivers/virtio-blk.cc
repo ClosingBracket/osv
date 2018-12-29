@@ -157,6 +157,8 @@ blk::blk(mmio_device& _dev)
     prv = reinterpret_cast<struct blk_priv*>(dev->private_data);
     prv->drv = this;
     dev->size = prv->drv->size();
+
+    debugf("virtio-blk: Reading partition table, device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
     read_partition_table(dev);
 
     debugf("virtio-blk: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
@@ -171,7 +173,7 @@ blk::~blk()
 void blk::read_config()
 {
     //read all of the block config (including size, mce, topology,..) in one shot
-    virtio_conf_read(0, &_config, sizeof(_config));
+    virtio_conf_read(0, &_config, sizeof(_config.capacity));
 
     trace_virtio_blk_read_config_capacity(_config.capacity);
 
