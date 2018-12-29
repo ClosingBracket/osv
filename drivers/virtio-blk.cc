@@ -10,7 +10,6 @@
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio-blk.hh"
-#include "drivers/pci-device.hh"
 #include <osv/interrupt.hh>
 
 #include <osv/mempool.hh>
@@ -100,6 +99,7 @@ struct driver blk_driver = {
 
 bool blk::ack_irq()
 {
+    /*
     auto isr = virtio_conf_readb(VIRTIO_PCI_ISR);
     auto queue = get_virt_queue(0);
 
@@ -108,12 +108,15 @@ bool blk::ack_irq()
         return true;
     } else {
         return false;
-    }
+    }*/
 
+    _dev.ack_irq();
+    get_virt_queue(0)->disable_interrupts();
+    return true;
 }
 
-blk::blk(pci::device& pci_dev)
-    : virtio_driver(pci_dev), _ro(false)
+blk::blk(mmio_device& _dev)
+    : virtio_mmio_driver(_dev), _ro(false)
 {
 
     _driver_name = "virtio-blk";
@@ -128,13 +131,17 @@ blk::blk(pci::device& pci_dev)
             sched::thread::attr().name("virtio-blk"));
     t->start();
     auto queue = get_virt_queue(0);
+    /*
     if (pci_dev.is_msix()) {
         _msi.easy_register({ { 0, [=] { queue->disable_interrupts(); }, t } });
     } else {
         _irq.reset(new pci_interrupt(pci_dev,
                                      [=] { return ack_irq(); },
                                      [=] { t->wake(); }));
-    }
+    }*/
+
+    _irq.reset(new gsi_edge_interrupt(_dev.get_irq(),
+                                     [=] { this->ack_irq(); t->wake(); }));
 
     // Enable indirect descriptor
     queue->set_use_indirect(true);
@@ -164,25 +171,25 @@ blk::~blk()
 void blk::read_config()
 {
     //read all of the block config (including size, mce, topology,..) in one shot
-    virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(0, &_config, sizeof(_config));
 
     trace_virtio_blk_read_config_capacity(_config.capacity);
 
-    if (get_guest_feature_bit(VIRTIO_BLK_F_SIZE_MAX))
+    if (get_drv_feature_bit(VIRTIO_BLK_F_SIZE_MAX))
         trace_virtio_blk_read_config_size_max(_config.size_max);
-    if (get_guest_feature_bit(VIRTIO_BLK_F_SEG_MAX))
+    if (get_drv_feature_bit(VIRTIO_BLK_F_SEG_MAX))
         trace_virtio_blk_read_config_seg_max(_config.seg_max);
-    if (get_guest_feature_bit(VIRTIO_BLK_F_GEOMETRY)) {
+    if (get_drv_feature_bit(VIRTIO_BLK_F_GEOMETRY)) {
         trace_virtio_blk_read_config_geometry((u32)_config.geometry.cylinders, (u32)_config.geometry.heads, (u32)_config.geometry.sectors);
     }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_BLK_SIZE))
+    if (get_drv_feature_bit(VIRTIO_BLK_F_BLK_SIZE))
         trace_virtio_blk_read_config_blk_size(_config.blk_size);
-    if (get_guest_feature_bit(VIRTIO_BLK_F_TOPOLOGY)) {
+    if (get_drv_feature_bit(VIRTIO_BLK_F_TOPOLOGY)) {
         trace_virtio_blk_read_config_topology((u32)_config.physical_block_exp, (u32)_config.alignment_offset, (u32)_config.min_io_size, (u32)_config.opt_io_size);
     }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_CONFIG_WCE))
+    if (get_drv_feature_bit(VIRTIO_BLK_F_CONFIG_WCE))
         trace_virtio_blk_read_config_wce((u32)_config.wce);
-    if (get_guest_feature_bit(VIRTIO_BLK_F_RO)) {
+    if (get_drv_feature_bit(VIRTIO_BLK_F_RO)) {
         set_readonly();
         trace_virtio_blk_read_config_ro();
     }
@@ -195,7 +202,7 @@ void blk::req_done()
 
     while (1) {
 
-        virtio_driver::wait_for_queue(queue, &vring::used_ring_not_empty);
+        virtio_mmio_driver::wait_for_queue(queue, &vring::used_ring_not_empty);
         trace_virtio_blk_wake();
 
         u32 len;
@@ -296,7 +303,7 @@ int blk::make_request(struct bio* bio)
 
 u32 blk::get_driver_features()
 {
-    auto base = virtio_driver::get_driver_features();
+    auto base = virtio_mmio_driver::get_driver_features();
     return (base | ( 1 << VIRTIO_BLK_F_SIZE_MAX)
                  | ( 1 << VIRTIO_BLK_F_SEG_MAX)
                  | ( 1 << VIRTIO_BLK_F_GEOMETRY)
@@ -308,7 +315,15 @@ u32 blk::get_driver_features()
 
 hw_driver* blk::probe(hw_device* dev)
 {
-    return virtio::probe<blk, VIRTIO_BLK_DEVICE_ID>(dev);
+    if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
+        if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_BLOCK)) {
+            debug_early("virtio-blk: found virtio-mmio device ...\n");
+            return new blk(*mmio_dev);
+        }
+    }
+    return nullptr;
+
+    //return virtio::probe<blk, VIRTIO_BLK_DEVICE_ID>(dev);
 }
 
 }
