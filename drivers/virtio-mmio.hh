@@ -81,6 +81,9 @@ using namespace hw;
  * the per-driver configuration space - Read Write */
 #define VIRTIO_MMIO_CONFIG		0x100
 
+#define VIRTIO_MMIO_INT_VRING		(1 << 0)
+#define VIRTIO_MMIO_INT_CONFIG		(1 << 1)
+
 namespace virtio {
 
 class mmio_device : public hw_device {
@@ -94,6 +97,9 @@ public:
     virtual hw_device_id get_id();
     virtual void print();
     virtual void reset();
+
+    unsigned int get_irq() { return _irq; }
+    bool ack_irq();
 
     u8 get_status();
     void set_status(u8 status);

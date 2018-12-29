@@ -226,7 +226,7 @@ bool net::ack_irq()
         return false;
     }
     */
-    return true;
+    return _dev.ack_irq();
 }
 
 net::net(mmio_device& dev)
@@ -302,6 +302,9 @@ net::net(mmio_device& dev)
                                      [=] { return this->ack_irq(); },
                                      [=] { poll_task->wake(); }));
     }*/
+
+    _irq.reset(new gsi_edge_interrupt(_dev.get_irq(),
+                                 [=] { this->ack_irq(); poll_task->wake(); }));
 
     fill_rx_ring();
 

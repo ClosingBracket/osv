@@ -14,6 +14,7 @@
 #include <bsd/sys/sys/mbuf.h>
 
 #include <osv/percpu_xmit.hh>
+#include <osv/interrupt.hh>
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio2.hh"
@@ -270,8 +271,7 @@ private:
 
     u32 _hdr_size;
 
-    //TODO: Figure out non-PCI interrupt stuff
-    //std::unique_ptr<pci_interrupt> _irq;
+    std::unique_ptr<gsi_edge_interrupt> _irq;
 
     struct rxq_stats {
         u64 rx_packets; /* if_ipackets */
