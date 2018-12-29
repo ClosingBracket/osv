@@ -327,8 +327,7 @@ net::~net()
 void net::read_config()
 {
     //read all of the net config  in one shot
-    //TODO: Figure out if this is actually necessary for MMIO
-    //virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(0, &(_config.mac[0]), sizeof(_config.mac));
 
     if (get_drv_feature_bit(VIRTIO_NET_F_MAC))
         debugf("The mac addr of the device is %x:%x:%x:%x:%x:%x\n",

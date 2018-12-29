@@ -107,6 +107,7 @@ public:
     u16 get_queue_size();
     void activate_queue(vring* queue);
 
+    u8 read_config(u64 offset);
     bool parse_config();
 
 private:

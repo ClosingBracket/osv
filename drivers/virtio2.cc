@@ -271,4 +271,10 @@ void virtio_mmio_driver::del_dev_status(u8 status)
     set_dev_status(get_dev_status() & ~status);
 }
 
+void virtio_mmio_driver::virtio_conf_read(u32 offset, void* buf, int length)
+{
+    unsigned char* ptr = reinterpret_cast<unsigned char*>(buf);
+    for (int i = 0; i < length; i++)
+        ptr[i] = _dev.read_config(offset + i);
+}
 }

@@ -69,6 +69,8 @@ public:
     //void virtio_conf_writew(u32 offset, u16 val) { _bar1->writew(offset, val);};
     //void virtio_conf_writel(u32 offset, u32 val) { _bar1->writel(offset, val);};
 
+    void virtio_conf_read(u32 offset, void* buf, int length);
+
     bool kick(int queue);
     void reset_host_side();
     void free_queues();

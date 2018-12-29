@@ -78,6 +78,10 @@ void mmio_device::activate_queue(vring* queue) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_READY, 1 );
 }
 
+u8 mmio_device::read_config(u64 offset) {
+    return mmio_getb(_addr_mmio + VIRTIO_MMIO_CONFIG + offset);
+}
+
 bool mmio_device::parse_config() {
     _addr_mmio = mmio_map(_address, _size);
 
