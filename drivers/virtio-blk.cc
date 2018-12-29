@@ -244,6 +244,7 @@ static const int sector_size = 512;
 
 int blk::make_request(struct bio* bio)
 {
+    debug("blk::make_request -> start\n");
     // The lock is here for parallel requests protection
     WITH_LOCK(_lock) {
 
@@ -251,12 +252,14 @@ int blk::make_request(struct bio* bio)
 
         if (bio->bio_bcount/mmu::page_size + 1 > _config.seg_max) {
             trace_virtio_blk_make_request_seg_max(bio->bio_bcount, _config.seg_max);
+            debug("blk::make_request -> first return\n");
             return EIO;
         }
 
         auto* queue = get_virt_queue(0);
         blk_request_type type;
 
+        debug("blk::make_request -> before switch\n");
         switch (bio->bio_cmd) {
         case BIO_READ:
             type = VIRTIO_BLK_T_IN;
@@ -276,12 +279,14 @@ int blk::make_request(struct bio* bio)
             return ENOTBLK;
         }
 
+        debug("blk::make_request -> before new blk_req\n");
         auto* req = new blk_req(bio);
         blk_outhdr* hdr = &req->hdr;
         hdr->type = type;
         hdr->ioprio = 0;
         hdr->sector = bio->bio_offset / sector_size;
 
+        debug("blk::make_request -> before init_sg\n");
         queue->init_sg();
         queue->add_out_sg(hdr, sizeof(struct blk_outhdr));
 
@@ -293,8 +298,10 @@ int blk::make_request(struct bio* bio)
         }
 
         req->res.status = 0;
+        debug("blk::make_request -> before add_in_sg\n");
         queue->add_in_sg(&req->res, sizeof (struct blk_res));
 
+        debug("blk::make_request -> before add_buf_wait\n");
         queue->add_buf_wait(req);
 
         queue->kick();

@@ -294,9 +294,11 @@ namespace virtio {
     bool
     vring::kick() {
         bool kicked = true;
+        debugf("virtio-vring:kicking 1\n");
 
         if (_driver->get_event_idx_cap()) {
 
+            debugf("virtio-vring:kicking 2\n");
             std::atomic_thread_fence(std::memory_order_seq_cst);
 
             u16 avail_idx = _avail->_idx.load(std::memory_order_relaxed);
