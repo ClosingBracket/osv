@@ -226,7 +226,9 @@ bool net::ack_irq()
         return false;
     }
     */
-    return _dev.ack_irq();
+    _dev.ack_irq();
+    _rxq.vqueue->disable_interrupts();
+    return true;
 }
 
 net::net(mmio_device& dev)

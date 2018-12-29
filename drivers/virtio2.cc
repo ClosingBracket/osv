@@ -162,6 +162,7 @@ void virtio_mmio_driver::probe_virt_queues()
         // Init a new queue
         vring* queue = new vring(this, qsize, _num_queues);
         _queues[_num_queues] = queue;
+        debugf("virtio_mmio_driver: created vring - id:(%d), size:(%d)\n", _num_queues, qsize);
 
         //PCI:
         /*if (_dev.is_msix()) {

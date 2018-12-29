@@ -54,6 +54,7 @@ void mmio_device::kick(int queue_num) {
 
 void mmio_device::select_queue(int queue_num) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_SEL, queue_num);
+    assert(!mmio_getl(_addr_mmio + VIRTIO_MMIO_QUEUE_READY));
 }
 
 u16 mmio_device::get_queue_size() {
