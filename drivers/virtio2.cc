@@ -72,6 +72,10 @@ void virtio_mmio_driver::setup_features()
             set_event_idx_cap(true);
 
     set_drv_features(subset);
+
+    // Confirm features (new non-legacy)
+    add_dev_status(VIRTIO_CONFIG_S_FEATURES_OK);
+    get_dev_status(); //TODO -> Verify if correct
 }
 
 void virtio_mmio_driver::dump_config()

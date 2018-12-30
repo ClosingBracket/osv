@@ -322,9 +322,9 @@ void arch_init_drivers()
     boot_time.event("pci enumerated");
 
     //Virtio-mmio
-    auto net_mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
-    net_mmio_device->parse_config();
-    device_manager::instance()->register_device(net_mmio_device);
+    //auto net_mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
+    //net_mmio_device->parse_config();
+    //device_manager::instance()->register_device(net_mmio_device);
 
     auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
     blk_mmio_device->parse_config();

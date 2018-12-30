@@ -294,11 +294,11 @@ namespace virtio {
     bool
     vring::kick() {
         bool kicked = true;
-        debugf("virtio-vring:kicking 1\n");
+        //debugf("virtio-vring:kicking 1\n");
 
         if (_driver->get_event_idx_cap()) {
 
-            debugf("virtio-vring:kicking 2\n");
+            //debugf("virtio-vring:kicking 2\n");
             std::atomic_thread_fence(std::memory_order_seq_cst);
 
             u16 avail_idx = _avail->_idx.load(std::memory_order_relaxed);
@@ -312,8 +312,10 @@ namespace virtio {
         } else {
             std::atomic_thread_fence(std::memory_order_seq_cst);
 
-            if (_used->notifications_disabled())
+            if (_used->notifications_disabled()) {
+                debugf("kick: notifications_disabled\n");
                 return false;
+            }
         }
 
         //
@@ -329,9 +331,11 @@ namespace virtio {
         if (kicked || (_avail_added_since_kick >= (u16)(~0) / 2)) {
             _driver->kick(_q_index);
             _avail_added_since_kick = 0;
+             debugf("virtio-vring:kick(): driver kicked\n");
             return true;
         }
 
+        debugf("kick: not kicking\n");
         return false;
     }
 

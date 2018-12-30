@@ -50,6 +50,7 @@ void mmio_device::set_features(u64 features) {
 
 void mmio_device::kick(int queue_num) {
     mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, queue_num);
+    debugf("mmio_device:kick() -> kicked queue %d\n", queue_num);
 }
 
 void mmio_device::select_queue(int queue_num) {
