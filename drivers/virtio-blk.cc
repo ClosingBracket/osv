@@ -199,7 +199,7 @@ void blk::read_config()
 
 void blk::req_done()
 {
-    debugf("in req_done\n");
+    //debugf("in req_done\n");
     auto* queue = get_virt_queue(0);
     blk_req* req;
 
