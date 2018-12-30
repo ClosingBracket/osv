@@ -313,7 +313,7 @@ namespace virtio {
             std::atomic_thread_fence(std::memory_order_seq_cst);
 
             if (_used->notifications_disabled()) {
-                debugf("kick: notifications_disabled\n");
+                //debugf("kick: notifications_disabled\n");
                 return false;
             }
         }
@@ -331,7 +331,7 @@ namespace virtio {
         if (kicked || (_avail_added_since_kick >= (u16)(~0) / 2)) {
             _driver->kick(_q_index);
             _avail_added_since_kick = 0;
-             debugf("virtio-vring:kick(): driver kicked\n");
+            //debugf("virtio-vring:kick(): driver kicked\n");
             return true;
         }
 

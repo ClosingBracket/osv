@@ -158,7 +158,7 @@ blk::blk(mmio_device& _dev)
     prv->drv = this;
     dev->size = prv->drv->size();
 
-    debugf("virtio-blk: Reading partition table, device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
+    //debugf("virtio-blk: Reading partition table, device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
     read_partition_table(dev);
 
     debugf("virtio-blk: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
@@ -199,7 +199,6 @@ void blk::read_config()
 
 void blk::req_done()
 {
-    //debugf("in req_done\n");
     auto* queue = get_virt_queue(0);
     blk_req* req;
 
@@ -215,7 +214,7 @@ void blk::req_done()
                 case VIRTIO_BLK_S_OK:
                     trace_virtio_blk_req_ok(req->bio, req->hdr.sector, req->bio->bio_bcount, req->hdr.type);
                     biodone(req->bio, true);
-                    debugf("req_done: VIRTIO_BLK_S_OK\n");
+                    //debugf("req_done: VIRTIO_BLK_S_OK\n");
                     break;
                 case VIRTIO_BLK_S_UNSUPP:
                     trace_virtio_blk_req_unsupp(req->bio, req->hdr.sector, req->bio->bio_bcount, req->hdr.type);
@@ -246,7 +245,7 @@ static const int sector_size = 512;
 
 int blk::make_request(struct bio* bio)
 {
-    debug("virtio-blk::make_request() -> start\n");
+    //debug("virtio-blk::make_request() -> start\n");
     // The lock is here for parallel requests protection
     WITH_LOCK(_lock) {
 
