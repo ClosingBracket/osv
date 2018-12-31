@@ -82,9 +82,10 @@ void mmio_device::activate_queue(vring* queue) {
 
 bool mmio_device::ack_irq() {
     unsigned long status = mmio_getl(_addr_mmio + VIRTIO_MMIO_INTERRUPT_STATUS);
-    assert(status & VIRTIO_MMIO_INT_VRING);
+    //assert(status & VIRTIO_MMIO_INT_VRING);
     mmio_setl(_addr_mmio + VIRTIO_MMIO_INTERRUPT_ACK, status);
-    return true;
+    //return true;
+    return (status & VIRTIO_MMIO_INT_VRING) != 0;
 }
 
 u8 mmio_device::read_config(u64 offset) {

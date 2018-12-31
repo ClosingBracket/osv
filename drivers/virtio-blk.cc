@@ -110,9 +110,12 @@ bool blk::ack_irq()
         return false;
     }*/
 
-    _dev.ack_irq();
-    get_virt_queue(0)->disable_interrupts();
-    return true;
+    if(_dev.ack_irq()) {
+        get_virt_queue(0)->disable_interrupts();
+        return true;
+    }
+    else
+        return false;
 }
 
 blk::blk(mmio_device& _dev)
@@ -141,7 +144,7 @@ blk::blk(mmio_device& _dev)
     }*/
 
     _irq.reset(new gsi_edge_interrupt(_dev.get_irq(),
-                                     [=] { this->ack_irq(); t->wake(); }));
+                                     [=] { if(this->ack_irq()) t->wake(); }));
 
     // Enable indirect descriptor
     queue->set_use_indirect(true);

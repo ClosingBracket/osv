@@ -226,9 +226,12 @@ bool net::ack_irq()
         return false;
     }
     */
-    _dev.ack_irq();
-    _rxq.vqueue->disable_interrupts();
-    return true;
+    if( _dev.ack_irq()) {
+        _rxq.vqueue->disable_interrupts();
+        return true;
+    }
+    else
+        return false;
 }
 
 net::net(mmio_device& dev)
@@ -306,7 +309,7 @@ net::net(mmio_device& dev)
     }*/
 
     _irq.reset(new gsi_edge_interrupt(_dev.get_irq(),
-                                 [=] { this->ack_irq(); poll_task->wake(); }));
+                                 [=] { if(this->ack_irq()) poll_task->wake(); }));
 
     fill_rx_ring();
 
@@ -519,6 +522,8 @@ void net::receiver()
         _rxq.stats.rx_csum       += csum_ok;
         _rxq.stats.rx_csum_err   += csum_err;
         _rxq.stats.rx_bytes      += rx_bytes;
+
+        debugf("virtio-net: Received %d packets and %d bytes\n", rx_packets, rx_bytes);
     }
 }
 
