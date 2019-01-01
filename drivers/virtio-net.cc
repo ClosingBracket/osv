@@ -250,7 +250,8 @@ net::net(mmio_device& dev)
     setup_features();
     read_config();
 
-    _hdr_size = _mergeable_bufs ? sizeof(net_hdr_mrg_rxbuf) : sizeof(net_hdr);
+    //_hdr_size = _mergeable_bufs ? sizeof(net_hdr_mrg_rxbuf) : sizeof(net_hdr);
+    _hdr_size = sizeof(net_hdr_mrg_rxbuf);
 
     //initialize the BSD interface _if
     _ifn = if_alloc(IFT_ETHER);
@@ -359,7 +360,7 @@ void net::read_config()
     debugf("Features: %s=%d,%s=%d\n", "Status", _status, "TSO_ECN", _tso_ecn);
     debugf("Features: %s=%d,%s=%d\n", "Host TSO ECN", _host_tso_ecn, "CSUM", _csum);
     debugf("Features: %s=%d,%s=%d\n", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
-    debugf("Features: %s=%d\n", "host tso4", _host_tso4);
+    debugf("Features: %s=%d,%s=%d\n", "host tso4", _host_tso4, "mergeable_bufs", _mergeable_bufs);
 }
 
 /**
@@ -420,6 +421,47 @@ bool net::bad_rx_csum(struct mbuf* m, struct net_hdr* hdr)
     }
 
     return false;
+}
+
+static void log_mbuf(mbuf* m) {
+    caddr_t h = m->m_hdr.mh_data;
+    if (unsigned(m->m_hdr.mh_len) < ETHER_HDR_LEN + sizeof(ip)) {
+        debugf("mbuf: Not 1!\n");
+        return;
+    }
+    auto ether_hdr = reinterpret_cast<ether_header*>(h);
+    if (ntohs(ether_hdr->ether_type) != ETHERTYPE_IP) {
+        u64 mtype = ntohs(ether_hdr->ether_type);
+        debugf("mbuf: Not an IP protocol: %x!\n", mtype);
+        return;
+    }
+    h += ETHER_HDR_LEN;
+    auto ip_hdr = reinterpret_cast<ip*>(h);
+    unsigned ip_size = ip_hdr->ip_hl << 2;
+    if (ip_size < sizeof(ip)) {
+        debugf("mbuf: Not 2!\n");
+        return;
+    }
+    /*
+    if (ip_hdr->ip_p != IPPROTO_TCP) {
+        return;
+    }
+    if (ntohs(ip_hdr->ip_off) & ~IP_DF) {
+        return;
+    }
+    auto src_addr = ip_hdr->ip_src;
+    auto dst_addr = ip_hdr->ip_dst;
+    */
+    debugf("mbuf: IP protocol: %d\n", ip_hdr->ip_p);
+    /*
+    h += ip_size;
+    auto tcp_hdr = reinterpret_cast<tcphdr*>(h);
+    if (tcp_hdr->th_flags & (TH_SYN | TH_FIN | TH_RST)) {
+        return;
+    }
+    auto src_port = ntohs(tcp_hdr->th_sport);
+    auto dst_port = ntohs(tcp_hdr->th_dport);
+    */
 }
 
 void net::receiver()
@@ -490,6 +532,8 @@ void net::receiver()
             auto m_head = packet_to_mbuf(packet);
             packet.clear();
 
+            log_mbuf(m_head);
+
             if ((_ifn->if_capenable & IFCAP_RXCSUM) &&
                 (mhdr->hdr.flags &
                  net_hdr::VIRTIO_NET_HDR_F_NEEDS_CSUM)) {
@@ -529,6 +573,7 @@ void net::receiver()
 
 mbuf* net::packet_to_mbuf(const std::vector<iovec>& packet)
 {
+    //addr_t h = m->m_hdr.mh_data;
     auto m = m_gethdr(M_DONTWAIT, MT_DATA);
     auto refcnt = new unsigned;
     m->M_dat.MH.MH_dat.MH_ext.ref_cnt = refcnt;

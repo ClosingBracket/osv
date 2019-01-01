@@ -225,8 +225,8 @@ void arch_setup_free_memory()
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
     //parse_cmdline(0);
-    osv::parse_cmdline("--bootchart /hello");
-    //osv::parse_cmdline("--verbose --bootchart --ip=eth0,169.254.0.165,255.255.255.252 --defaultgw=169.254.0.166 /lighttpd.so -D -f /lighttpd/lighttpd.conf");
+    //osv::parse_cmdline("--bootchart /hello");
+    osv::parse_cmdline("--verbose --bootchart --ip=eth0,169.254.0.165,255.255.255.252 --defaultgw=169.254.0.166 /lighttpd.so -D -f /lighttpd/lighttpd.conf");
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -323,13 +323,13 @@ void arch_init_drivers()
     boot_time.event("pci enumerated");
 
     //Virtio-mmio
-    //auto net_mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
-    //net_mmio_device->parse_config();
-    //device_manager::instance()->register_device(net_mmio_device);
+    auto net_mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
+    net_mmio_device->parse_config();
+    device_manager::instance()->register_device(net_mmio_device);
 
-    auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
-    blk_mmio_device->parse_config();
-    device_manager::instance()->register_device(blk_mmio_device);
+    //auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
+    //blk_mmio_device->parse_config();
+    //device_manager::instance()->register_device(blk_mmio_device);
 
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();
