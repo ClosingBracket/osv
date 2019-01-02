@@ -74,7 +74,7 @@ void parse_madt()
 
 void smp_init()
 {
-    debug_early("In smp_init()\n");
+    //debug_early("In smp_init()\n");
     //parse_madt();
 
     auto c = new sched::cpu(0);

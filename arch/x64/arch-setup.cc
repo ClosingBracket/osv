@@ -171,14 +171,14 @@ void arch_setup_free_memory()
        lower->type = 1;
        lower->addr = e820_table[0].addr;
        lower->size = e820_table[0].size;
-       debug_early_u64("arch_setup_free_memory - lower e820 entry size: ", e820_table[0].size);
+       //debug_early_u64("arch_setup_free_memory - lower e820 entry size: ", e820_table[0].size);
 
        struct e820ent *upper = lower + 1;
        upper->ent_size = 20;
        upper->type = 1;
        upper->addr = e820_table[1].addr;
        upper->size = e820_table[1].size;
-       debug_early_u64("arch_setup_free_memory - upper e820 entry size: ", e820_table[1].size);
+       //debug_early_u64("arch_setup_free_memory - upper e820 entry size: ", e820_table[1].size);
     }
 
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -334,7 +334,7 @@ void arch_init_drivers()
 
     // Enumerate PCI devices
     //pci::pci_device_enumeration();
-    debug_early("Disabled PCI\n");
+    //debug_early("Disabled PCI\n");
     boot_time.event("pci enumerated");
 
     //Virtio-mmio

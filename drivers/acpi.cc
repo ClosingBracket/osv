@@ -543,7 +543,7 @@ void early_init()
 {
     //ACPI_STATUS status;
 
-    debug_early("acpi::early_init() START\n");
+    //debug_early("acpi::early_init() START\n");
     /*status = AcpiInitializeTables(TableArray, ACPI_MAX_INIT_TABLES, TRUE);
     if (ACPI_FAILURE(status)) {
         debug_early("acpi::early_init() failed AcpiInitializeTables\n");
