@@ -25,8 +25,12 @@
 #define ZERO_PAGE_START      0x7000
 #define SETUP_HEADER_OFFSET  0x1f1   // look at bootparam.h in linux
 #define BOOT_FLAG_OFFSET     sizeof(u8) + 4 * sizeof(u16) + sizeof(u32)
+
 #define E820_ENTRIES_OFFSET  0x1e8   // look at bootparam.h in linux
 #define E820_TABLE_OFFSET    0x2d0   // look at bootparam.h in linux
+
+#define CMD_LINE_PTR_OFFSET  sizeof(u8) * 5 + sizeof(u16) * 11 + sizeof(u32) * 7
+#define CMD_LINE_SIZE_OFFSET CMD_LINE_PTR_OFFSET + sizeof(u8) * 2 + sizeof(u16) + sizeof(u32) * 3
 
 struct multiboot_info_type {
     u32 flags;
@@ -135,9 +139,7 @@ void arch_setup_free_memory()
     asm ("movl $.edata, %0" : "=rm"(edata));
 
     void *zero_page = reinterpret_cast<void*>(ZERO_PAGE_START);
-    //void *setup_header = zero_page + SETUP_HEADER_OFFSET;
-    //u16 boot_flag = *static_cast<u16*>(setup_header + BOOT_FLAG_OFFSET);
-    //debug_early_u64("arch_setup_free_memory - bootflag: ", boot_flag);
+    void *setup_header = zero_page + SETUP_HEADER_OFFSET;
 
     //u8 e820_entries = *static_cast<u8*>(zero_page + E820_ENTRIES_OFFSET);
     //debug_early_u64("arch_setup_free_memory - e820 entries: ", e820_entries);
@@ -146,6 +148,19 @@ void arch_setup_free_memory()
     //auto omb = *osv_multiboot_info;
     //auto mb = omb.mb;
     //memcpy(e820_buffer, reinterpret_cast<void*>(mb.mmap_addr), e820_size);
+    u32 cmdline_ptr = *static_cast<u32*>(setup_header + CMD_LINE_PTR_OFFSET);
+    u32 cmdline_size = *static_cast<u32*>(setup_header + CMD_LINE_SIZE_OFFSET);
+
+    // Copy cmdline from zero page
+    void* cmdline = reinterpret_cast<void*>((u64)cmdline_ptr);
+    void *cmdline_copy = alloca(cmdline_size + 1);
+    memcpy(cmdline_copy,cmdline,cmdline_size);
+    ((char*)cmdline_copy)[cmdline_size] = 0;
+
+    debug_early("Cmdline: ");
+    debug_early((char*)cmdline_copy);
+    debug_early("\n");
+
     struct _e820ent *e820_table = static_cast<struct _e820ent *>(zero_page + E820_TABLE_OFFSET);
 
     auto e820_size = 48;
