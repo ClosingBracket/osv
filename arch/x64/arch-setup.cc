@@ -314,7 +314,7 @@ extern bool opt_assign_net;
 void arch_init_drivers()
 {
     // initialize panic drivers
-    panic::pvpanic::probe_and_setup();
+    //panic::pvpanic::probe_and_setup();
     boot_time.event("pvpanic done");
 
     // Enumerate PCI devices
