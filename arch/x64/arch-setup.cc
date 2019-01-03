@@ -79,10 +79,73 @@ struct _e820ent {
 
 osv_multiboot_info_type* osv_multiboot_info;
 
-void parse_cmdline(multiboot_info_type& mb)
+struct mmio_device_info {
+    u64 address;
+    u64 size;
+    unsigned int irq;
+};
+
+struct mmio_device_info mmio_device_info_entries[2];
+int mmio_device_info_count = 0;
+
+#define VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX "virtio_mmio.device="
+char* parse_mmio_device_info(char *cmdline, mmio_device_info *info) {
+    // [virtio_mmio.]device=<size>@<baseaddr>:<irq>[:<id>]
+    char *prefix_pos = strstr(cmdline,VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX);
+    if (!prefix_pos)
+        return nullptr;
+
+    char *size_pos = prefix_pos + strlen(VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX);
+    if (sscanf(size_pos,"%ld", &info->size) != 1)
+        return nullptr;
+
+    char *at_pos = strstr(size_pos,"@");
+    if (!at_pos)
+        return nullptr;
+
+    switch(*(at_pos - 1)) {
+        case 'k':
+        case 'K':
+            info->size = info->size * 1024;
+            break;
+        case 'm':
+        case 'M':
+            info->size = info->size * 1024 * 1024;
+            break;
+        default:
+            break;
+    }
+
+    if (sscanf(at_pos, "@%lli:%u", &info->address, &info->irq) == 2)
+        return prefix_pos;
+    else
+        return nullptr;
+}
+
+//void parse_cmdline(multiboot_info_type& mb)
+void parse_cmdline(char *cmdline)
 {
-    auto p = reinterpret_cast<char*>(mb.cmdline);
-    osv::parse_cmdline(p);
+    //auto p = reinterpret_cast<char*>(mb.cmdline);
+    char *virtio_device_info_pos = parse_mmio_device_info(cmdline,mmio_device_info_entries);
+    if (virtio_device_info_pos) {
+        debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[0].address);
+        //debug_early_u64("size: ", mmio_device_info_entries[0].size);
+        //debug_early_u64("interrupt: ", mmio_device_info_entries[0].irq);
+
+        mmio_device_info_count++;
+        *virtio_device_info_pos = 0;
+
+        virtio_device_info_pos =
+            parse_mmio_device_info(virtio_device_info_pos + 1,mmio_device_info_entries + 1);
+        if (virtio_device_info_pos) {
+            debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[1].address);
+            //debug_early_u64("size: ", mmio_device_info_entries[1].size);
+            //debug_early_u64("interrupt: ", mmio_device_info_entries[1].irq);
+            mmio_device_info_count++;
+        }
+    }
+
+    osv::parse_cmdline(cmdline);
 }
 
 void setup_temporary_phys_map()
@@ -241,7 +304,7 @@ void arch_setup_free_memory()
     // get rid of the command line, before low memory is unmapped
     //parse_cmdline(mb);
 
-    osv::parse_cmdline((char*)cmdline_copy);
+    parse_cmdline((char*)cmdline_copy);
     //osv::parse_cmdline("--bootchart /hello");
     //osv::parse_cmdline("--verbose --bootchart --ip=eth0,169.254.0.165,255.255.255.252 --defaultgw=169.254.0.166 /lighttpd.so -D -f /lighttpd/lighttpd.conf");
 
@@ -345,9 +408,9 @@ void arch_init_drivers()
     //net_mmio_device->parse_config();
     //device_manager::instance()->register_device(net_mmio_device);
 
-    //auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
-    //blk_mmio_device->parse_config();
-    //device_manager::instance()->register_device(blk_mmio_device);
+    auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
+    blk_mmio_device->parse_config();
+    device_manager::instance()->register_device(blk_mmio_device);
 
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();
