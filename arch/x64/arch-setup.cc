@@ -128,7 +128,7 @@ void parse_cmdline(char *cmdline)
     //auto p = reinterpret_cast<char*>(mb.cmdline);
     char *virtio_device_info_pos = parse_mmio_device_info(cmdline,mmio_device_info_entries);
     if (virtio_device_info_pos) {
-        debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[0].address);
+        //debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[0].address);
         //debug_early_u64("size: ", mmio_device_info_entries[0].size);
         //debug_early_u64("interrupt: ", mmio_device_info_entries[0].irq);
 
@@ -138,7 +138,7 @@ void parse_cmdline(char *cmdline)
         virtio_device_info_pos =
             parse_mmio_device_info(virtio_device_info_pos + 1,mmio_device_info_entries + 1);
         if (virtio_device_info_pos) {
-            debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[1].address);
+            //debug_early_u64("Found mmio device at address: ", mmio_device_info_entries[1].address);
             //debug_early_u64("size: ", mmio_device_info_entries[1].size);
             //debug_early_u64("interrupt: ", mmio_device_info_entries[1].irq);
             mmio_device_info_count++;
