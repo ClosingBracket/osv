@@ -930,7 +930,7 @@ hw_driver* net::probe(hw_device* dev)
     if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
         //debug_early("virtio-net: probing MMIO device ...\n");
         if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_NET)) {
-            debug_early("virtio-net:probe() -> found virtio-mmio device ...\n");
+            debug_early("virtio-net::probe() -> found virtio-mmio device ...\n");
             if (opt_maxnic && maxnic-- <= 0) {
                 return nullptr;
             } else {

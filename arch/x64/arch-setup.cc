@@ -403,14 +403,17 @@ void arch_init_drivers()
     //debug_early("Disabled PCI\n");
     boot_time.event("pci enumerated");
 
-    //Virtio-mmio
-    //auto net_mmio_device = new virtio::mmio_device(0xd0000000,4096,5);
-    //net_mmio_device->parse_config();
-    //device_manager::instance()->register_device(net_mmio_device);
-
-    auto blk_mmio_device = new virtio::mmio_device(0xd0000000,4096,5); //CONFIRM BLK
-    blk_mmio_device->parse_config();
-    device_manager::instance()->register_device(blk_mmio_device);
+    // Register any parsed virtio-mmio devices
+    for (int d = 0; d < mmio_device_info_count; d++) {
+        auto info = mmio_device_info_entries[d];
+        auto mmio_device = new virtio::mmio_device(info.address, info.size, info.irq);
+        if (mmio_device->parse_config()) {
+            device_manager::instance()->register_device(mmio_device);
+        }
+        else {
+            delete mmio_device;
+        }
+    }
 
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();

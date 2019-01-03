@@ -330,7 +330,7 @@ hw_driver* blk::probe(hw_device* dev)
 {
     if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
         if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_BLOCK)) {
-            debug_early("virtio-blk: found virtio-mmio device ...\n");
+            debug_early("virtio-blk::probe() -> found virtio-mmio device ...\n");
             return new blk(*mmio_dev);
         }
     }
