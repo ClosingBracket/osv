@@ -10,7 +10,6 @@
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio-net.hh"
-#include "drivers/pci-device.hh"
 #include <osv/interrupt.hh>
 
 #include <osv/mempool.hh>
@@ -217,19 +216,20 @@ void net::fill_qstats(const struct txq& txq, struct if_data* out_data) const
 
 bool net::ack_irq()
 {
-    auto isr = virtio_conf_readb(VIRTIO_PCI_ISR);
-
-    if (isr) {
+    if( _dev.ack_irq()) {
         _rxq.vqueue->disable_interrupts();
         return true;
-    } else {
-        return false;
     }
-
+    else
+        return false;
 }
 
-net::net(pci::device& dev)
-    : virtio_driver(dev),
+//TODO: For now this driver is hardcoded to expect mmio_device
+// but eventually we could introduce some sort of virtio_device
+// interface class that pci_device and mmio_device would implement/extend
+// from.
+net::net(mmio_device& dev)
+    : virtio_mmio_driver(dev),
       _rxq(get_virt_queue(0), [this] { this->receiver(); }),
       _txq(this, get_virt_queue(1))
 {
@@ -244,7 +244,8 @@ net::net(pci::device& dev)
     setup_features();
     read_config();
 
-    _hdr_size = _mergeable_bufs ? sizeof(net_hdr_mrg_rxbuf) : sizeof(net_hdr);
+    //TODO: Legacy vs non-legacy -> the non-legacy header includes one more field
+    _hdr_size = sizeof(net_hdr_mrg_rxbuf);
 
     //initialize the BSD interface _if
     _ifn = if_alloc(IFT_ETHER);
@@ -290,16 +291,9 @@ net::net(pci::device& dev)
 
     ether_ifattach(_ifn, _config.mac);
 
-    if (dev.is_msix()) {
-        _msi.easy_register({
-            { 0, [&] { _rxq.vqueue->disable_interrupts(); }, poll_task },
-            { 1, [&] { _txq.vqueue->disable_interrupts(); }, nullptr }
-        });
-    } else {
-        _irq.reset(new pci_interrupt(dev,
-                                     [=] { return this->ack_irq(); },
-                                     [=] { poll_task->wake(); }));
-    }
+    //TODO: Move to device class
+    _irq.reset(new gsi_edge_interrupt(_dev.get_irq(),
+                                 [=] { if(this->ack_irq()) poll_task->wake(); }));
 
     fill_rx_ring();
 
@@ -324,10 +318,14 @@ net::~net()
 void net::read_config()
 {
     //read all of the net config  in one shot
-    virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    //TODO: It may to do with legacy vs non-legacy device
+    //but at least with latest spec we should check if individual
+    //config fields are available vs reading whole config struct. For example
+    //firecracker reports memory read violation warnings
+    virtio_conf_read(0, &(_config.mac[0]), sizeof(_config.mac));
 
-    if (get_guest_feature_bit(VIRTIO_NET_F_MAC))
-        net_i("The mac addr of the device is %x:%x:%x:%x:%x:%x",
+    if (get_drv_feature_bit(VIRTIO_NET_F_MAC))
+        debugf("The mac addr of the device is %x:%x:%x:%x:%x:%x\n",
                 (u32)_config.mac[0],
                 (u32)_config.mac[1],
                 (u32)_config.mac[2],
@@ -335,20 +333,20 @@ void net::read_config()
                 (u32)_config.mac[4],
                 (u32)_config.mac[5]);
 
-    _mergeable_bufs = get_guest_feature_bit(VIRTIO_NET_F_MRG_RXBUF);
-    _status = get_guest_feature_bit(VIRTIO_NET_F_STATUS);
-    _tso_ecn = get_guest_feature_bit(VIRTIO_NET_F_GUEST_ECN);
-    _host_tso_ecn = get_guest_feature_bit(VIRTIO_NET_F_HOST_ECN);
-    _csum = get_guest_feature_bit(VIRTIO_NET_F_CSUM);
-    _guest_csum = get_guest_feature_bit(VIRTIO_NET_F_GUEST_CSUM);
-    _guest_tso4 = get_guest_feature_bit(VIRTIO_NET_F_GUEST_TSO4);
-    _host_tso4 = get_guest_feature_bit(VIRTIO_NET_F_HOST_TSO4);
-    _guest_ufo = get_guest_feature_bit(VIRTIO_NET_F_GUEST_UFO);
+    _mergeable_bufs = get_drv_feature_bit(VIRTIO_NET_F_MRG_RXBUF);
+    _status = get_drv_feature_bit(VIRTIO_NET_F_STATUS);
+    _tso_ecn = get_drv_feature_bit(VIRTIO_NET_F_GUEST_ECN);
+    _host_tso_ecn = get_drv_feature_bit(VIRTIO_NET_F_HOST_ECN);
+    _csum = get_drv_feature_bit(VIRTIO_NET_F_CSUM);
+    _guest_csum = get_drv_feature_bit(VIRTIO_NET_F_GUEST_CSUM);
+    _guest_tso4 = get_drv_feature_bit(VIRTIO_NET_F_GUEST_TSO4);
+    _host_tso4 = get_drv_feature_bit(VIRTIO_NET_F_HOST_TSO4);
+    _guest_ufo = get_drv_feature_bit(VIRTIO_NET_F_GUEST_UFO);
 
-    net_i("Features: %s=%d,%s=%d", "Status", _status, "TSO_ECN", _tso_ecn);
-    net_i("Features: %s=%d,%s=%d", "Host TSO ECN", _host_tso_ecn, "CSUM", _csum);
-    net_i("Features: %s=%d,%s=%d", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
-    net_i("Features: %s=%d", "host tso4", _host_tso4);
+    debugf("Features: %s=%d,%s=%d\n", "Status", _status, "TSO_ECN", _tso_ecn);
+    debugf("Features: %s=%d,%s=%d\n", "Host TSO ECN", _host_tso_ecn, "CSUM", _csum);
+    debugf("Features: %s=%d,%s=%d\n", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
+    debugf("Features: %s=%d,%s=%d\n", "host tso4", _host_tso4, "mergeable_bufs", _mergeable_bufs);
 }
 
 /**
@@ -422,7 +420,7 @@ void net::receiver()
     while (1) {
 
         // Wait for rx queue (used elements)
-        virtio_driver::wait_for_queue(vq, &vring::used_ring_not_empty);
+        virtio_mmio_driver::wait_for_queue(vq, &vring::used_ring_not_empty);
         trace_virtio_net_rx_wake();
 
         _rxq.stats.rx_bh_wakeups++;
@@ -840,7 +838,7 @@ void net::txq::gc()
 
 u32 net::get_driver_features()
 {
-    u32 base = virtio_driver::get_driver_features();
+    u32 base = virtio_mmio_driver::get_driver_features();
     return (base | (1 << VIRTIO_NET_F_MAC)        \
                  | (1 << VIRTIO_NET_F_MRG_RXBUF)  \
                  | (1 << VIRTIO_NET_F_STATUS)     \
@@ -856,12 +854,14 @@ u32 net::get_driver_features()
 
 hw_driver* net::probe(hw_device* dev)
 {
-    if (auto pci_dev = dynamic_cast<pci::device*>(dev)) {
-        if (pci_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_NET_DEVICE_ID)) {
+    //TODO: Handle both PCI and MMIO devices
+    if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
+        if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_NET)) {
+            debug_early("virtio-net::probe() -> found virtio-mmio device ...\n");
             if (opt_maxnic && maxnic-- <= 0) {
                 return nullptr;
             } else {
-                return aligned_new<net>(*pci_dev);
+                return aligned_new<net>(*mmio_dev);
             }
         }
     }

@@ -55,6 +55,7 @@
 #include "drivers/null.hh"
 
 #include "libc/network/__dns.hh"
+#include "early-console.hh"
 
 using namespace osv;
 using namespace osv::clock::literals;
@@ -550,7 +551,7 @@ void main_cont(int loader_argc, char** loader_argv)
     memory::enable_debug_allocator();
 
 #ifndef AARCH64_PORT_STUB
-    acpi::init();
+    //acpi::init();
 #endif /* !AARCH64_PORT_STUB */
 
     if (sched::cpus.size() > sched::max_cpus) {

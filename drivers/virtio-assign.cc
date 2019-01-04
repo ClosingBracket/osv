@@ -42,8 +42,9 @@ public:
 
     // osv::assigned_virtio API implementation:
 
-    virtual void kick(int queue) override {
+    virtual bool kick(int queue) override {
         virtio_driver::kick(queue);
+        return true;
     }
 
     virtual u32 queue_size(int queue) override

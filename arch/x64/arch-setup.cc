@@ -22,6 +22,19 @@
 #include <osv/commands.hh>
 #include "dmi.hh"
 
+// Not sure if Linux zero page is always located at this place
+// in memory or its address is passed in one of the registers
+// -> double check
+#define ZERO_PAGE_START      0x7000
+#define SETUP_HEADER_OFFSET  0x1f1   // look at bootparam.h in linux
+#define BOOT_FLAG_OFFSET     sizeof(u8) + 4 * sizeof(u16) + sizeof(u32)
+
+#define E820_ENTRIES_OFFSET  0x1e8   // look at bootparam.h in linux
+#define E820_TABLE_OFFSET    0x2d0   // look at bootparam.h in linux
+
+#define CMD_LINE_PTR_OFFSET  sizeof(u8) * 5 + sizeof(u16) * 11 + sizeof(u32) * 7
+#define CMD_LINE_SIZE_OFFSET CMD_LINE_PTR_OFFSET + sizeof(u8) * 2 + sizeof(u16) + sizeof(u32) * 3
+
 struct multiboot_info_type {
     u32 flags;
     u32 mem_lower;
@@ -61,12 +74,81 @@ struct e820ent {
     u32 type;
 } __attribute__((packed));
 
+struct _e820ent {
+    u64 addr;
+    u64 size;
+    u32 type;
+} __attribute__((packed));
+
 osv_multiboot_info_type* osv_multiboot_info;
 
-void parse_cmdline(multiboot_info_type& mb)
+struct mmio_device_info {
+    u64 address;
+    u64 size;
+    unsigned int irq;
+};
+
+//TODO: For now we are limiting number of mmio devices to two
+// Ideally we should be using somewhat more dynamic structure
+struct mmio_device_info mmio_device_info_entries[2];
+int mmio_device_info_count = 0;
+
+#define VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX "virtio_mmio.device="
+char* parse_mmio_device_info(char *cmdline, mmio_device_info *info) {
+    // [virtio_mmio.]device=<size>@<baseaddr>:<irq>[:<id>]
+    char *prefix_pos = strstr(cmdline,VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX);
+    if (!prefix_pos)
+        return nullptr;
+
+    char *size_pos = prefix_pos + strlen(VIRTIO_MMIO_DEVICE_CMDLINE_PREFIX);
+    if (sscanf(size_pos,"%ld", &info->size) != 1)
+        return nullptr;
+
+    char *at_pos = strstr(size_pos,"@");
+    if (!at_pos)
+        return nullptr;
+
+    switch(*(at_pos - 1)) {
+        case 'k':
+        case 'K':
+            info->size = info->size * 1024;
+            break;
+        case 'm':
+        case 'M':
+            info->size = info->size * 1024 * 1024;
+            break;
+        default:
+            break;
+    }
+
+    if (sscanf(at_pos, "@%lli:%u", &info->address, &info->irq) == 2)
+        return prefix_pos;
+    else
+        return nullptr;
+}
+
+//void parse_cmdline(multiboot_info_type& mb)
+void parse_cmdline(char *cmdline)
 {
-    auto p = reinterpret_cast<char*>(mb.cmdline);
-    osv::parse_cmdline(p);
+    //auto p = reinterpret_cast<char*>(mb.cmdline);
+    // We are assuming the mmio devices information is appended to the
+    // command line (at least it is the case with the firecracker) so
+    // once we parse those we strip it away so only plain OSv command line
+    // is left
+    //TODO: There may be a smarter, better way to parse this information
+    char *virtio_device_info_pos = parse_mmio_device_info(cmdline,mmio_device_info_entries);
+    if (virtio_device_info_pos) {
+        mmio_device_info_count++;
+        *virtio_device_info_pos = 0;
+
+        virtio_device_info_pos =
+            parse_mmio_device_info(virtio_device_info_pos + 1,mmio_device_info_entries + 1);
+        if (virtio_device_info_pos) {
+            mmio_device_info_count++;
+        }
+    }
+
+    osv::parse_cmdline(cmdline);
 }
 
 void setup_temporary_phys_map()
@@ -121,28 +203,64 @@ void arch_setup_free_memory()
 {
     static ulong edata;
     asm ("movl $.edata, %0" : "=rm"(edata));
-    // copy to stack so we don't free it now
-    auto omb = *osv_multiboot_info;
-    auto mb = omb.mb;
-    auto e820_buffer = alloca(mb.mmap_length);
-    auto e820_size = mb.mmap_length;
-    memcpy(e820_buffer, reinterpret_cast<void*>(mb.mmap_addr), e820_size);
+
+    void *zero_page = reinterpret_cast<void*>(ZERO_PAGE_START);
+    void *setup_header = zero_page + SETUP_HEADER_OFFSET;
+
+    // Grab command line from zero page
+    u32 cmdline_ptr = *static_cast<u32*>(setup_header + CMD_LINE_PTR_OFFSET);
+    u32 cmdline_size = *static_cast<u32*>(setup_header + CMD_LINE_SIZE_OFFSET);
+
+    // Copy cmdline from zero page
+    void* cmdline = reinterpret_cast<void*>((u64)cmdline_ptr);
+    void *cmdline_copy = alloca(cmdline_size + 1);
+    memcpy(cmdline_copy,cmdline,cmdline_size);
+    ((char*)cmdline_copy)[cmdline_size] = 0;
+
+    debug_early("Cmdline: ");
+    debug_early((char*)cmdline_copy);
+    debug_early("\n");
+
+    // Copy e820 information from zero page
+    struct _e820ent *e820_table = static_cast<struct _e820ent *>(zero_page + E820_TABLE_OFFSET);
+
+    //TODO: We are assuming two entries but in reality
+    //there could be more so this logic below needs to be a little smarter
+    auto e820_size = 48;
+    auto e820_buffer = alloca(e820_size);
+    {
+       struct e820ent *lower = reinterpret_cast<struct e820ent*>(e820_buffer);
+       lower->ent_size = 20;
+       lower->type = 1;
+       lower->addr = e820_table[0].addr;
+       lower->size = e820_table[0].size;
+
+       struct e820ent *upper = lower + 1;
+       upper->ent_size = 20;
+       upper->type = 1;
+       upper->addr = e820_table[1].addr;
+       upper->size = e820_table[1].size;
+    }
+
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
         memory::phys_mem_size += ent.size;
     });
     constexpr u64 initial_map = 1 << 30; // 1GB mapped by startup code
 
-    u64 time;
-    time = omb.tsc_init_hi;
-    time = (time << 32) | omb.tsc_init;
+    //TODO: We are assuming that bootchart-wise we start here but
+    // in reality it all starts at boot.S:start64_. However what happens
+    // before this points should take negligible amount of time, no?
+    u64 time = 0;
+    //time = omb.tsc_init_hi;
+    //time = (time << 32) | omb.tsc_init;
     boot_time.event(0, "", time );
 
-    time = omb.tsc_disk_done_hi;
-    time = (time << 32) | omb.tsc_disk_done;
+    //time = omb.tsc_disk_done_hi;
+    //time = (time << 32) | omb.tsc_disk_done;
     boot_time.event(1, "disk read (real mode)", time );
 
-    time = omb.tsc_uncompress_done_hi;
-    time = (time << 32) | omb.tsc_uncompress_done;
+    //time = omb.tsc_uncompress_done_hi;
+    //time = (time << 32) | omb.tsc_uncompress_done;
     boot_time.event(2, "uncompress lzloader.elf", time );
 
     auto c = processor::cpuid(0x80000000);
@@ -185,7 +303,10 @@ void arch_setup_free_memory()
     elf_size = edata - elf_phys;
     mmu::linear_map(elf_start, elf_phys, elf_size, OSV_KERNEL_BASE);
     // get rid of the command line, before low memory is unmapped
-    parse_cmdline(mb);
+    //parse_cmdline(mb);
+
+    parse_cmdline((char*)cmdline_copy);
+
     // now that we have some free memory, we can start mapping the rest
     mmu::switch_to_runtime_page_tables();
     for_each_e820_entry(e820_buffer, e820_size, [] (e820ent ent) {
@@ -260,6 +381,7 @@ void arch_init_premain()
 #include "drivers/virtio-net.hh"
 #include "drivers/virtio-assign.hh"
 #include "drivers/virtio-rng.hh"
+#include "drivers/virtio-mmio.hh"
 #include "drivers/xenplatform-pci.hh"
 #include "drivers/ahci.hh"
 #include "drivers/vmw-pvscsi.hh"
@@ -271,12 +393,32 @@ extern bool opt_assign_net;
 void arch_init_drivers()
 {
     // initialize panic drivers
-    panic::pvpanic::probe_and_setup();
+    // pvpanic depends on ACPI which firecracker
+    // does not suppot so we disable probing it altogether
+    //TODO: Is there a way to detect if ACPI is available and
+    //only then probe pvpanic?
+    //panic::pvpanic::probe_and_setup();
     boot_time.event("pvpanic done");
 
     // Enumerate PCI devices
-    pci::pci_device_enumeration();
+    // PCI is not supported by firecracker
+    //TODO: Is there a way to detect if PCI is present and only enumerate
+    //PCI devices then? Somehow even firecracker presents a bus with
+    //some dummy devices.
+    //pci::pci_device_enumeration();
     boot_time.event("pci enumerated");
+
+    // Register any parsed virtio-mmio devices
+    for (int d = 0; d < mmio_device_info_count; d++) {
+        auto info = mmio_device_info_entries[d];
+        auto mmio_device = new virtio::mmio_device(info.address, info.size, info.irq);
+        if (mmio_device->parse_config()) {
+            device_manager::instance()->register_device(mmio_device);
+        }
+        else {
+            delete mmio_device;
+        }
+    }
 
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();

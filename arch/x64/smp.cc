@@ -74,7 +74,21 @@ void parse_madt()
 
 void smp_init()
 {
-    parse_madt();
+    //Firecracker does not support ACPI so
+    //there is no MADT table
+    //parse_madt();
+
+    //TODO: This a nasty hack as we support
+    // single vCPU. Eventually we should parse out equivalent information
+    // about all vCPUs from MP table (seems like more ancient way).
+    // See https://github.com/firecracker-microvm/firecracker/blob/7f29bca9ca197283275eab62fddc1c10ab580794/x86_64/src/mptable.rs
+    auto c = new sched::cpu(0);
+    c->arch.apic_id = 0;//lapic->Id;
+    c->arch.acpi_id = 0;//lapic->ProcessorId;
+    c->arch.initstack.next = smp_stack_free;
+    smp_stack_free = &c->arch.initstack;
+    sched::cpus.push_back(c);
+
     sched::current_cpu = sched::cpus[0];
     for (auto c : sched::cpus) {
         c->incoming_wakeups = aligned_array_new<sched::cpu::incoming_wakeup_queue>(sched::cpus.size());

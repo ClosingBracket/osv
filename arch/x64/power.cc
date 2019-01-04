@@ -27,17 +27,9 @@ void halt(void)
 
 void poweroff(void)
 {
-    ACPI_STATUS status = AcpiEnterSleepStatePrep(ACPI_STATE_S5);
-    if (ACPI_FAILURE(status)) {
-        debug("AcpiEnterSleepStatePrep failed: %s\n", AcpiFormatException(status));
-        halt();
-    }
-    status = AcpiEnterSleepState(ACPI_STATE_S5);
-    if (ACPI_FAILURE(status)) {
-        debug("AcpiEnterSleepState failed: %s\n", AcpiFormatException(status));
-        halt();
-    }
-
+    // Firecracker only supports this as away to shutdown the VM
+    // Reset using the 8042 PS/2 Controller ("keyboard controller")
+    processor::outb(0xfe, 0x64);
     // We shouldn't get here on x86.
     halt();
 }

@@ -605,7 +605,9 @@ void init()
 
 }
 
-void __attribute__((constructor(init_prio::acpi))) acpi_init_early()
-{
-     XENPV_ALTERNATIVE({ acpi::early_init(); }, {});
-}
+//TODO: Is there a way to detect if ACPI is available and do not even
+//try to load relevant information? Right now OSv depends on ACPI available
+//void __attribute__((constructor(init_prio::acpi))) acpi_init_early()
+//{
+//     XENPV_ALTERNATIVE({ acpi::early_init(); }, {});
+//}

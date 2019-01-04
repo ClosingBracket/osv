@@ -21,7 +21,7 @@ public:
     // TODO: provide a way to get one of multiple assigned virtio devices.
     static assigned_virtio *get() __attribute__((weak));
 
-    virtual void kick(int queue) = 0;
+    virtual bool kick(int queue) = 0;
     virtual uint32_t queue_size(int queue) = 0;
     virtual void enable_interrupt(unsigned int queue,
             std::function<void(void)> handler) = 0;
