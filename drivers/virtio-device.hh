@@ -8,12 +8,16 @@
 #ifndef VIRTIO_DEVICE_HH
 #define VIRTIO_DEVICE_HH
 
-#include "drivers/virtio-vring.hh"
+#include <osv/types.h>
+#include "virtio-vring.hh"
+#include "device.hh"
+
+using namespace hw;
 
 namespace virtio {
-    class virtio_device {
-        explicit virtio_device() {}
-        virtual ~virtio_device() = 0;
+    class virtio_device : public hw_device {
+    public:
+        virtual ~virtio_device() {};
 
         virtual vring *probe_queue(int number) = 0;
         virtual void activate_queue(vring *queue) = 0;
