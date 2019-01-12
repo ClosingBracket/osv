@@ -42,12 +42,15 @@ enum VIRTIO_CONFIG {
     /* The Host publishes the avail index for which it expects a kick
      * at the end of the used ring. Guest should ignore the used->flags field. */
     VIRTIO_RING_F_EVENT_IDX = 29,
-
+    /* Version bit that can be used to detect legacy vs modern devices */
+    VIRTIO_F_VERSION_1 = 32,
     /* Do we get callbacks when the ring is completely used, even if we've
      * suppressed them? */
     VIRTIO_F_NOTIFY_ON_EMPTY = 24,
     /* A 32-bit r/o bitmask of the features supported by the host */
     VIRTIO_PCI_HOST_FEATURES = 0,
+    /* A 32-bit r/o bitmask of the features supported by the host */
+    VIRTIO_PCI_HOST_FEATURES_HIGH = 1,
     /* A 32-bit r/w bitmask of features activated by the guest */
     VIRTIO_PCI_GUEST_FEATURES = 4,
     /* A 32-bit r/w PFN for the currently selected queue */
@@ -82,6 +85,11 @@ enum VIRTIO_CONFIG {
      * x86 pagesize again. */
     VIRTIO_PCI_VRING_ALIGN = 4096,
 
+};
+
+enum VIRTIO_VERSION {
+    LEGACY = 0,
+    MODERN = 1,
 };
 
 enum {
@@ -162,6 +170,9 @@ public:
     bool get_event_idx_cap() {return _cap_event_idx;}
     void set_event_idx_cap(bool on) {_cap_event_idx = on;}
 
+    void set_modern() {_version = MODERN; }
+    bool is_modern() { return _version == MODERN; }
+
     pci::device& pci_device() { return _dev; }
 protected:
     // Actual drivers should implement this on top of the basic ring features
@@ -175,6 +186,7 @@ protected:
     pci::bar* _bar1;
     bool _cap_indirect_buf;
     bool _cap_event_idx = false;
+    VIRTIO_VERSION _version = LEGACY;
     static int _disk_idx;
 };
 
