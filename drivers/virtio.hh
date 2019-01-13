@@ -44,11 +44,6 @@ enum VIRTIO_CONFIG {
     VIRTIO_F_NOTIFY_ON_EMPTY = 24,
 };
 
-enum VIRTIO_VERSION {
-    LEGACY = 0,
-    MODERN = 1,
-};
-
 enum {
     VIRTIO_VENDOR_ID = 0x1af4,
 
@@ -113,9 +108,6 @@ public:
     bool get_event_idx_cap() {return _cap_event_idx;}
     void set_event_idx_cap(bool on) {_cap_event_idx = on;}
 
-    //void set_modern() {_version = MODERN; }
-    //bool is_modern() { return _version == MODERN; }
-
     //pci::device& pci_device() { return _dev; }
 protected:
     // Actual drivers should implement this on top of the basic ring features
@@ -127,7 +119,6 @@ protected:
     u32 _num_queues;
     bool _cap_indirect_buf;
     bool _cap_event_idx = false;
-    //VIRTIO_VERSION _version = LEGACY;
     static int _disk_idx;
 };
 

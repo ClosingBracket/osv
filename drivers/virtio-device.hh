@@ -42,6 +42,8 @@ public:
     virtual void set_status(u8 status) = 0;
 
     virtual u8 read_config(u32 offset) = 0;
+
+    virtual bool is_modern() = 0;
 };
 
 }

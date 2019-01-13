@@ -102,6 +102,8 @@ public:
 
     virtual u8 read_config(u32 offset);
     virtual u8 ack_irq();
+
+    virtual bool is_modern() { return false; };
 private:
     bool parse_pci_config();
 
@@ -124,6 +126,8 @@ class virtio_modern_pci_device : public virtio_pci_device {
 public:
     explicit virtio_modern_pci_device(pci::device dev);
     ~virtio_modern_pci_device();
+
+    virtual bool is_modern() { return true; };
 };
 
 }
