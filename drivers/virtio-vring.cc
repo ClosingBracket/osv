@@ -43,7 +43,7 @@ namespace virtio {
         _dev = dev;
         _q_index = q_index;
         // Alloc enough pages for the vring...
-        unsigned sz = VIRTIO_ALIGN(vring::get_size(num, VIRTIO_PCI_VRING_ALIGN));
+        unsigned sz = 0;//TODO VIRTIO_ALIGN(vring::get_size(num, VIRTIO_PCI_VRING_ALIGN));
         _vring_ptr = memory::alloc_phys_contiguous_aligned(sz, 4096);
         memset(_vring_ptr, 0, sz);
         
@@ -52,8 +52,8 @@ namespace virtio {
         _num = num;
         _desc = (vring_desc*)_vring_ptr;
         _avail = (vring_avail*)(_vring_ptr + num * sizeof(vring_desc));
-        _used = (vring_used*)(((unsigned long)&_avail->_ring[num] +
-                sizeof(u16) + VIRTIO_PCI_VRING_ALIGN - 1) & ~(VIRTIO_PCI_VRING_ALIGN - 1));
+        //_used = (vring_used*)(((unsigned long)&_avail->_ring[num] +
+        //        sizeof(u16) + VIRTIO_PCI_VRING_ALIGN - 1) & ~(VIRTIO_PCI_VRING_ALIGN - 1));
 
         // initialize the next pointer within the available ring
         for (int i = 0; i < num; i++) _desc[i]._next = i + 1;

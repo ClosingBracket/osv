@@ -12,7 +12,7 @@
 #include <osv/mempool.hh>
 #include <osv/sched.hh>
 #include <osv/interrupt.hh>
-#include "drivers/pci-device.hh"
+//#include "drivers/pci-device.hh"
 #include "drivers/virtio.hh"
 #include "drivers/virtio-scsi.hh"
 #include "drivers/scsi-common.hh"
@@ -129,7 +129,7 @@ void scsi::add_lun(u16 target, u16 lun)
 
 bool scsi::ack_irq()
 {
-    auto isr = virtio_conf_readb(VIRTIO_PCI_ISR);
+    auto isr = _dev.ack_irq();
     auto queue = get_virt_queue(VIRTIO_SCSI_QUEUE_REQ);
 
     if (isr) {
@@ -141,7 +141,7 @@ bool scsi::ack_irq()
 
 }
 
-scsi::scsi(pci::device& dev)
+scsi::scsi(virtio_device& dev)
     : virtio_driver(dev)
 {
 
@@ -157,6 +157,7 @@ scsi::scsi(pci::device& dev)
     t->start();
     auto queue = get_virt_queue(VIRTIO_SCSI_QUEUE_REQ);
 
+    /*
     if (dev.is_msix()) {
         _msi.easy_register({
                 { VIRTIO_SCSI_QUEUE_CTRL, nullptr, nullptr },
@@ -167,7 +168,7 @@ scsi::scsi(pci::device& dev)
         _irq.reset(new pci_interrupt(dev,
                                      [=] { return this->ack_irq(); },
                                      [=] { t->wake(); }));
-    }
+    }*/
 
     // Enable indirect descriptor
     queue->set_use_indirect(true);
@@ -184,7 +185,7 @@ scsi::~scsi()
 
 void scsi::read_config()
 {
-    virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    //TODO: virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
     config.max_lun = _config.max_lun;
     config.max_target = _config.max_target;
 }

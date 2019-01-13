@@ -204,7 +204,7 @@ public:
             u16 virtqueue_pairs;
     };
 
-    explicit net(pci::device& dev);
+    explicit net(virtio_device& dev);
     virtual ~net();
 
     virtual std::string get_name() const { return _driver_name; }

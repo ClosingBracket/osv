@@ -7,7 +7,9 @@
 
 
 #include <osv/virtio-assign.hh>
+#include <drivers/virtio-device.hh>
 #include <drivers/virtio-net.hh>
+
 
 // Currently we support only one assigned virtio device, but more could
 // easily be added later.
@@ -23,7 +25,7 @@ assigned_virtio *assigned_virtio::get() {
 class impl : public osv::assigned_virtio, public virtio::virtio_driver {
 public:
     static hw_driver* probe_net(hw_device* dev);
-    explicit impl(pci::device& dev)
+    explicit impl(virtio::virtio_device& dev)
         : virtio_driver(dev)
     {
         assert(!the_assigned_virtio_device);
@@ -48,8 +50,8 @@ public:
 
     virtual u32 queue_size(int queue) override
     {
-        virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
-        return virtio_conf_readw(virtio::VIRTIO_PCI_QUEUE_NUM);
+        _dev.select_queue(queue);
+        return _dev.get_queue_size()
 
     }
     virtual u32 init_features(u32 driver_features) override
