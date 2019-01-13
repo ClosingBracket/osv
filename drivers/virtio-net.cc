@@ -324,7 +324,7 @@ net::~net()
 void net::read_config()
 {
     //read all of the net config  in one shot
-    //TODO: virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
 
     if (get_guest_feature_bit(VIRTIO_NET_F_MAC))
         net_i("The mac addr of the device is %x:%x:%x:%x:%x:%x",

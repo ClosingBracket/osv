@@ -185,7 +185,7 @@ scsi::~scsi()
 
 void scsi::read_config()
 {
-    //TODO: virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
     config.max_lun = _config.max_lun;
     config.max_target = _config.max_target;
 }

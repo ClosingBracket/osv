@@ -69,10 +69,6 @@ public:
 
     virtual void dump_config();
 
-    // The remaining space is defined by each driver as the per-driver
-    // configuration space
-    //int virtio_pci_config_offset() {return (_dev.is_msix_enabled())? 24 : 20;}
-
     //bool parse_pci_config();
 
     void probe_virt_queues();

@@ -103,6 +103,10 @@ public:
     virtual u8 read_config(u32 offset);
     virtual u8 ack_irq();
 
+    // The remaining space is defined by each driver as the per-driver
+    // configuration space
+    virtual int config_offset() {return (_dev->is_msix_enabled())? 24 : 20;}
+
     virtual bool is_modern() { return false; };
 private:
     bool parse_pci_config();
