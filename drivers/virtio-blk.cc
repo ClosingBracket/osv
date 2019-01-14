@@ -127,14 +127,19 @@ blk::blk(virtio_device& virtio_dev)
             sched::thread::attr().name("virtio-blk"));
     t->start();
     auto queue = get_virt_queue(0);
-    /*TODO: Fix
-    if (pci_dev.is_msix()) {
-        _msi.easy_register({ { 0, [=] { queue->disable_interrupts(); }, t } });
-    } else {
-        _irq.reset(new pci_interrupt(pci_dev,
-                                     [=] { return ack_irq(); },
-                                     [=] { t->wake(); }));
-    }*/
+
+    interrupt_factory int_factory;
+    int_factory.register_msi_bindings = [queue, t](interrupt_manager &msi) {
+        msi.easy_register( {{ 0, [=] { queue->disable_interrupts(); }, t }});
+    };
+
+    int_factory.create_pci_interrupt = [this,t](pci::device &pci_dev) {
+        return new pci_interrupt(
+            pci_dev,
+            [=] { return this->ack_irq(); },
+            [=] { t->wake(); });
+    };
+    _dev.register_interrupt(int_factory);
 
     // Enable indirect descriptor
     queue->set_use_indirect(true);

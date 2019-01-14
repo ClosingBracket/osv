@@ -9,12 +9,21 @@
 #define VIRTIO_DEVICE_HH
 
 #include <osv/types.h>
+#include <osv/pci.hh>
+#include <osv/interrupt.hh>
+#include <osv/msi.hh>
 #include "virtio-vring.hh"
 #include "device.hh"
 
 using namespace hw;
 
 namespace virtio {
+
+struct interrupt_factory {
+    std::function<void(interrupt_manager &)> register_msi_bindings = nullptr;
+    std::function<pci_interrupt *(pci::device &)> create_pci_interrupt = nullptr;
+    std::function<gsi_edge_interrupt *()> create_gsi_edge_interrupt = nullptr;
+};
 
 class virtio_device : public hw_device {
 public:
@@ -23,8 +32,8 @@ public:
     virtual void init() = 0;
 
     virtual u8 ack_irq() = 0;
+    virtual void register_interrupt(interrupt_factory irq_factory) = 0;
 
-    virtual vring *probe_queue(int queue) = 0;
     virtual void select_queue(int queue) = 0;
     virtual u16 get_queue_size() = 0;
     virtual void activate_queue(vring *queue) = 0;

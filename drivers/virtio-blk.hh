@@ -157,7 +157,6 @@ private:
     bool _ro;
     // This mutex protects parallel make_request invocations
     mutex _lock;
-    std::unique_ptr<pci_interrupt> _irq;
 };
 
 }

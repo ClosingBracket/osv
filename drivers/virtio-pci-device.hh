@@ -75,6 +75,7 @@ public:
 protected:
     pci::device *_dev;
     interrupt_manager _msi;
+    std::unique_ptr<pci_interrupt> _irq;
 };
 
 class virtio_legacy_pci_device : public virtio_pci_device {
@@ -83,6 +84,7 @@ public:
     ~virtio_legacy_pci_device();
 
     virtual void init();
+    virtual void register_interrupt(interrupt_factory irq_factory);
 
     virtual void select_queue(int queue);
     virtual u16 get_queue_size();

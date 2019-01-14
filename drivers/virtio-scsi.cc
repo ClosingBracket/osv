@@ -157,7 +157,7 @@ scsi::scsi(virtio_device& dev)
     t->start();
     auto queue = get_virt_queue(VIRTIO_SCSI_QUEUE_REQ);
 
-    /*
+    /*TODO
     if (dev.is_msix()) {
         _msi.easy_register({
                 { VIRTIO_SCSI_QUEUE_CTRL, nullptr, nullptr },
