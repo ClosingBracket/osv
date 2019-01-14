@@ -58,8 +58,6 @@ enum VIRTIO_PCI_CONFIG {
     VIRTIO_PCI_ID_MAX = 0x103f,
 };
 
-#define VIRTIO_ALIGN(x) ((x + (VIRTIO_PCI_VRING_ALIGN-1)) & ~(VIRTIO_PCI_VRING_ALIGN-1))
-
 class virtio_pci_device : public virtio_device {
 public:
     explicit virtio_pci_device(pci::device *dev);
@@ -71,6 +69,8 @@ public:
 
     bool is_attached()  { return _dev->is_attached(); }
     void set_attached() { _dev->set_attached(); }
+
+    size_t get_vring_alignment() { return VIRTIO_PCI_VRING_ALIGN; }
 
 protected:
     pci::device *_dev;

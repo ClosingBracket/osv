@@ -43,7 +43,8 @@ namespace virtio {
         _dev = dev;
         _q_index = q_index;
         // Alloc enough pages for the vring...
-        unsigned sz = 0;//TODO VIRTIO_ALIGN(vring::get_size(num, VIRTIO_PCI_VRING_ALIGN));
+        unsigned alignment = dev->get_vring_alignment();
+        unsigned sz = VIRTIO_ALIGN(vring::get_size(num, alignment), alignment);
         _vring_ptr = memory::alloc_phys_contiguous_aligned(sz, 4096);
         memset(_vring_ptr, 0, sz);
         

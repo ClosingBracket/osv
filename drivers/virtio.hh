@@ -102,6 +102,8 @@ public:
     bool get_event_idx_cap() {return _cap_event_idx;}
     void set_event_idx_cap(bool on) {_cap_event_idx = on;}
 
+    size_t get_vring_alignment() { return _dev.get_vring_alignment();}
+
 protected:
     // Actual drivers should implement this on top of the basic ring features
     virtual u32 get_driver_features() { return 1 << VIRTIO_RING_F_INDIRECT_DESC | 1 << VIRTIO_RING_F_EVENT_IDX; }

@@ -17,6 +17,8 @@
 
 using namespace hw;
 
+#define VIRTIO_ALIGN(x,alignment) ((x + (alignment-1)) & ~(alignment-1))
+
 namespace virtio {
 
 struct interrupt_factory {
@@ -54,6 +56,7 @@ public:
     virtual int config_offset() = 0;
 
     virtual bool is_modern() = 0;
+    virtual size_t get_vring_alignment() = 0;
 };
 
 }
