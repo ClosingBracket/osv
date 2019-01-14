@@ -112,7 +112,7 @@ void virtio_legacy_pci_device::init()
 
 void virtio_legacy_pci_device::register_interrupt(interrupt_factory irq_factory)
 {
-    if (_dev->is_msix()) {
+    if (irq_factory.register_msi_bindings && _dev->is_msix()) {
         irq_factory.register_msi_bindings(_msi);
     } else {
         _irq.reset(irq_factory.create_pci_interrupt(*_dev));
