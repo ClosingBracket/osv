@@ -157,18 +157,22 @@ scsi::scsi(virtio_device& dev)
     t->start();
     auto queue = get_virt_queue(VIRTIO_SCSI_QUEUE_REQ);
 
-    /*TODO
-    if (dev.is_msix()) {
-        _msi.easy_register({
-                { VIRTIO_SCSI_QUEUE_CTRL, nullptr, nullptr },
-                { VIRTIO_SCSI_QUEUE_EVT, nullptr, nullptr },
-                { VIRTIO_SCSI_QUEUE_REQ, [=] { queue->disable_interrupts(); }, t },
+    interrupt_factory int_factory;
+    int_factory.register_msi_bindings = [queue,t](interrupt_manager &msi) {
+        msi.easy_register({
+          { VIRTIO_SCSI_QUEUE_CTRL, nullptr, nullptr },
+          { VIRTIO_SCSI_QUEUE_EVT, nullptr, nullptr },
+          { VIRTIO_SCSI_QUEUE_REQ, [=] { queue->disable_interrupts(); }, t },
         });
-    } else {
-        _irq.reset(new pci_interrupt(dev,
-                                     [=] { return this->ack_irq(); },
-                                     [=] { t->wake(); }));
-    }*/
+    };
+
+    int_factory.create_pci_interrupt = [this,t](pci::device &pci_dev) {
+        return new pci_interrupt(
+                pci_dev,
+                [=] { return this->ack_irq(); },
+                [=] { t->wake(); });
+    };
+    _dev.register_interrupt(int_factory);
 
     // Enable indirect descriptor
     queue->set_use_indirect(true);

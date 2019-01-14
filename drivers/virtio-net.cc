@@ -289,17 +289,21 @@ net::net(virtio_device& dev)
 
     ether_ifattach(_ifn, _config.mac);
 
-    /*TODO:
-    if (dev.is_msix()) {
-        _msi.easy_register({
-            { 0, [&] { _rxq.vqueue->disable_interrupts(); }, poll_task },
-            { 1, [&] { _txq.vqueue->disable_interrupts(); }, nullptr }
-        });
-    } else {
-        _irq.reset(new pci_interrupt(dev,
-                                     [=] { return this->ack_irq(); },
-                                     [=] { poll_task->wake(); }));
-    }*/
+    interrupt_factory int_factory;
+    int_factory.register_msi_bindings = [this,poll_task](interrupt_manager &msi) {
+       msi.easy_register({
+           { 0, [&] { this->_rxq.vqueue->disable_interrupts(); }, poll_task },
+           { 1, [&] { this->_txq.vqueue->disable_interrupts(); }, nullptr }
+       });
+    };
+
+    int_factory.create_pci_interrupt = [this,poll_task](pci::device &pci_dev) {
+        return new pci_interrupt(
+            pci_dev,
+            [=] { return this->ack_irq(); },
+            [=] { poll_task->wake(); });
+    };
+    _dev.register_interrupt(int_factory);
 
     fill_rx_ring();
 

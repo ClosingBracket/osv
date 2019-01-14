@@ -269,8 +269,6 @@ private:
 
     u32 _hdr_size;
 
-    std::unique_ptr<pci_interrupt> _irq;
-
     struct rxq_stats {
         u64 rx_packets; /* if_ipackets */
         u64 rx_bytes;   /* if_ibytes */
