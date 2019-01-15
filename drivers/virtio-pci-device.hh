@@ -88,6 +88,7 @@ public:
 
     virtual void select_queue(int queue);
     virtual u16 get_queue_size();
+    virtual void setup_queue(int queue);
     virtual void activate_queue(vring *queue);
     virtual void kick_queue(int queue);
 

@@ -127,20 +127,12 @@ void virtio_driver::probe_virt_queues()
         // Init a new queue
         vring* queue = new vring(this, qsize, _num_queues);
         _queues[_num_queues] = queue;
-/* TODO
-        if (_dev.is_msix()) {
-            // Setup queue_id:entry_id 1:1 correlation...
-            virtio_conf_writew(VIRTIO_MSI_QUEUE_VECTOR, _num_queues);
-            if (virtio_conf_readw(VIRTIO_MSI_QUEUE_VECTOR) != _num_queues) {
-                virtio_e("Setting MSIx entry for queue %d failed.", _num_queues);
-                return;
-            }
-        }
-*/
-        _num_queues++;
 
+        _dev.setup_queue(_num_queues);
         _dev.activate_queue(queue);
 
+        _num_queues++;
+        
         // Debug print
         virtio_d("Queue[%d] -> size %d, paddr %x", (_num_queues-1), qsize, queue->get_paddr());
 

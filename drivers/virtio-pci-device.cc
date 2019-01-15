@@ -25,6 +25,18 @@ void virtio_legacy_pci_device::kick_queue(int queue)
     virtio_conf_writew(VIRTIO_PCI_QUEUE_NOTIFY, queue);
 }
 
+void virtio_legacy_pci_device::setup_queue(int queue)
+{
+    if (_dev->is_msix()) {
+        // Setup queue_id:entry_id 1:1 correlation...
+        virtio_conf_writew(VIRTIO_MSI_QUEUE_VECTOR, queue);
+        if (virtio_conf_readw(VIRTIO_MSI_QUEUE_VECTOR) != queue) {
+            virtio_e("Setting MSIx entry for queue %d failed.", queue);
+            return;
+        }
+    }
+}
+
 void virtio_legacy_pci_device::activate_queue(vring *queue)
 {
     // Tell host about pfn
