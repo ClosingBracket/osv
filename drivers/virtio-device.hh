@@ -35,11 +35,13 @@ public:
 
     virtual u8 ack_irq() = 0;
     virtual void register_interrupt(interrupt_factory irq_factory) = 0;
+    virtual void register_interrupt(unsigned int queue, std::function<void(void)> handler) = 0;
 
     virtual void select_queue(int queue) = 0;
     virtual u16 get_queue_size() = 0;
     virtual void setup_queue(int queue) = 0;
     virtual void activate_queue(vring *queue) = 0;
+    virtual void activate_queue(u64 phys) = 0;
     virtual void kick_queue(int queue) = 0;
 
     virtual u64 get_available_features() = 0;

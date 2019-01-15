@@ -283,7 +283,7 @@ void arch_init_drivers()
     drvman->register_driver(virtio::blk::probe);
     drvman->register_driver(virtio::scsi::probe);
     if (opt_assign_net) {
-        ;//TODO drvman->register_driver(virtio::assigned::probe_net);
+        drvman->register_driver(virtio::assigned::probe_net);
     } else {
         drvman->register_driver(virtio::net::probe);
     }

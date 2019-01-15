@@ -132,7 +132,7 @@ void virtio_driver::probe_virt_queues()
         _dev.activate_queue(queue);
 
         _num_queues++;
-        
+
         // Debug print
         virtio_d("Queue[%d] -> size %d, paddr %x", (_num_queues-1), qsize, queue->get_paddr());
 

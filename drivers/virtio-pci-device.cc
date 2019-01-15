@@ -45,6 +45,15 @@ void virtio_legacy_pci_device::activate_queue(vring *queue)
     virtio_conf_writel(VIRTIO_PCI_QUEUE_PFN, (u32)(queue->get_paddr() >> VIRTIO_PCI_QUEUE_ADDR_SHIFT));
 }
 
+void virtio_legacy_pci_device::activate_queue(u64 phys)
+{
+    // Tell host about pfn
+    u64 pfn = phys >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
+    // A bug in virtio's design... on large memory, this can actually happen
+    assert(pfn <= std::numeric_limits<u32>::max());
+    virtio_conf_writel(VIRTIO_PCI_QUEUE_PFN, (u32)pfn);
+}
+
 void virtio_legacy_pci_device::select_queue(int queue)
 {
     virtio_conf_writew(VIRTIO_PCI_QUEUE_SEL, queue);
@@ -129,6 +138,28 @@ void virtio_legacy_pci_device::register_interrupt(interrupt_factory irq_factory)
     } else {
         _irq.reset(irq_factory.create_pci_interrupt(*_dev));
     }
+}
+
+void virtio_legacy_pci_device::register_interrupt(unsigned int queue, std::function<void(void)> handler)
+{
+    // OSv's generic virtio driver has already set the device to msix, and set
+    // the VIRTIO_MSI_QUEUE_VECTOR of its queue to its number.
+    assert(_dev->is_msix());
+    virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
+    assert(virtio_conf_readw(virtio::VIRTIO_MSI_QUEUE_VECTOR) == queue);
+    if (!_dev->is_msix_enabled()) {
+        _dev->msix_enable();
+    }
+    auto vectors = _msi.request_vectors(1);
+    assert(vectors.size() == 1);
+    auto vec = vectors[0];
+    // TODO: in _msi.easy_register() we also have code for moving the
+    // interrupt's affinity to where the handling thread is. We should
+    // probably do this here too.
+    _msi.assign_isr(vec, handler);
+    auto ok = _msi.setup_entry(queue, vec);
+    assert(ok);
+    vec->msix_unmask_entries();
 }
 
 u8 virtio_legacy_pci_device::ack_irq()
