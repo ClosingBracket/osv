@@ -25,8 +25,8 @@ assigned_virtio *assigned_virtio::get() {
 class impl : public osv::assigned_virtio, public virtio::virtio_driver {
 public:
     static hw_driver* probe_net(hw_device* dev);
-    explicit impl(virtio::virtio_device& dev)
-        : virtio_driver(dev)
+    explicit impl(virtio::virtio_device& virtio_dev)
+        : virtio_driver(virtio_dev)
     {
         assert(!the_assigned_virtio_device);
         the_assigned_virtio_device = this;
@@ -51,8 +51,7 @@ public:
     virtual u32 queue_size(int queue) override
     {
         _dev.select_queue(queue);
-        return _dev.get_queue_size()
-
+        return _dev.get_queue_size();
     }
     virtual u32 init_features(u32 driver_features) override
     {
@@ -63,6 +62,8 @@ public:
 
     virtual void enable_interrupt(unsigned int queue, std::function<void(void)> handler) override
     {
+        //TODO: !!!       
+
         // Hack to enable_interrupt's handler in a separate thread instead of
         // directly at the interrupt context. We need this when the tries to
         // signal and eventfd, which involves a mutex and not allowed in interrupt
@@ -94,6 +95,8 @@ public:
 
     virtual void set_queue_pfn(int queue, u64 phys) override
     {
+        //TODO: !!!       
+
         virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
         // Tell host about pfn
         u64 pfn = phys >> virtio::VIRTIO_PCI_QUEUE_ADDR_SHIFT;
@@ -109,6 +112,7 @@ public:
 
     virtual void conf_read(void *buf, int length) override
     {
+        //TODO: !!!       
         virtio_conf_read(virtio_pci_config_offset(), buf, length);
     }
 
