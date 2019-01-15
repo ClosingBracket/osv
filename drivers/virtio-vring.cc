@@ -53,8 +53,8 @@ namespace virtio {
         _num = num;
         _desc = (vring_desc*)_vring_ptr;
         _avail = (vring_avail*)(_vring_ptr + num * sizeof(vring_desc));
-        //_used = (vring_used*)(((unsigned long)&_avail->_ring[num] +
-        //        sizeof(u16) + VIRTIO_PCI_VRING_ALIGN - 1) & ~(VIRTIO_PCI_VRING_ALIGN - 1));
+        _used = (vring_used*)(((unsigned long)&_avail->_ring[num] +
+                sizeof(u16) + dev->get_vring_alignment() - 1) & ~(dev->get_vring_alignment() - 1));
 
         // initialize the next pointer within the available ring
         for (int i = 0; i < num; i++) _desc[i]._next = i + 1;
