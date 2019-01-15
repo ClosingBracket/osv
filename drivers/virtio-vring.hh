@@ -122,7 +122,7 @@ class virtio_driver;
     class vring {
     public:
 
-        vring(virtio_driver* const dev, u16 num, u16 q_index);
+        vring(virtio_driver* const driver, u16 num, u16 q_index);
         virtual ~vring();
 
         u64 get_paddr();
@@ -240,7 +240,7 @@ class virtio_driver;
     private:
 
         // Up pointer
-        virtio_driver* _dev;
+        virtio_driver* _driver;
         u16 _q_index;
         // The physical of the physical address handed to the virtio device
         void* _vring_ptr;
