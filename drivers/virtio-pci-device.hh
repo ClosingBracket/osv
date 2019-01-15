@@ -80,8 +80,8 @@ protected:
 
 class virtio_legacy_pci_device : public virtio_pci_device {
 public:
-    explicit virtio_legacy_pci_device(pci::device dev);
-    ~virtio_legacy_pci_device();
+    explicit virtio_legacy_pci_device(pci::device *dev);
+    ~virtio_legacy_pci_device() {}
 
     virtual void init();
     virtual void register_interrupt(interrupt_factory irq_factory);
@@ -133,11 +133,13 @@ private:
 
 class virtio_modern_pci_device : public virtio_pci_device {
 public:
-    explicit virtio_modern_pci_device(pci::device dev);
+    explicit virtio_modern_pci_device(pci::device *dev);
     ~virtio_modern_pci_device();
 
     virtual bool is_modern() { return true; };
 };
+
+virtio_device* create_virtio_device(pci::device *dev);
 
 }
 

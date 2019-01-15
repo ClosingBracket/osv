@@ -34,6 +34,8 @@ namespace hw {
                     && _device_id == other._device_id;
         }
 
+        bool is_vendor(u16 vendor_id) { return _vendor_id == vendor_id; }
+
     private:
         u16 _vendor_id;
         u16 _device_id;

@@ -20,6 +20,11 @@ virtio_pci_device::~virtio_pci_device() {
     delete _dev;
 }
 
+virtio_legacy_pci_device::virtio_legacy_pci_device(pci::device *dev)
+    : virtio_pci_device(dev)
+{
+}
+
 void virtio_legacy_pci_device::kick_queue(int queue)
 {
     virtio_conf_writew(VIRTIO_PCI_QUEUE_NOTIFY, queue);
@@ -191,5 +196,10 @@ bool virtio_legacy_pci_device::parse_pci_config()
 
     return true;
 }
+
+virtio_device* create_virtio_device(pci::device *dev) {
+    return new virtio_legacy_pci_device(dev);
+}
+
 }
 
