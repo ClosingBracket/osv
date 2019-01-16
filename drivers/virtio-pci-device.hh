@@ -106,11 +106,13 @@ public:
     virtual void set_status(u8 status);
 
     virtual u8 read_config(u32 offset);
+    virtual void write_config(u32 offset, u8 byte);
+    virtual void dump_config();
     virtual u8 ack_irq();
 
     // The remaining space is defined by each driver as the per-driver
     // configuration space
-    virtual int config_offset() {return (_dev->is_msix_enabled())? 24 : 20;}
+    virtual int config_offset() { return (_dev->is_msix_enabled())? 24 : 20;}
 
     virtual bool is_modern() { return false; };
 private:
@@ -139,6 +141,8 @@ public:
     virtual bool is_modern() { return true; };
 };
 
+// Creates instance of virtio_modern_pci_device or virtio_legacy_pci_device
+// by reading configuration from PCI device
 virtio_device* create_virtio_device(pci::device *dev);
 
 }

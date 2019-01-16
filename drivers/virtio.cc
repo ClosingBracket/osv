@@ -71,18 +71,10 @@ void virtio_driver::setup_features()
 
 void virtio_driver::dump_config()
 {
-    /*
-    u8 B, D, F;
-    _dev.get_bdf(B, D, F);
-
     _dev.dump_config();
-    virtio_d("%s [%x:%x.%x] vid:id=%x:%x", get_name().c_str(),
-        (u16)B, (u16)D, (u16)F,
-        _dev.get_vendor_id(),
-        _dev.get_device_id());
-    */
+
     virtio_d("    virtio features: ");
-    for (int i = 0; i < 32; i++)
+    for (int i = 0; i < 64; i++)
         virtio_d(" %d ", get_device_feature_bit(i));
 }
 
@@ -222,11 +214,9 @@ void virtio_driver::del_dev_status(u8 status)
 
 void virtio_driver::virtio_conf_write(u32 offset, void* buf, int length)
 {
-    /*
     u8* ptr = reinterpret_cast<u8*>(buf);
     for (int i = 0; i < length; i++)
-        _bar1->writeb(offset + i, ptr[i]);
-    */
+        _dev.write_config(offset + i, ptr[i]);
 }
 
 void virtio_driver::virtio_conf_read(u32 offset, void* buf, int length)

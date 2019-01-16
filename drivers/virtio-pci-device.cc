@@ -126,6 +126,23 @@ u8 virtio_legacy_pci_device::read_config(u32 offset)
     return _bar1->readb(offset);
 }
 
+void virtio_legacy_pci_device::write_config(u32 offset, u8 byte)
+{
+    _bar1->writeb(offset, byte);
+}
+
+void virtio_legacy_pci_device::dump_config()
+{
+    u8 B, D, F;
+    _dev->get_bdf(B, D, F);
+
+    _dev->dump_config();
+    virtio_d("%s [%x:%x.%x] vid:id=%x:%x", get_name().c_str(),
+             (u16)B, (u16)D, (u16)F,
+             _dev.get_vendor_id(),
+             _dev.get_device_id());
+}
+
 void virtio_legacy_pci_device::init()
 {
     bool status = parse_pci_config();
@@ -198,6 +215,8 @@ bool virtio_legacy_pci_device::parse_pci_config()
 }
 
 virtio_device* create_virtio_device(pci::device *dev) {
+    //TODO Read PCI device configuration to create instance
+    // of virtio_modern_pci_device or virtio_legacy_pci_device
     return new virtio_legacy_pci_device(dev);
 }
 

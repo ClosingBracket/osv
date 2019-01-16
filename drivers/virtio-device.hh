@@ -21,12 +21,21 @@ using namespace hw;
 
 namespace virtio {
 
+// Allows virtio drivers specify how to instantiate interrupts or
+// register msi bindings. The associated virtio-device will
+// use adequate functor to create correct interrupt in order
+// to register it.
 struct interrupt_factory {
     std::function<void(interrupt_manager &)> register_msi_bindings = nullptr;
     std::function<pci_interrupt *(pci::device &)> create_pci_interrupt = nullptr;
     std::function<gsi_edge_interrupt *()> create_gsi_edge_interrupt = nullptr;
 };
 
+// Defines virtio transport abstraction used by virtio-driver
+// to communicate with virtio device. The specializations of thise
+// include virtio pci device (legacy and modern) as well
+// as virtio mmio device. This abstraction allows virtio driver
+// not be tied to any specific transport (pci, mmio).
 class virtio_device : public hw_device {
 public:
     virtual ~virtio_device() {};
@@ -56,7 +65,9 @@ public:
     virtual void set_status(u8 status) = 0;
 
     virtual u8 read_config(u32 offset) = 0;
+    virtual void write_config(u32 offset, u8 byte) = 0;
     virtual int config_offset() = 0;
+    virtual void dump_config() = 0;
 
     virtual bool is_modern() = 0;
     virtual size_t get_vring_alignment() = 0;
