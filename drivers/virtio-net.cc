@@ -10,7 +10,6 @@
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio-net.hh"
-#include "drivers/pci-device.hh"
 #include <osv/interrupt.hh>
 
 #include <osv/mempool.hh>
@@ -217,7 +216,7 @@ void net::fill_qstats(const struct txq& txq, struct if_data* out_data) const
 
 bool net::ack_irq()
 {
-    auto isr = virtio_conf_readb(VIRTIO_PCI_ISR);
+    auto isr = _dev.ack_irq();
 
     if (isr) {
         _rxq.vqueue->disable_interrupts();
@@ -228,7 +227,7 @@ bool net::ack_irq()
 
 }
 
-net::net(pci::device& dev)
+net::net(virtio_device& dev)
     : virtio_driver(dev),
       _rxq(get_virt_queue(0), [this] { this->receiver(); }),
       _txq(this, get_virt_queue(1))
@@ -290,16 +289,21 @@ net::net(pci::device& dev)
 
     ether_ifattach(_ifn, _config.mac);
 
-    if (dev.is_msix()) {
-        _msi.easy_register({
-            { 0, [&] { _rxq.vqueue->disable_interrupts(); }, poll_task },
-            { 1, [&] { _txq.vqueue->disable_interrupts(); }, nullptr }
-        });
-    } else {
-        _irq.reset(new pci_interrupt(dev,
-                                     [=] { return this->ack_irq(); },
-                                     [=] { poll_task->wake(); }));
-    }
+    interrupt_factory int_factory;
+    int_factory.register_msi_bindings = [this,poll_task](interrupt_manager &msi) {
+       msi.easy_register({
+           { 0, [&] { this->_rxq.vqueue->disable_interrupts(); }, poll_task },
+           { 1, [&] { this->_txq.vqueue->disable_interrupts(); }, nullptr }
+       });
+    };
+
+    int_factory.create_pci_interrupt = [this,poll_task](pci::device &pci_dev) {
+        return new pci_interrupt(
+            pci_dev,
+            [=] { return this->ack_irq(); },
+            [=] { poll_task->wake(); });
+    };
+    _dev.register_interrupt(int_factory);
 
     fill_rx_ring();
 
@@ -324,7 +328,7 @@ net::~net()
 void net::read_config()
 {
     //read all of the net config  in one shot
-    virtio_conf_read(virtio_pci_config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
 
     if (get_guest_feature_bit(VIRTIO_NET_F_MAC))
         net_i("The mac addr of the device is %x:%x:%x:%x:%x:%x",
@@ -856,12 +860,12 @@ u32 net::get_driver_features()
 
 hw_driver* net::probe(hw_device* dev)
 {
-    if (auto pci_dev = dynamic_cast<pci::device*>(dev)) {
-        if (pci_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_NET_DEVICE_ID)) {
+    if (auto virtio_dev = dynamic_cast<virtio_device*>(dev)) {
+        if (virtio_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_NET_DEVICE_ID)) {
             if (opt_maxnic && maxnic-- <= 0) {
                 return nullptr;
             } else {
-                return aligned_new<net>(*pci_dev);
+                return aligned_new<net>(*virtio_dev);
             }
         }
     }

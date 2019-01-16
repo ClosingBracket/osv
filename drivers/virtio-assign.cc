@@ -7,7 +7,9 @@
 
 
 #include <osv/virtio-assign.hh>
+#include <drivers/virtio-device.hh>
 #include <drivers/virtio-net.hh>
+
 
 // Currently we support only one assigned virtio device, but more could
 // easily be added later.
@@ -23,8 +25,8 @@ assigned_virtio *assigned_virtio::get() {
 class impl : public osv::assigned_virtio, public virtio::virtio_driver {
 public:
     static hw_driver* probe_net(hw_device* dev);
-    explicit impl(pci::device& dev)
-        : virtio_driver(dev)
+    explicit impl(virtio::virtio_device& virtio_dev)
+        : virtio_driver(virtio_dev)
     {
         assert(!the_assigned_virtio_device);
         the_assigned_virtio_device = this;
@@ -48,9 +50,8 @@ public:
 
     virtual u32 queue_size(int queue) override
     {
-        virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
-        return virtio_conf_readw(virtio::VIRTIO_PCI_QUEUE_NUM);
-
+        _dev.select_queue(queue);
+        return _dev.get_queue_size();
     }
     virtual u32 init_features(u32 driver_features) override
     {
@@ -70,34 +71,13 @@ public:
         auto *ht = &_hack_threads.back(); // assumes object won't move later
         handler = [ht] { ht->wake(); };
 
-        // OSv's generic virtio driver has already set the device to msix, and set
-        // the VIRTIO_MSI_QUEUE_VECTOR of its queue to its number.
-        assert(_dev.is_msix());
-        virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
-        assert(virtio_conf_readw(virtio::VIRTIO_MSI_QUEUE_VECTOR) == queue);
-        if (!_dev.is_msix_enabled()) {
-            _dev.msix_enable();
-        }
-        auto vectors = _msi.request_vectors(1);
-        assert(vectors.size() == 1);
-        auto vec = vectors[0];
-        // TODO: in _msi.easy_register() we also have code for moving the
-        // interrupt's affinity to where the handling thread is. We should
-        // probably do this here too.
-        _msi.assign_isr(vec, handler);
-        auto ok = _msi.setup_entry(queue, vec);
-        assert(ok);
-        vec->msix_unmask_entries();
+        _dev.register_interrupt(queue,handler);
     }
 
     virtual void set_queue_pfn(int queue, u64 phys) override
     {
-        virtio_conf_writew(virtio::VIRTIO_PCI_QUEUE_SEL, queue);
-        // Tell host about pfn
-        u64 pfn = phys >> virtio::VIRTIO_PCI_QUEUE_ADDR_SHIFT;
-        // A bug in virtio's design... on large memory, this can actually happen
-        assert(pfn <= std::numeric_limits<u32>::max());
-        virtio_conf_writel(virtio::VIRTIO_PCI_QUEUE_PFN, (u32)pfn);
+        _dev.select_queue(queue);
+        _dev.activate_queue(phys);
     }
 
     virtual void set_driver_ok() override
@@ -107,7 +87,7 @@ public:
 
     virtual void conf_read(void *buf, int length) override
     {
-        virtio_conf_read(virtio_pci_config_offset(), buf, length);
+        virtio_conf_read(_dev.config_offset(), buf, length);
     }
 
 private:

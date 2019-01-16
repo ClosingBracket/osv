@@ -8,7 +8,6 @@
 #ifndef VIRTIO_SCSI_DRIVER_H
 #define VIRTIO_SCSI_DRIVER_H
 #include "drivers/virtio.hh"
-#include "drivers/pci-device.hh"
 #include "drivers/scsi-common.hh"
 #include <osv/bio.h>
 #include <osv/types.h>
@@ -145,7 +144,7 @@ public:
     };
 
 
-    scsi(pci::device& dev);
+    scsi(virtio_device& dev);
     ~scsi();
 
     virtual std::string get_name() const { return _driver_name; }
@@ -173,8 +172,6 @@ private:
 
     std::string _driver_name;
     scsi_config _config;
-
-    std::unique_ptr<pci_interrupt> _irq;
 
     //maintains the virtio instance number for multiple drives
     static int _instance;

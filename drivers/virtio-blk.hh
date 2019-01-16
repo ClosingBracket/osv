@@ -8,7 +8,7 @@
 #ifndef VIRTIO_BLK_DRIVER_H
 #define VIRTIO_BLK_DRIVER_H
 #include "drivers/virtio.hh"
-#include "drivers/pci-device.hh"
+#include "drivers/virtio-device.hh"
 #include <osv/bio.h>
 
 namespace virtio {
@@ -118,7 +118,7 @@ public:
         u8 status;
     };
 
-    explicit blk(pci::device& dev);
+    explicit blk(virtio_device& dev);
     virtual ~blk();
 
     virtual std::string get_name() const { return _driver_name; }
@@ -157,7 +157,6 @@ private:
     bool _ro;
     // This mutex protects parallel make_request invocations
     mutex _lock;
-    std::unique_ptr<pci_interrupt> _irq;
 };
 
 }
