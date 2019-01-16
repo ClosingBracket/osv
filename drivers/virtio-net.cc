@@ -224,19 +224,8 @@ bool net::ack_irq()
         return false;
 }
 
-//TODO: For now this driver is hardcoded to expect mmio_device
-// but eventually we could introduce some sort of virtio_device
-// interface class that pci_device and mmio_device would implement/extend
-// from.
-net::net(mmio_device& dev)
-    : virtio_mmio_driver(dev),
-      _rxq(get_virt_queue(0), [this] { this->receiver(); }),
-      _txq(this, get_virt_queue(1))
+void net::pre_init() 
 {
-    sched::thread* poll_task = _rxq.poll_task.get();
-
-    poll_task->set_priority(sched::thread::priority_infinity);
-
     _driver_name = "virtio-net";
     virtio_i("VIRTIO NET INSTANCE");
     _id = _instance++;
@@ -246,6 +235,21 @@ net::net(mmio_device& dev)
 
     // Generic init of virtqueues
     probe_virt_queues();
+}
+
+//TODO: For now this driver is hardcoded to expect mmio_device
+// but eventually we could introduce some sort of virtio_device
+// interface class that pci_device and mmio_device would implement/extend
+// from.
+net::net(mmio_device& dev)
+    : virtio_mmio_driver(dev),
+      _bla(this),
+      _rxq(get_virt_queue(0), [this] { this->receiver(); }),
+      _txq(this, get_virt_queue(1))
+{
+    sched::thread* poll_task = _rxq.poll_task.get();
+
+    poll_task->set_priority(sched::thread::priority_infinity);
 
     //TODO: Legacy vs non-legacy -> the non-legacy header includes one more field
     _hdr_size = sizeof(net_hdr_mrg_rxbuf);

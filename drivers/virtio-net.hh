@@ -208,6 +208,7 @@ public:
 
     explicit net(mmio_device& dev);
     virtual ~net();
+    void pre_init();
 
     virtual std::string get_name() const { return _driver_name; }
     void read_config();
@@ -300,6 +301,12 @@ private:
 
         wakeup_stats tx_wakeup_stats;
     };
+
+    struct bla {
+        bla(virtio::net *_net) {
+           _net->pre_init();
+        }
+    } _bla;
 
     /* Single Rx queue object */
     struct rxq {
