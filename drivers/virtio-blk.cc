@@ -122,6 +122,9 @@ blk::blk(mmio_device& _dev)
     setup_features();
     read_config();
 
+    // Generic init of virtqueues
+    probe_virt_queues();
+
     //register the single irq callback for the block
     sched::thread* t = sched::thread::make([this] { this->req_done(); },
             sched::thread::attr().name("virtio-blk"));
@@ -318,7 +321,7 @@ hw_driver* blk::probe(hw_device* dev)
     //once we have a virtio_device class
     if (auto mmio_dev = dynamic_cast<mmio_device*>(dev)) {
         if (mmio_dev->get_id() == hw_device_id(0x0, VIRTIO_ID_BLOCK)) {
-            debug_early("virtio-blk::probe() -> found virtio-mmio device ...\n");
+            //debug_early("virtio-blk::probe() -> found virtio-mmio device ...\n");
             return new blk(*mmio_dev);
         }
     }

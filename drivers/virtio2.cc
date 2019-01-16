@@ -44,10 +44,11 @@ virtio_mmio_driver::virtio_mmio_driver(mmio_device& dev)
     reset_host_side();
 
     // Acknowledge device
-    add_dev_status(VIRTIO_CONFIG_S_ACKNOWLEDGE | VIRTIO_CONFIG_S_DRIVER);
+    add_dev_status(VIRTIO_CONFIG_S_ACKNOWLEDGE);
+    add_dev_status(VIRTIO_CONFIG_S_DRIVER);
 
     // Generic init of virtqueues
-    probe_virt_queues();
+    //probe_virt_queues();
 }
 
 virtio_mmio_driver::~virtio_mmio_driver()

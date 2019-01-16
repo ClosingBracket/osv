@@ -244,6 +244,9 @@ net::net(mmio_device& dev)
     setup_features();
     read_config();
 
+    // Generic init of virtqueues
+    probe_virt_queues();
+
     //TODO: Legacy vs non-legacy -> the non-legacy header includes one more field
     _hdr_size = sizeof(net_hdr_mrg_rxbuf);
 
