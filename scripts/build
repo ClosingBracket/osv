@@ -205,6 +205,14 @@ rofs)
 	qemu-img resize bare.raw ${img_size}b >/dev/null 2>&1
 	dd if=rofs.img of=bare.raw obs=${kernel_end} seek=1 >/dev/null 2>&1
 	qemu-img convert -f raw -O qcow2 bare.raw usr.img
+	# Just rofs
+	rofs_start=512
+	img2_size=$((rofs_start + rofs_size))
+	cp boot.bin rofs.raw
+	$SRC/scripts/imgedit.py setpartition "-f raw rofs.raw" 2 $rofs_start $rofs_size
+	qemu-img resize rofs.raw ${img2_size}b >/dev/null 2>&1
+	dd if=rofs.img of=rofs.raw obs=${rofs_start} seek=1 >/dev/null 2>&1
+	qemu-img convert -f raw -O qcow2 rofs.raw usr_rofs.img
 	;;
 ramfs)
 	qemu-img convert -f raw -O qcow2 loader.img usr.img
