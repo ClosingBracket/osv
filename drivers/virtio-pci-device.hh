@@ -85,13 +85,11 @@ public:
 
     virtual void init();
     virtual void register_interrupt(interrupt_factory irq_factory);
-    virtual void register_interrupt(unsigned int queue, std::function<void(void)> handler);
 
     virtual void select_queue(int queue);
     virtual u16 get_queue_size();
     virtual void setup_queue(int queue);
     virtual void activate_queue(vring *queue);
-    virtual void activate_queue(u64 phys);
     virtual void kick_queue(int queue);
 
     virtual u64 get_available_features();
