@@ -131,15 +131,7 @@ private:
     pci::bar* _bar1;
 };
 
-class virtio_modern_pci_device : public virtio_pci_device {
-public:
-    explicit virtio_modern_pci_device(pci::device *dev);
-    ~virtio_modern_pci_device();
-
-    virtual bool is_modern() { return true; };
-};
-
-// Creates instance of virtio_modern_pci_device or virtio_legacy_pci_device
+// Creates appropriate instance of virtio_pci_device
 // by reading configuration from PCI device
 virtio_device* create_virtio_device(pci::device *dev);
 
