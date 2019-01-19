@@ -32,7 +32,7 @@ struct interrupt_factory {
 };
 
 // Defines virtio transport abstraction used by virtio-driver
-// to communicate with virtio device. The specializations of thise
+// to communicate with virtio device. The specializations of this
 // include virtio pci device (legacy and modern) as well
 // as virtio mmio device. This abstraction allows virtio driver
 // not be tied to any specific transport (pci, mmio).
@@ -42,7 +42,7 @@ public:
 
     virtual void init() = 0;
 
-    virtual u8 ack_irq() = 0;
+    virtual u8 read_and_ack_isr() = 0;
     virtual void register_interrupt(interrupt_factory irq_factory) = 0;
 
     virtual void select_queue(int queue) = 0;

@@ -153,7 +153,7 @@ void virtio_legacy_pci_device::register_interrupt(interrupt_factory irq_factory)
     }
 }
 
-u8 virtio_legacy_pci_device::ack_irq()
+u8 virtio_legacy_pci_device::read_and_ack_isr()
 {
     return virtio_conf_readb(VIRTIO_PCI_ISR);
 }

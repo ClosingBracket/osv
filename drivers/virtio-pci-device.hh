@@ -106,7 +106,7 @@ public:
     virtual u8 read_config(u32 offset);
     virtual void write_config(u32 offset, u8 byte);
     virtual void dump_config();
-    virtual u8 ack_irq();
+    virtual u8 read_and_ack_isr();
 
     // The remaining space is defined by each driver as the per-driver
     // configuration space

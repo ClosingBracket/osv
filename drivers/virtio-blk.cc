@@ -99,7 +99,7 @@ struct driver blk_driver = {
 
 bool blk::ack_irq()
 {
-    auto isr = _dev.ack_irq();
+    auto isr = _dev.read_and_ack_isr();
     auto queue = get_virt_queue(0);
 
     if (isr) {

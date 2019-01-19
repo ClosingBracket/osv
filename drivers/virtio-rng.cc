@@ -87,7 +87,7 @@ void rng::handle_irq()
 
 bool rng::ack_irq()
 {
-    return _dev.ack_irq();
+    return _dev.read_and_ack_isr();
 }
 
 void rng::worker()

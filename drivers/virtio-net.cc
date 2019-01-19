@@ -216,7 +216,7 @@ void net::fill_qstats(const struct txq& txq, struct if_data* out_data) const
 
 bool net::ack_irq()
 {
-    auto isr = _dev.ack_irq();
+    auto isr = _dev.read_and_ack_isr();
 
     if (isr) {
         _rxq.vqueue->disable_interrupts();

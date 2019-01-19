@@ -128,7 +128,7 @@ void scsi::add_lun(u16 target, u16 lun)
 
 bool scsi::ack_irq()
 {
-    auto isr = _dev.ack_irq();
+    auto isr = _dev.read_and_ack_isr();
     auto queue = get_virt_queue(VIRTIO_SCSI_QUEUE_REQ);
 
     if (isr) {
