@@ -183,7 +183,7 @@ bool virtio_legacy_pci_device::parse_pci_config()
     return true;
 }
 
-virtio_device* create_virtio_device(pci::device *dev) {
+virtio_device* create_virtio_pci_device(pci::device *dev) {
     //TODO Read PCI device configuration to create instance
     // of virtio_modern_pci_device or virtio_legacy_pci_device
     return new virtio_legacy_pci_device(dev);

@@ -95,24 +95,28 @@ bool check_bus(u16 bus)
                 break;
             }
 
-            if (auto pci_dev = dynamic_cast<device*>(dev)) {
-                if (pci_dev->get_id().is_vendor(virtio::VIRTIO_VENDOR_ID)) {
-                    auto virtio_dev = virtio::create_virtio_device(pci_dev);
-                    if (!device_manager::instance()->register_device(virtio_dev)) {
-                        pci_e("Error: couldn't register virtio pci device %02x:%02x.%x",
+            hw_device *dev_to_register = dev;
+            //
+            // Create virtio_device if vendor is VIRTIO_VENDOR_ID
+            if (dev->get_vendor_id() == virtio::VIRTIO_VENDOR_ID) {
+                if (auto pci_dev = dynamic_cast<device*>(dev)) {
+                    dev_to_register = virtio::create_virtio_pci_device(pci_dev);
+                    if (!dev_to_register) {
+                        pci_e("Error: couldn't create virtio pci device %02x:%02x.%x",
                               bus, slot, func);
-                        //TODO: Need to beautify it as multiple instances of the device may exist
                         delete dev;
                     }
                 }
-            }
-            else {
-                if (!device_manager::instance()->register_device(dev)) {
-                    pci_e("Error: couldn't register device %02x:%02x.%x",
+                else
+                    pci_e("Error: expected regular pci device %02x:%02x.%x",
                           bus, slot, func);
-                    //TODO: Need to beautify it as multiple instances of the device may exist
-                    delete dev;
-                }
+            }
+
+            if (dev_to_register && !device_manager::instance()->register_device(dev_to_register)) {
+                pci_e("Error: couldn't register device %02x:%02x.%x",
+                      bus, slot, func);
+                //TODO: Need to beautify it as multiple instances of the device may exist
+                delete dev_to_register;
             }
 
             // test for multiple functions

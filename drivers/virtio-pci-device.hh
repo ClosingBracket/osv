@@ -133,7 +133,7 @@ private:
 
 // Creates appropriate instance of virtio_pci_device
 // by reading configuration from PCI device
-virtio_device* create_virtio_device(pci::device *dev);
+virtio_device* create_virtio_pci_device(pci::device *dev);
 
 }
 
