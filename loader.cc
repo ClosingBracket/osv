@@ -56,6 +56,7 @@
 
 #include "libc/network/__dns.hh"
 #include "early-console.hh"
+#include <processor.hh>
 
 using namespace osv;
 using namespace osv::clock::literals;
@@ -432,6 +433,7 @@ void* do_main_thread(void *_main_args)
     }
 
     boot_time.event("Total time");
+    processor::outb(123, 0x3f0);
 
     if (opt_bootchart) {
         boot_time.print_chart();
