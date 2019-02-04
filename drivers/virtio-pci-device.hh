@@ -13,6 +13,7 @@
 #include <osv/msi.hh>
 
 #include "virtio-device.hh"
+#include "virtio.hh"
 
 namespace virtio {
 
@@ -47,15 +48,15 @@ enum VIRTIO_PCI_CONFIG {
     /* Vector value used to disable MSI for queue */
     VIRTIO_MSI_NO_VECTOR = 0xffff,
     /* Virtio ABI version, this must match exactly */
-    VIRTIO_PCI_ABI_VERSION = 0,
+    VIRTIO_PCI_LEGACY_ABI_VERSION = 0,
     /* How many bits to shift physical queue address written to QUEUE_PFN.
      * 12 is historical, and due to x86 page size. */
     VIRTIO_PCI_QUEUE_ADDR_SHIFT = 12,
     /* The alignment to use between consumer and producer parts of vring.
      * x86 pagesize again. */
     VIRTIO_PCI_VRING_ALIGN = 4096,
-    VIRTIO_PCI_ID_MIN = 0x1000,
-    VIRTIO_PCI_ID_MAX = 0x103f,
+    VIRTIO_PCI_LEGACY_ID_MIN = 0x1000,
+    VIRTIO_PCI_LEGACY_ID_MAX = 0x103f,
 };
 
 class virtio_pci_device : public virtio_device {
@@ -63,16 +64,26 @@ public:
     explicit virtio_pci_device(pci::device *dev);
     ~virtio_pci_device();
 
-    virtual hw_device_id get_id() { return _dev->get_id(); }
+    virtual const char *get_version() = 0;
+    virtual u16 get_type_id() = 0;
+
+    virtual hw_device_id get_id() { return hw_device_id(VIRTIO_VENDOR_ID,get_type_id()); }
     virtual void print() { _dev->print(); }
     virtual void reset() { _dev->reset(); }
 
     bool is_attached()  { return _dev->is_attached(); }
     void set_attached() { _dev->set_attached(); }
 
+    virtual void dump_config();
+    virtual void init();
+    virtual void register_interrupt(interrupt_factory irq_factory);
+
+    virtual unsigned get_irq() { return 0; }
     size_t get_vring_alignment() { return VIRTIO_PCI_VRING_ALIGN; }
 
 protected:
+    virtual bool parse_pci_config() = 0;
+
     pci::device *_dev;
     interrupt_manager _msi;
     std::unique_ptr<pci_interrupt> _irq;
@@ -83,20 +94,18 @@ public:
     explicit virtio_legacy_pci_device(pci::device *dev);
     ~virtio_legacy_pci_device() {}
 
-    virtual void init();
-    virtual void register_interrupt(interrupt_factory irq_factory);
+    virtual const char *get_version() { return "legacy"; }
+    virtual u16 get_type_id() { return _dev->get_subsystem_id(); };
 
     virtual void select_queue(int queue);
     virtual u16 get_queue_size();
-    virtual void setup_queue(int queue);
-    virtual void activate_queue(vring *queue);
+    virtual void setup_queue(vring *queue);
     virtual void kick_queue(int queue);
 
     virtual u64 get_available_features();
     virtual bool get_available_feature_bit(int bit);
 
     virtual void set_enabled_features(u64 features);
-    virtual void set_enabled_feature_bit(int bit, bool on);
     virtual u64 get_enabled_features();
     virtual bool get_enabled_feature_bit(int bit);
 
@@ -104,21 +113,15 @@ public:
     virtual void set_status(u8 status);
 
     virtual u8 read_config(u32 offset);
-    virtual void write_config(u32 offset, u8 byte);
-    virtual void dump_config();
     virtual u8 read_and_ack_isr();
 
-    // The remaining space is defined by each driver as the per-driver
-    // configuration space
-    virtual int config_offset() { return (_dev->is_msix_enabled())? 24 : 20;}
-
     virtual bool is_modern() { return false; };
-private:
-    bool parse_pci_config();
+protected:
+    virtual bool parse_pci_config();
 
+private:
     // Access the virtio conf address space set by pci bar 1
     bool get_virtio_config_bit(u32 offset, int bit);
-    void set_virtio_config_bit(u32 offset, int bit, bool on);
 
     // Access virtio config space
     u8 virtio_conf_readb(u32 offset) { return _bar1->readb(offset);};

@@ -31,7 +31,6 @@ public:
     };
 
     enum {
-        VIRTIO_BLK_DEVICE_ID = 0x1001,
         VIRTIO_BLK_ID_BYTES = 20, /* ID string length */
 
         /*

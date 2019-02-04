@@ -224,24 +224,35 @@ bool net::ack_irq()
     } else {
         return false;
     }
+}
 
+void net::pre_init()
+{
+    // Steps 4 & 5 - negotiate and confirm features
+    //TODO: Come up with a better solution as setup_features
+    // calls virtual function which may not be available
+    // reliably as pre_init() is initialized as part of
+    // net constructor
+    setup_features();
+    read_config();
+
+    // Step 7 - generic init of virtqueues
+    probe_virt_queues();
 }
 
 net::net(virtio_device& dev)
     : virtio_driver(dev),
-      _rxq(get_virt_queue(0), [this] { this->receiver(); }),
-      _txq(this, get_virt_queue(1))
+    _bla(this),
+    _rxq(get_virt_queue(0), [this] { this->receiver(); }),
+    _txq(this, get_virt_queue(1))
 {
-    sched::thread* poll_task = _rxq.poll_task.get();
-
-    poll_task->set_priority(sched::thread::priority_infinity);
-
     _driver_name = "virtio-net";
     virtio_i("VIRTIO NET INSTANCE");
     _id = _instance++;
 
-    setup_features();
-    read_config();
+    sched::thread* poll_task = _rxq.poll_task.get();
+
+    poll_task->set_priority(sched::thread::priority_infinity);
 
     _hdr_size = _mergeable_bufs ? sizeof(net_hdr_mrg_rxbuf) : sizeof(net_hdr);
 
@@ -307,6 +318,7 @@ net::net(virtio_device& dev)
 
     fill_rx_ring();
 
+    // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 }
 
@@ -328,7 +340,7 @@ net::~net()
 void net::read_config()
 {
     //read all of the net config  in one shot
-    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(0, &_config, sizeof(_config));
 
     if (get_guest_feature_bit(VIRTIO_NET_F_MAC))
         net_i("The mac addr of the device is %x:%x:%x:%x:%x:%x",
@@ -861,7 +873,7 @@ u32 net::get_driver_features()
 hw_driver* net::probe(hw_device* dev)
 {
     if (auto virtio_dev = dynamic_cast<virtio_device*>(dev)) {
-        if (virtio_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_NET_DEVICE_ID)) {
+        if (virtio_dev->get_id() == hw_device_id(VIRTIO_VENDOR_ID, VIRTIO_ID_NET)) {
             if (opt_maxnic && maxnic-- <= 0) {
                 return nullptr;
             } else {

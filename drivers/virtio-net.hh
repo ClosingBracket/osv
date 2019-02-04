@@ -53,7 +53,6 @@ public:
     };
 
     enum {
-        VIRTIO_NET_DEVICE_ID = 0x1000,
         VIRTIO_NET_S_LINK_UP = 1,       /* Link is up */
         VIRTIO_NET_S_ANNOUNCE = 2,       /* Announcement is needed */
         VIRTIO_NET_OK = 0,
@@ -206,6 +205,7 @@ public:
 
     explicit net(virtio_device& dev);
     virtual ~net();
+    void pre_init();
 
     virtual std::string get_name() const { return _driver_name; }
     void read_config();
@@ -296,6 +296,12 @@ private:
 
         wakeup_stats tx_wakeup_stats;
     };
+
+    struct bla {
+        bla(virtio::net *_net) {
+           _net->pre_init();
+        }
+    } _bla;
 
     /* Single Rx queue object */
     struct rxq {

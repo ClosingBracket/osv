@@ -28,27 +28,26 @@ virtio_driver::virtio_driver(virtio_device& dev)
         _queues[i] = nullptr;
     }
 
-    //initialize device
+    // Initialize device
     _dev.init();
 
-    //make sure the queue is reset
-    reset_host_side();
+    // Step 1 - make sure the device is reset
+    reset_device();
 
-    // Acknowledge device
-    add_dev_status(VIRTIO_CONFIG_S_ACKNOWLEDGE | VIRTIO_CONFIG_S_DRIVER);
-
-    // Generic init of virtqueues
-    probe_virt_queues();
+    // Steps 2 & 3 - acknowledge device
+    add_dev_status(VIRTIO_CONFIG_S_ACKNOWLEDGE);
+    add_dev_status(VIRTIO_CONFIG_S_DRIVER);
 }
 
 virtio_driver::~virtio_driver()
 {
-    reset_host_side();
+    reset_device();
     free_queues();
 }
 
 void virtio_driver::setup_features()
 {
+    // Step 4 - negotiate features
     u64 dev_features = get_device_features();
     u64 drv_features = this->get_driver_features();
 
@@ -78,7 +77,7 @@ void virtio_driver::dump_config()
         virtio_d(" %d ", get_device_feature_bit(i));
 }
 
-void virtio_driver::reset_host_side()
+void virtio_driver::reset_device()
 {
     set_dev_status(0);
 }
@@ -120,9 +119,8 @@ void virtio_driver::probe_virt_queues()
         vring* queue = new vring(this, qsize, _num_queues);
         _queues[_num_queues] = queue;
 
-        _dev.setup_queue(_num_queues);
-        _dev.activate_queue(queue);
-
+        // Activate queue
+        _dev.setup_queue(queue);
         _num_queues++;
 
         // Debug print
@@ -177,16 +175,6 @@ void virtio_driver::set_guest_features(u64 features)
     _dev.set_enabled_features(features);
 }
 
-void virtio_driver::set_guest_feature_bit(int bit, bool on)
-{
-    _dev.set_enabled_feature_bit(bit, on);
-}
-
-u64 virtio_driver::get_guest_features()
-{
-    return _dev.get_enabled_features();
-}
-
 bool virtio_driver::get_guest_feature_bit(int bit)
 {
     return _dev.get_enabled_feature_bit(bit);
@@ -205,18 +193,6 @@ void virtio_driver::set_dev_status(u8 status)
 void virtio_driver::add_dev_status(u8 status)
 {
     _dev.set_status(get_dev_status() | status);
-}
-
-void virtio_driver::del_dev_status(u8 status)
-{
-    _dev.set_status(get_dev_status() & ~status);
-}
-
-void virtio_driver::virtio_conf_write(u32 offset, void* buf, int length)
-{
-    u8* ptr = reinterpret_cast<u8*>(buf);
-    for (int i = 0; i < length; i++)
-        _dev.write_config(offset + i, ptr[i]);
 }
 
 void virtio_driver::virtio_conf_read(u32 offset, void* buf, int length)

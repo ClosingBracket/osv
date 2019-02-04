@@ -23,6 +23,7 @@
 
 #include <osv/sched.hh>
 #include "osv/trace.hh"
+#include "osv/aligned_new.hh"
 
 #include <osv/device.h>
 #include <osv/bio.h>
@@ -119,8 +120,12 @@ blk::blk(virtio_device& virtio_dev)
     _id = _instance++;
     virtio_i("VIRTIO BLK INSTANCE %d", _id);
 
+    // Steps 4 & 5 - negotiate and confirm features
     setup_features();
     read_config();
+
+    // Step 7 - generic init of virtqueues
+    probe_virt_queues();
 
     //register the single irq callback for the block
     sched::thread* t = sched::thread::make([this] { this->req_done(); },
@@ -144,6 +149,7 @@ blk::blk(virtio_device& virtio_dev)
     // Enable indirect descriptor
     queue->set_use_indirect(true);
 
+    // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
     struct blk_priv* prv;
@@ -169,7 +175,7 @@ blk::~blk()
 void blk::read_config()
 {
     //read all of the block config (including size, mce, topology,..) in one shot
-    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(0, &_config, sizeof(_config));
 
     trace_virtio_blk_read_config_capacity(_config.capacity);
 
@@ -313,7 +319,7 @@ u32 blk::get_driver_features()
 
 hw_driver* blk::probe(hw_device* dev)
 {
-    return virtio::probe<blk, VIRTIO_BLK_DEVICE_ID>(dev);
+    return virtio::probe<blk, VIRTIO_ID_BLOCK>(dev);
 }
 
 }

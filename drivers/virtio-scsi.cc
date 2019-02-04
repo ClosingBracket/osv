@@ -147,8 +147,12 @@ scsi::scsi(virtio_device& dev)
     _driver_name = "virtio-scsi";
     _id = _instance++;
 
+    // Steps 4 & 5 - negotiate and confirm features
     setup_features();
     read_config();
+
+    // Step 7 - generic init of virtqueues
+    probe_virt_queues();
 
     //register the single irq callback for the block
     sched::thread* t = sched::thread::make([this] { this->req_done(); },
@@ -176,6 +180,7 @@ scsi::scsi(virtio_device& dev)
     // Enable indirect descriptor
     queue->set_use_indirect(true);
 
+    // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
     scan();
@@ -188,7 +193,7 @@ scsi::~scsi()
 
 void scsi::read_config()
 {
-    virtio_conf_read(_dev.config_offset(), &_config, sizeof(_config));
+    virtio_conf_read(0, &_config, sizeof(_config));
     config.max_lun = _config.max_lun;
     config.max_target = _config.max_target;
 }
@@ -249,7 +254,6 @@ u32 scsi::get_driver_features()
 
 hw_driver* scsi::probe(hw_device* dev)
 {
-    return virtio::probe<scsi, VIRTIO_SCSI_DEVICE_ID>(dev);
+    return virtio::probe<scsi, VIRTIO_ID_SCSI>(dev);
 }
-
 }

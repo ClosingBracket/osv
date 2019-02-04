@@ -36,35 +36,45 @@ struct interrupt_factory {
 // include virtio pci device (legacy and modern) as well
 // as virtio mmio device. This abstraction allows virtio driver
 // not be tied to any specific transport (pci, mmio).
+//
+// From the specification:
+// "Each device consists of the following parts:
+//   - Device status field - see section 2.1 of the spec
+//   - Feature bits - see section 2.2 of the spec
+//   - Device Configuration space - see section 2.3 of the spec
+//   - One or more virtqueues" - see section 2.4 of the spec
+//
+// For details please VIRTIO 1.0 specification here -
+// http://docs.oasis-open.org/virtio/virtio/v1.0/virtio-v1.0.html.
 class virtio_device : public hw_device {
 public:
     virtual ~virtio_device() {};
 
     virtual void init() = 0;
 
+    virtual unsigned get_irq() = 0;
     virtual u8 read_and_ack_isr() = 0;
     virtual void register_interrupt(interrupt_factory irq_factory) = 0;
 
     virtual void select_queue(int queue) = 0;
     virtual u16 get_queue_size() = 0;
-    virtual void setup_queue(int queue) = 0;
-    virtual void activate_queue(vring *queue) = 0;
+    virtual void setup_queue(vring *queue) = 0;
     virtual void kick_queue(int queue) = 0;
 
     virtual u64 get_available_features() = 0;
     virtual bool get_available_feature_bit(int bit) = 0;
 
     virtual void set_enabled_features(u64 features) = 0;
-    virtual void set_enabled_feature_bit(int bit, bool on) = 0;
     virtual u64 get_enabled_features() = 0;
     virtual bool get_enabled_feature_bit(int bit) = 0;
 
+    // From the spec:
+    // "The device status field provides a simple low-level indication of
+    //  the completed steps of the device initialization sequence".
     virtual u8 get_status() = 0;
     virtual void set_status(u8 status) = 0;
 
     virtual u8 read_config(u32 offset) = 0;
-    virtual void write_config(u32 offset, u8 byte) = 0;
-    virtual int config_offset() = 0;
     virtual void dump_config() = 0;
 
     virtual bool is_modern() = 0;

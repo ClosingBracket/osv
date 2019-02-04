@@ -33,7 +33,6 @@ public:
         VIRTIO_SCSI_CDB_SIZE = 32,
         VIRTIO_SCSI_SENSE_SIZE = 96,
         VIRTIO_SCSI_SECTOR_SIZE = 512,
-        VIRTIO_SCSI_DEVICE_ID = 0x1004,
     };
 
     enum scsi_res_code {

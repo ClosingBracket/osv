@@ -22,10 +22,6 @@ namespace virtio {
 
 class rng : public virtio_driver, randomdev::hw_rng {
 public:
-    enum {
-        VIRTIO_RNG_DEVICE_ID = 0x1005,
-    };
-
     explicit rng(virtio_device& dev);
     virtual ~rng();
 

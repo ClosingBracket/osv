@@ -40,6 +40,12 @@ rng::rng(virtio_device& dev)
     : virtio_driver(dev)
     , _thread(sched::thread::make([&] { worker(); }, sched::thread::attr().name("virtio-rng")))
 {
+    // Steps 4 & 5 - negotiate and confirm features
+    setup_features();
+
+    // Step 7 - generic init of virtqueues
+    probe_virt_queues();
+
     interrupt_factory int_factory;
     int_factory.create_pci_interrupt = [this](pci::device &pci_dev) {
         return new pci_interrupt(
@@ -51,6 +57,7 @@ rng::rng(virtio_device& dev)
 
     _queue = get_virt_queue(0);
 
+    // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
     _thread->start();
@@ -132,7 +139,7 @@ void rng::refill()
 
 hw_driver* rng::probe(hw_device* dev)
 {
-    return virtio::probe<rng, VIRTIO_RNG_DEVICE_ID>(dev);
+    return virtio::probe<rng, VIRTIO_ID_RNG>(dev);
 }
 
 }

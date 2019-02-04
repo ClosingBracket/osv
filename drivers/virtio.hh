@@ -79,22 +79,18 @@ public:
     u64 get_device_features();
     bool get_device_feature_bit(int bit);
     void set_guest_features(u64 features);
-    void set_guest_feature_bit(int bit, bool on);
-    u64 get_guest_features();
     bool get_guest_feature_bit(int bit);
 
     // device status
     u8 get_dev_status();
     void set_dev_status(u8 status);
     void add_dev_status(u8 status);
-    void del_dev_status(u8 status);
 
     // Access virtio config space
     void virtio_conf_read(u32 offset, void* buf, int length);
-    void virtio_conf_write(u32 offset, void* buf, int length);
 
     bool kick(int queue);
-    void reset_host_side();
+    void reset_device();
     void free_queues();
 
     bool get_indirect_buf_cap() {return _cap_indirect_buf;}
