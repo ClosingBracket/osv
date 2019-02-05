@@ -205,7 +205,7 @@ public:
 
     explicit net(virtio_device& dev);
     virtual ~net();
-    void pre_init();
+    void init();
 
     virtual std::string get_name() const { return _driver_name; }
     void read_config();
@@ -297,11 +297,11 @@ private:
         wakeup_stats tx_wakeup_stats;
     };
 
-    struct bla {
-        bla(virtio::net *_net) {
-           _net->pre_init();
+    struct pre_init {
+        explicit pre_init(virtio::net *_net) {
+           _net->init();
         }
-    } _bla;
+    } _pre_init;
 
     /* Single Rx queue object */
     struct rxq {

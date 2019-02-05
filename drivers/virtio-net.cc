@@ -226,13 +226,9 @@ bool net::ack_irq()
     }
 }
 
-void net::pre_init()
+void net::init()
 {
     // Steps 4 & 5 - negotiate and confirm features
-    //TODO: Come up with a better solution as setup_features
-    // calls virtual function which may not be available
-    // reliably as pre_init() is initialized as part of
-    // net constructor
     setup_features();
     read_config();
 
@@ -242,7 +238,7 @@ void net::pre_init()
 
 net::net(virtio_device& dev)
     : virtio_driver(dev),
-    _bla(this),
+    _pre_init(this),
     _rxq(get_virt_queue(0), [this] { this->receiver(); }),
     _txq(this, get_virt_queue(1))
 {
