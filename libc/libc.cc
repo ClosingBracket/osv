@@ -32,6 +32,10 @@
 char *program_invocation_name;
 char *program_invocation_short_name;
 
+// These two are used by GNU coreutils
+char* __progname;
+char* __progname_full;
+
 int libc_error(int err)
 {
     errno = err;

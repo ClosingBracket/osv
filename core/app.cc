@@ -23,6 +23,8 @@
 using namespace boost::range;
 
 extern int optind;
+extern char* __progname;
+extern char* __progname_full;
 
 // Java uses this global variable (supplied by Glibc) to figure out
 // aproximatively where the initial thread's stack end.
@@ -338,8 +340,8 @@ void application::prepare_argv(elf::program *program)
 {
     // Prepare program_* variable used by the libc
     char *c_path = (char *)(_command.c_str());
-    program_invocation_name = c_path;
-    program_invocation_short_name = basename(c_path);
+    __progname_full = program_invocation_name = c_path;
+    __progname = program_invocation_short_name = basename(c_path);
 
     // Allocate a continuous buffer for arguments: _argv_buf
     // First count the trailing zeroes
