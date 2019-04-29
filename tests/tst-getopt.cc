@@ -1,6 +1,7 @@
 // http://www.informit.com/articles/article.aspx?p=175771&seqNum=3
 // https://www.gnu.org/software/libc/manual/html_node/Getopt-Long-Option-Example.html
 
+#include <getopt.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,6 +65,130 @@ test_getopt(int argc, char * const argv[], int expected_aflag, int expected_bfla
   }
 }
 
+static int verbose_flag;
+
+void
+test_getopt_long(int argc, char * const argv[], int expected_aflag, int expected_bflag, const char *expected_cvalue, const char *expected_dvalue, const char *expected_fvalue, int expected_verbose)
+{
+  int c;
+  int aflag = 0;
+  int bflag = 0;
+  char *cvalue = NULL;
+  char *dvalue = NULL;
+  char *fvalue = NULL;
+
+  opterr = 0;
+  optind = 0;
+
+  while (1)
+    {
+      struct option long_options[] =
+        {
+          /* These options set a flag. */
+          {"verbose", no_argument,       &verbose_flag, 1},
+          {"brief",   no_argument,       &verbose_flag, 0},
+          /* These options don’t set a flag.
+             We distinguish them by their indices. */
+          {"add",     no_argument,       0, 'a'},
+          {"append",  no_argument,       0, 'b'},
+          {"delete",  required_argument, 0, 'd'},
+          {"create",  required_argument, 0, 'c'},
+          {"file",    required_argument, 0, 'f'},
+          {0, 0, 0, 0}
+        };
+      /* getopt_long stores the option index here. */
+      int option_index = 0;
+
+      c = getopt_long (argc, argv, "abc:d:f:",
+                       long_options, &option_index);
+
+      /* Detect the end of the options. */
+      if (c == -1)
+        break;
+
+      switch (c)
+        {
+        case 0:
+          /* If this option set a flag, do nothing else now. */
+          if (long_options[option_index].flag != 0)
+            break;
+          printf ("option %s", long_options[option_index].name);
+          if (optarg)
+            printf (" with arg %s", optarg);
+          printf ("\n");
+          break;
+
+        case 'a':
+	  aflag = 1;
+          break;
+
+        case 'b':
+	  bflag = 1;
+          break;
+
+        case 'c':
+          printf ("option -c with value `%s'\n", optarg);
+	  cvalue = optarg;
+          break;
+
+        case 'd':
+          printf ("option -d with value `%s'\n", optarg);
+	  dvalue = optarg;
+          break;
+
+        case 'f':
+          printf ("option -f with value `%s'\n", optarg);
+	  fvalue = optarg;
+          break;
+
+        case '?':
+          /* getopt_long already printed an error message. */
+          assert(0);
+
+        default:
+          assert(0);
+        }
+    }
+
+  assert(expected_aflag == aflag);
+  assert(expected_bflag == bflag);
+
+  if (expected_cvalue && cvalue) {
+     assert(strcmp(expected_cvalue,cvalue)==0); 
+  }
+  else {
+     assert(!cvalue && !expected_cvalue);
+  }
+
+  if (expected_dvalue && dvalue) {
+     assert(strcmp(expected_dvalue,dvalue)==0); 
+  }
+  else {
+     assert(!dvalue && !expected_dvalue);
+  }
+
+  if (expected_fvalue && fvalue) {
+     assert(strcmp(expected_fvalue,fvalue)==0); 
+  }
+  else {
+     assert(!fvalue && !expected_fvalue);
+  }
+
+  /* Instead of reporting ‘--verbose’
+     and ‘--brief’ as they are encountered,
+     we report the final status resulting from them. */
+  assert(verbose_flag == expected_verbose);
+
+  /* Print any remaining command line arguments (not options). */
+  if (optind < argc)
+    {
+      printf ("non-option ARGV-elements: ");
+      while (optind < argc)
+        printf ("%s ", argv[optind++]);
+      putchar ('\n');
+    }
+}
+
 int
 main (int argc, char *argv[]) {
   char * const test1[] = {(char*)"tst-getopt",nullptr};
@@ -95,6 +220,12 @@ main (int argc, char *argv[]) {
 
   char * const test10[] = {(char*)"tst-getopt",(char*)"-a",(char*)"-",nullptr};
   test_getopt(3,test10,1,0,nullptr,"-");
+
+  char * const long_test1[] = {(char*)"tst-getopt",(char*)"-a",(char*)"--create",(char*)"bula",nullptr};
+  test_getopt_long(4,long_test1,1,0,"bula",nullptr,nullptr,0);
+
+  char * const long_test2[] = {(char*)"tst-getopt",(char*)"-a",(char*)"--create",(char*)"bula",(char*)"--append",(char*)"-f",(char*)"x.txt",(char*)"--verbose",nullptr};
+  test_getopt_long(8,long_test2,1,1,"bula",nullptr,"x.txt",1);
 
   return 0;
 }
