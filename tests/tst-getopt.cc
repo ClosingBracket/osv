@@ -15,7 +15,6 @@ test_getopt(int argc, char * const argv[], int expected_aflag, int expected_bfla
   int aflag = 0;
   int bflag = 0;
   char *cvalue = NULL;
-  int index;
   int c;
 
   opterr = 0;
