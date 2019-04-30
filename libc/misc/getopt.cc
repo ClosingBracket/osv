@@ -15,9 +15,18 @@ int optind=1, opterr=1, optopt, __optpos, __optreset=0;
 #define optpos __optpos
 weak_alias(__optreset, optreset);
 
-#define COPY_VALUE(source,target) if (target) { \
-       *target = source; \
-} 
+#define COPY_GLOBALS_AND_RETURN(retval) { \
+if (optarg2) { \
+       *optarg2 = optarg; \
+} \
+if (optind2) { \
+       *optind2 = optind; \
+}\
+if (optopt2) { \
+       *optopt2 = optopt; \
+}\
+return retval; \
+}
 
 int getopt(int argc, char * const argv[], const char *optstring)
 {
@@ -47,15 +56,13 @@ int getopt(int argc, char * const argv[], const char *optstring)
 		__optreset = 0;
 		__optpos = 0;
 		optind = 1;
-                COPY_VALUE(optind,optind2)
 	}
 
 	if (optind >= argc || !argv[optind] || argv[optind][0] != '-' || !argv[optind][1])
-		return -1;
+		COPY_GLOBALS_AND_RETURN(-1)
 	if (argv[optind][1] == '-' && !argv[optind][2]) {
                 optind++;
-                COPY_VALUE(optind,optind2)
-		return -1;
+		COPY_GLOBALS_AND_RETURN(-1)
         }
 
 	if (!optpos) optpos++;
@@ -65,12 +72,10 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	}
 	optchar = argv[optind]+optpos;
 	optopt = c;
-        COPY_VALUE(optopt,optopt2)
 	optpos += k;
 
 	if (!argv[optind][optpos]) {
 		optind++;
-                COPY_VALUE(optind,optind2)
 		optpos = 0;
 	}
 
@@ -83,26 +88,24 @@ int getopt(int argc, char * const argv[], const char *optstring)
 			write(2, optchar, k);
 			write(2, "\n", 1);
 		}
-		return '?';
+		COPY_GLOBALS_AND_RETURN('?')
 	}
 
 	if (optstring[i+1] == ':') {
 		if (optind >= argc) {
-			if (optstring[0] == ':') return ':';
+			if (optstring[0] == ':') COPY_GLOBALS_AND_RETURN(':')
 			if (opterr) {
 				write(2, argv[0], strlen(argv[0]));
 				write(2, ": option requires an argument: ", 31);
 				write(2, optchar, k);
 				write(2, "\n", 1);
 			}
-			return '?';
+			COPY_GLOBALS_AND_RETURN('?')
 		}
 		optarg = argv[optind++] + optpos;
-                COPY_VALUE(optarg,optarg2)
-                COPY_VALUE(optind,optind2)
 		optpos = 0;
 	}
-	return c;
+	COPY_GLOBALS_AND_RETURN(c)
 }
 
 weak_alias(getopt, __posix_getopt);
