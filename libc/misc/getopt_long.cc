@@ -4,9 +4,15 @@
 #include <osv/sched.hh>
 #include <osv/app.hh>
 
-#define COPY_VALUE(source,target) if (target) { \
-       *target = source; \
-} 
+#define COPY_GLOBALS_AND_RETURN(retval) { \
+if (optarg2) { \
+       *optarg2 = optarg; \
+} \
+if (optind2) { \
+       *optind2 = optind; \
+}\
+return retval; \
+}
 
 extern "C" {
 
@@ -31,9 +37,8 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
 		__optreset = 0;
 		__optpos = 0;
 		optind = 1;
-                COPY_VALUE(optind,optind2)
 	}
-	if (optind >= argc || !argv[optind] || argv[optind][0] != '-') return -1;
+	if (optind >= argc || !argv[optind] || argv[optind][0] != '-') COPY_GLOBALS_AND_RETURN(-1)
 	if ((longonly && argv[optind][1]) ||
 		(argv[optind][1] == '-' && argv[optind][2]))
 	{
@@ -47,36 +52,26 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
 			if (*opt == '=') {
 				if (!longopts[i].has_arg) continue;
 				optarg = opt+1;
-                                COPY_VALUE(optarg,optarg2)
 			} else {
 				if (longopts[i].has_arg == required_argument) {
 					if (!(optarg = argv[++optind])) {
-                                                COPY_VALUE(optarg,optarg2)
-                                                COPY_VALUE(optind,optind2)
-						return ':';
+						COPY_GLOBALS_AND_RETURN(':')
                                         }
-					else {
-                                                COPY_VALUE(optarg,optarg2)
-                                                COPY_VALUE(optind,optind2)
-                                        }                                        
 				} else {
                                   optarg = NULL;
-                                  COPY_VALUE(optarg,optarg2)
                                 }
 			}
 			optind++;
-                        COPY_VALUE(optind,optind2)
 			if (idx) *idx = i;
 			if (longopts[i].flag) {
 				*longopts[i].flag = longopts[i].val;
-				return 0;
+				COPY_GLOBALS_AND_RETURN(0)
 			}
-			return longopts[i].val;
+			COPY_GLOBALS_AND_RETURN(longopts[i].val)
 		}
 		if (argv[optind][1] == '-') {
 			optind++;
-                        COPY_VALUE(optind,optind2)
-			return '?';
+			COPY_GLOBALS_AND_RETURN('?')
 		}
 	}
 	return getopt(argc, argv, optstring);
