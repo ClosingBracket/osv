@@ -21,8 +21,9 @@ extern int __optpos, __optreset;
 static int __getopt_long(int argc, char *const *argv, const char *optstring, const struct option *longopts, int *idx, int longonly)
 {
 	char **optarg2 = nullptr;
-        int* optind2 = nullptr;
-	auto __runtime = sched::thread::current()->app_runtime();
+    int* optind2 = nullptr;
+
+    auto __runtime = sched::thread::current()->app_runtime();
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
         assert(obj);

@@ -36,8 +36,9 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	char *optchar;
 
 	char **optarg2 = nullptr;
-        int* optind2 = nullptr, *optopt2 = nullptr, *opterr2 = nullptr;
-	auto __runtime = sched::thread::current()->app_runtime();
+    int* optind2 = nullptr, *optopt2 = nullptr, *opterr2 = nullptr;
+
+    auto __runtime = sched::thread::current()->app_runtime();
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
         assert(obj);
