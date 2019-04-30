@@ -152,11 +152,13 @@ void* object::cached_lookup(const char* name)
     auto name_str = std::string(name);
     auto cached_address_it = _cached_symbols.find(name_str);
     if (cached_address_it != _cached_symbols.end()) {
+        printf("cached_lookup: hit %s\n", name);
         return cached_address_it->second;
     }
     else {
         void *symbol_address = lookup(name);
         _cached_symbols[name_str] = symbol_address;
+        printf("cached_lookup: placed address %p of %s\n", symbol_address, name);
         return symbol_address;
     }
 }
