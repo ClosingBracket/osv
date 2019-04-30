@@ -25,10 +25,12 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
 	auto __runtime = sched::thread::current()->app_runtime();
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
-        	assert(obj);
-                optarg2 = reinterpret_cast<char**>(obj->cached_lookup("optarg"));
-                optind2 = reinterpret_cast<int*>(obj->cached_lookup("optind"));
-        }
+        assert(obj);
+        optarg2 = reinterpret_cast<char**>(obj->cached_lookup("optarg"));
+        printf("optarg: %p vs %p\n", &optarg, optarg2);
+        optind2 = reinterpret_cast<int*>(obj->cached_lookup("optind"));
+        printf("optind: %p vs %p\n", &optind, optind2);
+    }
 
 	if (optind2)
 	    optind = *optind2;

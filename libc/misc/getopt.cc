@@ -42,18 +42,20 @@ int getopt(int argc, char * const argv[], const char *optstring)
 		auto obj = __runtime->app.lib();
         assert(obj);
         optarg2 = reinterpret_cast<char**>(obj->cached_lookup("optarg"));
+        printf("optarg: %p vs %p\n", &optarg, optarg2);
         optind2 = reinterpret_cast<int*>(obj->cached_lookup("optind"));
+        printf("optind: %p vs %p\n", &optind, optind2);
         optopt2 = reinterpret_cast<int*>(obj->cached_lookup("optopt"));
+        printf("optopt: %p vs %p\n", &optopt, optopt2);
         opterr2 = reinterpret_cast<int*>(obj->cached_lookup("opterr"));
+        printf("opterr: %p vs %p\n", &opterr, opterr2);
     }
 
 	if (opterr2) {
         opterr = *opterr2;
-        printf("opterr: %p vs %p\n", &opterr, opterr2);
     }
 	if (optind2) {
         optind = *optind2;
-        printf("optind: %p vs %p\n", &optind, optind2);
     }
 
 	if (!optind || __optreset) {
