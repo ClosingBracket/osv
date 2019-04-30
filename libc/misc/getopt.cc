@@ -41,10 +41,10 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
         	assert(obj);
-                optarg2 = reinterpret_cast<char**>(obj->lookup("optarg"));
-                optind2 = reinterpret_cast<int*>(obj->lookup("optind"));
-                optopt2 = reinterpret_cast<int*>(obj->lookup("optopt"));
-                opterr2 = reinterpret_cast<int*>(obj->lookup("opterr"));
+                optarg2 = reinterpret_cast<char**>(obj->cached_lookup("optarg"));
+                optind2 = reinterpret_cast<int*>(obj->cached_lookup("optind"));
+                optopt2 = reinterpret_cast<int*>(obj->cached_lookup("optopt"));
+                opterr2 = reinterpret_cast<int*>(obj->cached_lookup("opterr"));
         }
 
 	if (opterr2)

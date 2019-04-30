@@ -26,8 +26,8 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
         	assert(obj);
-                optarg2 = reinterpret_cast<char**>(obj->lookup("optarg"));
-                optind2 = reinterpret_cast<int*>(obj->lookup("optind"));
+                optarg2 = reinterpret_cast<char**>(obj->cached_lookup("optarg"));
+                optind2 = reinterpret_cast<int*>(obj->cached_lookup("optind"));
         }
 
 	if (optind2)
