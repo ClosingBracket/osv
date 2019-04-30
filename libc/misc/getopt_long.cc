@@ -24,6 +24,9 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
                 optind2 = reinterpret_cast<int*>(obj->lookup("optind"));
         }
 
+	if (optind2)
+	    optind = *optind2;
+
 	if (!optind || __optreset) {
 		__optreset = 0;
 		__optpos = 0;
@@ -52,6 +55,10 @@ static int __getopt_long(int argc, char *const *argv, const char *optstring, con
                                                 COPY_VALUE(optind,optind2)
 						return ':';
                                         }
+					else {
+                                                COPY_VALUE(optarg,optarg2)
+                                                COPY_VALUE(optind,optind2)
+                                        }                                        
 				} else {
                                   optarg = NULL;
                                   COPY_VALUE(optarg,optarg2)

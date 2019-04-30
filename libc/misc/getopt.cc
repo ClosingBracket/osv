@@ -27,7 +27,7 @@ int getopt(int argc, char * const argv[], const char *optstring)
 	char *optchar;
 
 	char **optarg2 = nullptr;
-        int* optind2 = nullptr, *optopt2 = nullptr;
+        int* optind2 = nullptr, *optopt2 = nullptr, *opterr2 = nullptr;
 	auto __runtime = sched::thread::current()->app_runtime();
 	if (__runtime) {
 		auto obj = __runtime->app.lib();
@@ -35,7 +35,13 @@ int getopt(int argc, char * const argv[], const char *optstring)
                 optarg2 = reinterpret_cast<char**>(obj->lookup("optarg"));
                 optind2 = reinterpret_cast<int*>(obj->lookup("optind"));
                 optopt2 = reinterpret_cast<int*>(obj->lookup("optopt"));
+                opterr2 = reinterpret_cast<int*>(obj->lookup("opterr"));
         }
+
+	if (opterr2)
+	   opterr = *opterr2;
+	if (optind2)
+	   optind = *optind2;
 
 	if (!optind || __optreset) {
 		__optreset = 0;

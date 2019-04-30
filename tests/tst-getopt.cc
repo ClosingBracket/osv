@@ -17,6 +17,8 @@ test_getopt(int argc, char * const argv[], int expected_aflag, int expected_bfla
   char *cvalue = NULL;
   int c;
 
+  printf("Running test: %s ...\n", argv[0]);
+
   opterr = 0;
   optind = 0;
 
@@ -75,6 +77,8 @@ test_getopt_long(int argc, char * const argv[], int expected_aflag, int expected
   char *cvalue = NULL;
   char *dvalue = NULL;
   char *fvalue = NULL;
+
+  printf("Running test: %s ...\n", argv[0]);
 
   opterr = 0;
   optind = 0;
@@ -190,40 +194,40 @@ test_getopt_long(int argc, char * const argv[], int expected_aflag, int expected
 
 int
 main (int argc, char *argv[]) {
-  char * const test1[] = {(char*)"tst-getopt",nullptr};
+  char * const test1[] = {(char*)"tst-getopt1",nullptr};
   test_getopt(1,test1,0,0,nullptr,nullptr);
 
-  char * const test2[] = {(char*)"tst-getopt",(char*)"-a",(char*)"-b",nullptr};
+  char * const test2[] = {(char*)"tst-getopt2",(char*)"-a",(char*)"-b",nullptr};
   test_getopt(3,test2,1,1,nullptr,nullptr);
 
-  char * const test3[] = {(char*)"tst-getopt",(char*)"-ab",nullptr};
+  char * const test3[] = {(char*)"tst-getopt3",(char*)"-ab",nullptr};
   test_getopt(2,test3,1,1,nullptr,nullptr);
 
-  char * const test4[] = {(char*)"tst-getopt",(char*)"-c",(char*)"foo",nullptr};
+  char * const test4[] = {(char*)"tst-getopt4",(char*)"-c",(char*)"foo",nullptr};
   test_getopt(3,test4,0,0,"foo",nullptr);
 
-  char * const test5[] = {(char*)"tst-getopt",(char*)"-cfoo",nullptr};
+  char * const test5[] = {(char*)"tst-getopt5",(char*)"-cfoo",nullptr};
   test_getopt(2,test5,0,0,"foo",nullptr);
 
-  char * const test6[] = {(char*)"tst-getopt",(char*)"arg1",nullptr};
+  char * const test6[] = {(char*)"tst-getopt6",(char*)"arg1",nullptr};
   test_getopt(2,test6,0,0,nullptr,"arg1");
 
-  char * const test7[] = {(char*)"tst-getopt",(char*)"-a",(char*)"arg1",nullptr};
+  char * const test7[] = {(char*)"tst-getopt7",(char*)"-a",(char*)"arg1",nullptr};
   test_getopt(3,test7,1,0,nullptr,"arg1");
 
-  char * const test8[] = {(char*)"tst-getopt",(char*)"-c",(char*)"foo",(char*)"arg1",nullptr};
+  char * const test8[] = {(char*)"tst-getopt8",(char*)"-c",(char*)"foo",(char*)"arg1",nullptr};
   test_getopt(4,test8,0,0,"foo","arg1");
 
-  char * const test9[] = {(char*)"tst-getopt",(char*)"-a",(char*)"--",(char*)"-b",nullptr};
+  char * const test9[] = {(char*)"tst-getopt9",(char*)"-a",(char*)"--",(char*)"-b",nullptr};
   test_getopt(4,test9,1,0,nullptr,"-b");
 
-  char * const test10[] = {(char*)"tst-getopt",(char*)"-a",(char*)"-",nullptr};
+  char * const test10[] = {(char*)"tst-getopt10",(char*)"-a",(char*)"-",nullptr};
   test_getopt(3,test10,1,0,nullptr,"-");
 
-  char * const long_test1[] = {(char*)"tst-getopt",(char*)"-a",(char*)"--create",(char*)"bula",nullptr};
+  char * const long_test1[] = {(char*)"tst-getopt_long1",(char*)"-a",(char*)"--create",(char*)"bula",nullptr};
   test_getopt_long(4,long_test1,1,0,"bula",nullptr,nullptr,0);
 
-  char * const long_test2[] = {(char*)"tst-getopt",(char*)"-a",(char*)"--create",(char*)"bula",(char*)"--append",(char*)"-f",(char*)"x.txt",(char*)"--verbose",nullptr};
+  char * const long_test2[] = {(char*)"tst-getopt_long2",(char*)"-a",(char*)"--create",(char*)"bula",(char*)"--append",(char*)"-f",(char*)"x.txt",(char*)"--verbose",nullptr};
   test_getopt_long(8,long_test2,1,1,"bula",nullptr,"x.txt",1);
 
   return 0;
