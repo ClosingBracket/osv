@@ -455,3 +455,22 @@ extern "C" long syscall_wrapper(long number, long p1, long p2, long p3, long p4,
     }
     return ret;
 }
+
+extern "C" int getfilecon(const char *path, void* con) {
+    return -1;
+}
+
+extern "C" int lgetfilecon(const char *path, void *con) {
+    return -1;
+}
+
+extern "C" int fgetfilecon(int fd, void *con) {
+    return -1;
+}
+
+extern "C" void freecon(void *con) {
+}
+
+extern "C" int is_selinux_enabled() {
+    return 0;
+}
