@@ -451,9 +451,12 @@ void object::load_segments()
     // As explained in issue #352, we currently don't correctly support TLS
     // used in PIEs.
     if (_is_executable && _tls_segment) {
-        std::cout << "WARNING: " << pathname() << " is a PIE using TLS. This "
-                  << "is currently unsupported (see issue #352). Link with "
+        auto tls_size = _tls_init_size + _tls_uninit_size;
+        if (tls_size > 256) {
+            std::cout << "WARNING: " << pathname() << " is a PIE using TLS of size " << tls_size
+                  << " which is greater than 256 bytes limit. Either increase the limit of link with "
                   << "'-shared' instead of '-pie'.\n";
+        }
     }
 }
 
