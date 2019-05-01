@@ -419,7 +419,7 @@ ifeq ($(arch),x64)
 
 # kernel_base is where the kernel will be loaded after uncompression.
 # lzkernel_base is where the compressed kernel is loaded from disk.
-kernel_base := 0x200000
+kernel_base := 0x2000000
 lzkernel_base := 0x100000
 
 $(out)/arch/x64/boot16.o: $(out)/lzloader.elf
