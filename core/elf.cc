@@ -452,9 +452,9 @@ void object::load_segments()
     // used in PIEs.
     if (_is_executable && _tls_segment) {
         auto tls_size = _tls_init_size + _tls_uninit_size;
-        if (tls_size > 256) {
+        if (tls_size > PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE) {
             std::cout << "WARNING: " << pathname() << " is a PIE using TLS of size " << tls_size
-                  << " which is greater than 256 bytes limit. Either increase the limit of link with "
+                  << " which is greater than " << PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE << " bytes limit. Either increase the limit of link with "
                   << "'-shared' instead of '-pie'.\n";
         }
     }
