@@ -73,6 +73,9 @@ int main(int argc, char** argv)
     report(ex1 == 322, "ex1 modified");
     report(ex2 == 433, "ex2 modified");
     report(ex3 == 766, "ex3 modified");
+#ifndef __OSV__
+    report(v7 == 790, "v7 modified");
+#endif
 
     // Write on this thread's variables, and see a new thread gets
     // the original default values
@@ -105,6 +108,9 @@ int main(int argc, char** argv)
             report(ex1 == 322, "ex1 modified in new thread");
             report(ex2 == 433, "ex2 modified in new thread");
             report(ex3 == 766, "ex3 modified in new thread");
+#ifndef __OSV__
+            report(v7 == 790, "v7 modified");
+#endif
     });
     t1.join();
 
