@@ -112,6 +112,7 @@ object::object(program& prog, std::string pathname)
     , _is_executable(false)
     , _visibility(nullptr)
 {
+    printf("Created object %s with module index: %d\n", _pathname.c_str(), _module_index);
 }
 
 object::~object()
@@ -437,9 +438,12 @@ void object::load_segments()
     // As explained in issue #352, we currently don't correctly support TLS
     // used in PIEs.
     if (_is_executable && _tls_segment) {
-        std::cout << "WARNING: " << pathname() << " is a PIE using TLS. This "
-                  << "is currently unsupported (see issue #352). Link with "
+        auto tls_size = _tls_init_size + _tls_uninit_size;
+        if (tls_size > PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE) {
+            std::cout << "WARNING: " << pathname() << " is a PIE using TLS of size " << tls_size
+                  << " which is greater than " << PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE << " bytes limit. Either increase the limit of link with "
                   << "'-shared' instead of '-pie'.\n";
+        }
     }
 }
 
@@ -1627,7 +1631,14 @@ void* __tls_get_addr(module_and_offset* mao)
     abort();
 #endif /* AARCH64_PORT_STUB */
 
-    auto tls = sched::thread::current()->get_tls(mao->module);
+    //printf("__tls_get_addr: module:%s, offset:%d\n", mao->module, mao->offset);
+    //
+    // TODO: If object for mao->module (target) is PIE and offset is within local exec reservation
+    // return TLS of the kernel (module 0)
+    auto module = mao->module;
+    if (module == 2 )
+       module = 1;
+    auto tls = sched::thread::current()->get_tls(module);
     if (tls) {
         return tls + mao->offset;
     } else {

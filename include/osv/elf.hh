@@ -22,6 +22,7 @@
 /// Marks a shared object as locked in memory and forces eager resolution of
 /// PLT entries so OSv APIs like preempt_disable() can be used
 #define OSV_ELF_MLOCK_OBJECT() asm(".pushsection .note.osv-mlock, \"a\"; .long 0, 0, 0; .popsection")
+#define PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE 64
 
 /**
  * elf namespace
@@ -362,7 +363,10 @@ public:
     void init_static_tls();
     size_t initial_tls_size() { return _initial_tls_size; }
     void* initial_tls() { return _initial_tls.get(); }
+    void* get_tls_segment() { return _tls_segment; }
     std::vector<ptrdiff_t>& initial_tls_offsets() { return _initial_tls_offsets; }
+    bool is_executable() { return _is_executable; }
+    ulong get_tls_size();
 protected:
     virtual void load_segment(const Elf64_Phdr& segment) = 0;
     virtual void unload_segment(const Elf64_Phdr& segment) = 0;
@@ -387,7 +391,6 @@ private:
     void relocate_rela();
     void relocate_pltgot();
     unsigned symtab_len();
-    ulong get_tls_size();
     void collect_dependencies(std::unordered_set<elf::object*>& ds);
     void prepare_initial_tls(void* buffer, size_t size, std::vector<ptrdiff_t>& offsets);
     void alloc_static_tls();

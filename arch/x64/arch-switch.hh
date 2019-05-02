@@ -156,11 +156,17 @@ void thread::setup_tcb()
 
     void* user_tls_data;
     size_t user_tls_size = 0;
+    void* user_local_tls_data;
+    size_t user_local_tls_size = 0;
     if (_app_runtime) {
         auto obj = _app_runtime->app.lib();
         assert(obj);
         user_tls_size = obj->initial_tls_size();
         user_tls_data = obj->initial_tls();
+        if (obj->is_executable()) {
+           user_local_tls_size = obj->get_tls_size();
+           user_local_tls_data = obj->get_tls_segment();
+        }
     }
 
     // In arch/x64/loader.ld, the TLS template segment is aligned to 64
@@ -177,6 +183,9 @@ void thread::setup_tcb()
     memcpy(p + user_tls_size, sched::tls.start, sched::tls.filesize);
     memset(p + user_tls_size + sched::tls.filesize, 0,
            sched::tls.size - sched::tls.filesize);
+    if (user_local_tls_size) {
+        memcpy(p + (tls.size + user_tls_size - user_local_tls_size), user_local_tls_data, user_local_tls_size);
+    }
     _tcb = static_cast<thread_control_block*>(p + tls.size + user_tls_size);
     _tcb->self = _tcb;
     _tcb->tls_base = p + user_tls_size;

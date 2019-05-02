@@ -12,9 +12,14 @@ __thread int ex1 = 321;
 __thread int ex2 __attribute__ ((tls_model ("initial-exec"))) = 432;
 __thread int ex3 = 765;
 
+extern __thread int v1;
+//extern __thread int vv1;
+
 void external_library()
 {
     ex1++;
     ex2++;
     ex3++;
+    v1++;
+//    vv1++;
 }

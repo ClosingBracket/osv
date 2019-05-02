@@ -73,6 +73,7 @@ int main(int argc, char** argv)
     report(ex1 == 322, "ex1 modified");
     report(ex2 == 433, "ex2 modified");
     report(ex3 == 766, "ex3 modified");
+    report(v1 == 124, "v1 modified");
 
     // Write on this thread's variables, and see a new thread gets
     // the original default values
@@ -105,6 +106,7 @@ int main(int argc, char** argv)
             report(ex1 == 322, "ex1 modified in new thread");
             report(ex2 == 433, "ex2 modified in new thread");
             report(ex3 == 766, "ex3 modified in new thread");
+            report(v1 == 124, "v1 modified in new thread");
     });
     t1.join();
 
