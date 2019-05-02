@@ -189,6 +189,7 @@ void thread::setup_tcb()
     _tcb = static_cast<thread_control_block*>(p + tls.size + user_tls_size);
     _tcb->self = _tcb;
     _tcb->tls_base = p + user_tls_size;
+    _tcb->user_local_tls_base = p + (tls.size + user_tls_size - user_local_tls_size);
 
     if (is_app()) {
         //

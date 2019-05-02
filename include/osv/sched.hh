@@ -621,6 +621,7 @@ private:
     void* do_remote_thread_local_var(void* var);
     thread_handle handle();
 public:
+    void* get_tls_base() { return _tcb->tls_base; }
     template <typename T>
     T& remote_thread_local_var(T& var)
     {

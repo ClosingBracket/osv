@@ -1635,12 +1635,15 @@ void* __tls_get_addr(module_and_offset* mao)
     //
     // TODO: If object for mao->module (target) is PIE and offset is within local exec reservation
     // return TLS of the kernel (module 0)
-    auto module = mao->module;
-    if (module == 2 )
-       module = 1;
-    auto tls = sched::thread::current()->get_tls(module);
+    //auto module = mao->module;
+    //if (module == 2 )
+    //   module = 0;
+    auto tls = sched::thread::current()->get_tls(mao->module);
     if (tls) {
-        return tls + mao->offset;
+	if (mao->module)
+           return tls + mao->offset;
+        else
+	   return sched::thread::current()->get_tls_base() + mao->offset;
     } else {
         // This module's TLS block hasn't yet been allocated for this thread:
         object *obj = get_program()->tls_object(mao->module);
