@@ -1643,7 +1643,7 @@ void* __tls_get_addr(module_and_offset* mao)
 	if (mao->module)
            return tls + mao->offset;
         else
-	   return sched::thread::current()->get_tls_base() + mao->offset;
+	   return sched::thread::current()->get_tls_end() - get_program()->get_tls_size() + mao->offset;
     } else {
         // This module's TLS block hasn't yet been allocated for this thread:
         object *obj = get_program()->tls_object(mao->module);
