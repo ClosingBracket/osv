@@ -80,7 +80,7 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         } else {
 	    auto s = symbol(sym);
 	    auto s_name = s.obj->symbol_name(s.symbol);
-	    if (strcmp(s_name,"v1") == 0)
+	    if (strcmp(s_name,"v1") == 0 && s.obj->is_executable())
                *static_cast<u64*>(addr) = 0;
 	    else
                *static_cast<u64*>(addr) = s.obj->_module_index;
