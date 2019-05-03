@@ -19,9 +19,11 @@ extern __thread int v56;
 
 void external_library()
 {
+    // ex1 and ex3 get accessed by _tls_get_addr()
     ex1++;
     ex2++;
     ex3++;
+    // These 3 below get handled get _tls_get_addr() function in core/elf.cc
     v1++;
     v54++;
     v56++;

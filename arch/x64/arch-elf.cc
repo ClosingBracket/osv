@@ -41,8 +41,12 @@ bool arch_init_reloc_dyn(struct init_table *t, u32 type, u32 sym,
         *static_cast<u64*>(addr) = t->dyn_tabs.lookup(sym)->st_value;
         break;
     case R_X86_64_TPOFF64:
+	{
         // FIXME: assumes TLS segment comes before DYNAMIC segment
-        *static_cast<u64*>(addr) = t->dyn_tabs.lookup(sym)->st_value - t->tls.size;
+        auto offset = t->dyn_tabs.lookup(sym)->st_value - t->tls.size;
+        *static_cast<u64*>(addr) = offset;
+	//printf("arch_init_reloc_dyn: R_X86_64_TPOFF64 offset:%d\n", offset);
+	}
         break;
     case R_X86_64_IRELATIVE:
         *static_cast<void**>(addr) = reinterpret_cast<void *(*)()>(base + addend)();
@@ -100,19 +104,25 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
     case R_X86_64_TPOFF64:
         if (sym) {
             auto sm = symbol(sym);
-            sm.obj->alloc_static_tls();
-            auto tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+	    ulong tls_offset;
             if (sm.obj->is_executable()) {
                tls_offset = sm.obj->get_tls_size();
             }
+	    else {
+               sm.obj->alloc_static_tls();
+               tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+            }
+	    auto s_name = sm.obj->symbol_name(sm.symbol);
 
-	    printf("arch_relocate_rela: R_X86_64_TPOFF64, sym, %d, tls_offset: %d, addend: %d, st_value: %d\n", 
-               sym, tls_offset, addend, sm.symbol->st_value);
+	    //This seems to resolve relications for TLS initial-exec access
+	    printf("arch_relocate_rela: R_X86_64_TPOFF64, sym:%d, name:%s, this module:%d, symbol module:%d, tls_offset:%d, addend:%d, st_value:%d\n", 
+               sym, s_name, _module_index, sm.obj->module_index(), tls_offset, addend, sm.symbol->st_value);
             *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;
         } else {
-	    printf("arch_relocate_rela: R_X86_64_TPOFF64, NO sym %d\n", sym);
+            // When does this get used?
             alloc_static_tls();
             auto tls_offset = static_tls_end() + sched::kernel_tls_size();
+	    printf("arch_relocate_rela: R_X86_64_TPOFF64, NO sym, tls offset: %d\n", tls_offset);
             *static_cast<u64*>(addr) = addend - tls_offset;
         }
         break;
@@ -146,18 +156,21 @@ void object::prepare_initial_tls(void* buffer, size_t size,
     memset(ptr + _tls_init_size, 0, _tls_uninit_size);
 
     offsets.resize(std::max(_module_index + 1, offsets.size()));
-    offsets[_module_index] = - _static_tls_offset - tls_size - sched::kernel_tls_size();
+    auto offset = - _static_tls_offset - tls_size - sched::kernel_tls_size();
+    offsets[_module_index] = offset;
+    printf("---> prepare_initial_tls: _module_index: %d, offset: %d\n", _module_index, offset);   
 }
 
 void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
 {
-    if (!_static_tls) {
+    if (!_static_tls && !is_executable()) {
         return;
     }
-    printf("prepare_local_tls: _module_index: %d, get_tls_size: %d\n", _module_index, get_tls_size());   
 
     offsets.resize(std::max(_module_index + 1, offsets.size()));
-    offsets[_module_index] = - get_tls_size();
+    auto offset = - get_tls_size();
+    offsets[_module_index] = offset;
+    printf("---> prepare_local_tls: _module_index: %d, offset: %d\n", _module_index, offset);   
 }
 
 }

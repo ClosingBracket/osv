@@ -438,7 +438,7 @@ protected:
                             Elf64_Sxword addend);
     bool arch_relocate_jump_slot(u32 sym, void *addr, Elf64_Sxword addend, bool ignore_missing = false);
     size_t static_tls_end() {
-        if (is_core()) {
+        if (is_core() || is_executable()) {
             return 0;
         }
         return _static_tls_offset + get_tls_size();

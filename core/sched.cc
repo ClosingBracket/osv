@@ -940,6 +940,7 @@ thread::thread(std::function<void ()> func, attr attr, bool main, bool app)
         for (unsigned i = 1; i < offsets.size(); i++) {
             if (!offsets[i]) {
                 _tls.push_back(nullptr);
+		printf("Thread contructor: Adding nullptr address for module %d into _tls\n", i);
             } else {
                 _tls.push_back(reinterpret_cast<char*>(_tcb) + offsets[i]);
             }

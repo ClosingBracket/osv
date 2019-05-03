@@ -1033,6 +1033,8 @@ void object::alloc_static_tls()
     if (!_static_tls && tls_size) {
         _static_tls = true;
         _static_tls_offset = _static_tls_alloc.fetch_add(tls_size, std::memory_order_relaxed);
+	printf("alloc_static_tls(): _static_tls_offset:%d, tls_size: %d, _static_tls_alloc: %d\n",
+			_static_tls_offset, tls_size, _static_tls_alloc.load(std::memory_order_relaxed));
     }
 }
 
@@ -1051,7 +1053,7 @@ void object::init_static_tls()
             continue;
         }
         static_tls |= obj->_static_tls;
-        printf("obj::init_static_tls() - (1) _initial_tls_size:%d\n", _initial_tls_size);
+        printf("obj::init_static_tls() - (1) _initial_tls_size:%d, static_tls_end:%d\n", _initial_tls_size, obj->static_tls_end());
         _initial_tls_size = std::max(_initial_tls_size, obj->static_tls_end());
         printf("obj::init_static_tls() - (2) _initial_tls_size:%d\n", _initial_tls_size);
 	// Align initial_tls_size to 64 bytes, to not break the 64-byte
