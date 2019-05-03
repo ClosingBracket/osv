@@ -102,8 +102,15 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
             auto sm = symbol(sym);
             sm.obj->alloc_static_tls();
             auto tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+            if (sm.obj->is_executable()) {
+               tls_offset = sm.obj->get_tls_size();
+            }
+
+	    printf("arch_relocate_rela: R_X86_64_TPOFF64, sym, %d, tls_offset: %d, addend: %d, st_value: %d\n", 
+               sym, tls_offset, addend, sm.symbol->st_value);
             *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;
         } else {
+	    printf("arch_relocate_rela: R_X86_64_TPOFF64, NO sym %d\n", sym);
             alloc_static_tls();
             auto tls_offset = static_tls_end() + sched::kernel_tls_size();
             *static_cast<u64*>(addr) = addend - tls_offset;
