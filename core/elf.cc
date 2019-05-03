@@ -1069,8 +1069,13 @@ void object::init_static_tls()
         if (obj->is_core()) {
             continue;
         }
-        obj->prepare_initial_tls(_initial_tls.get(), _initial_tls_size,
-                                 _initial_tls_offsets);
+        if (obj->is_executable()) {
+            obj->prepare_local_tls(_initial_tls_offsets);
+        }
+        else {
+            obj->prepare_initial_tls(_initial_tls.get(), _initial_tls_size,
+                                     _initial_tls_offsets);
+        }
     }
 }
 

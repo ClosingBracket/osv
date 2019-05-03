@@ -142,4 +142,15 @@ void object::prepare_initial_tls(void* buffer, size_t size,
     offsets[_module_index] = - _static_tls_offset - tls_size - sched::kernel_tls_size();
 }
 
+void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
+{
+    if (!_static_tls) {
+        return;
+    }
+    printf("prepare_local_tls: _module_index: %d, get_tls_size: %d\n", _module_index, get_tls_size());   
+
+    offsets.resize(std::max(_module_index + 1, offsets.size()));
+    offsets[_module_index] = - get_tls_size();
+}
+
 }

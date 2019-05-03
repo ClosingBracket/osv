@@ -393,6 +393,7 @@ private:
     unsigned symtab_len();
     void collect_dependencies(std::unordered_set<elf::object*>& ds);
     void prepare_initial_tls(void* buffer, size_t size, std::vector<ptrdiff_t>& offsets);
+    void prepare_local_tls(std::vector<ptrdiff_t>& offsets);
     void alloc_static_tls();
     void make_text_writable(bool flag);
 protected:
