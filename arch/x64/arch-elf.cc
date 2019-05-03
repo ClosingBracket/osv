@@ -80,20 +80,24 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         } else {
 	    auto s = symbol(sym);
 	    auto s_name = s.obj->symbol_name(s.symbol);
-	    if (strcmp(s_name,"v1") == 0 && s.obj->is_executable())
-               *static_cast<u64*>(addr) = 0;
-	    else
-               *static_cast<u64*>(addr) = s.obj->_module_index;
+	    //if (strcmp(s_name,"v1") == 0 && s.obj->is_executable())
+            //   *static_cast<u64*>(addr) = 0;
+	    //else
+            //   *static_cast<u64*>(addr) = s.obj->_module_index;
+            *static_cast<u64*>(addr) = s.obj->_module_index;
 	    printf("arch_relocate_rela: R_X86_64_DPTMOD64 %d, %s, module:%d, _module:%d\n", 
 			    sym, s_name, s.obj->_module_index, _module_index);
         }
         break;
     case R_X86_64_DTPOFF64:
-	printf("arch_relocate_rela: R_X86_64_DTPOFF64 %d\n", sym);
-        *static_cast<u64*>(addr) = symbol(sym).symbol->st_value;
+        {
+	    auto s = symbol(sym);
+	    auto s_name = s.obj->symbol_name(s.symbol);
+	    printf("arch_relocate_rela: R_X86_64_DTPOFF64 %d, %s\n", sym, s_name);
+            *static_cast<u64*>(addr) = s.symbol->st_value;
+        }
         break;
     case R_X86_64_TPOFF64:
-	//printf("arch_relocate_rela: R_X86_64_TPOFF64 %d\n", sym);
         if (sym) {
             auto sm = symbol(sym);
             sm.obj->alloc_static_tls();

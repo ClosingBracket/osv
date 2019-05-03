@@ -430,6 +430,7 @@ void object::load_segments()
             _tls_segment = _base + phdr.p_vaddr;
             _tls_init_size = phdr.p_filesz;
             _tls_uninit_size = phdr.p_memsz - phdr.p_filesz;
+            printf("TLS size: %d\n", get_tls_size());
             break;
         default:
             abort("Unknown p_type in executable %s: %d\n", pathname(), phdr.p_type);
@@ -1050,7 +1051,9 @@ void object::init_static_tls()
             continue;
         }
         static_tls |= obj->_static_tls;
+        printf("obj::init_static_tls() - (1) _initial_tls_size:%d\n", _initial_tls_size);
         _initial_tls_size = std::max(_initial_tls_size, obj->static_tls_end());
+        printf("obj::init_static_tls() - (2) _initial_tls_size:%d\n", _initial_tls_size);
 	// Align initial_tls_size to 64 bytes, to not break the 64-byte
 	// alignment of the TLS segment defined in loader.ld.
 	_initial_tls_size = align_up(_initial_tls_size, (size_t)64);
@@ -1060,6 +1063,7 @@ void object::init_static_tls()
         return;
     }
     assert(_initial_tls_size);
+    printf("obj::init_static_tls() Arrived with _initial_tls_size:%d\n", _initial_tls_size);
     _initial_tls.reset(new char[_initial_tls_size]);
     for (auto&& obj : deps) {
         if (obj->is_core()) {
@@ -1640,10 +1644,11 @@ void* __tls_get_addr(module_and_offset* mao)
     //   module = 0;
     auto tls = sched::thread::current()->get_tls(mao->module);
     if (tls) {
-	if (mao->module)
-           return tls + mao->offset;
-        else
-	   return sched::thread::current()->get_tls_end() - sched::thread::current_app()->lib()->get_tls_size() + mao->offset;
+        return tls + mao->offset;
+	//if (mao->module)
+        //   return tls + mao->offset;
+        //else
+	//   return sched::thread::current()->get_tls_end() - sched::thread::current_app()->lib()->get_tls_size() + mao->offset;
     } else {
         // This module's TLS block hasn't yet been allocated for this thread:
         object *obj = get_program()->tls_object(mao->module);
