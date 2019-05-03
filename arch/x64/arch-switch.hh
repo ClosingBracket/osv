@@ -184,6 +184,8 @@ void thread::setup_tcb()
     memset(p + user_tls_size + sched::tls.filesize, 0,
            sched::tls.size - sched::tls.filesize);
     if (user_local_tls_size) {
+        printf("setup_tcb: total TLS size: %d, kernel TLS size: %d, user TLS size: %d, TCB size:%d\n",
+		sched::tls.size + user_tls_size + sizeof(*_tcb), sched::tls.size, user_tls_size, sizeof(*_tcb));
         printf("setup_tcb: user_local_tls_size: %d\n", user_local_tls_size);
         memcpy(p + (tls.size + user_tls_size - user_local_tls_size), user_local_tls_data, user_local_tls_size);
     }
