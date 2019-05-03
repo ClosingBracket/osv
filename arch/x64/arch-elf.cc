@@ -79,9 +79,15 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         *static_cast<void**>(addr) = symbol(sym).relocated_addr();
         break;
     case R_X86_64_DPTMOD64:
+	// This and amd R_X86_64_DTPOFF64 is used for tls_get_addr() completely DYNAMIC access
+	// This calculates the module index of the ELF contain the variable
         if (sym == STN_UNDEF) {
-            *static_cast<u64*>(addr) = _module_index;
+	    // This is for accessing thread-local variable within the SAME shared object 
+            *static_cast<u64*>(addr) = _module_index; // Return this index
+	    // No need to calculate variable offset
         } else {
+	    // This is for accessing thread-local variable in DIFFERENT shared object 
+	    // That is why it has to resolve the symbol and ELF object defining it
 	    auto s = symbol(sym);
             *static_cast<u64*>(addr) = s.obj->_module_index;
 	    //auto s_name = s.obj->symbol_name(s.symbol);
@@ -95,6 +101,8 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         break;
     case R_X86_64_DTPOFF64:
         {
+	    // This is ONLY used for accessing thread-local variable in DIFFERENT shared object
+	    // because we do not know offset ahead of time (compiler did not produce it)
 	    auto s = symbol(sym);
             *static_cast<u64*>(addr) = s.symbol->st_value;
 	    //auto s_name = s.obj->symbol_name(s.symbol);
@@ -102,6 +110,8 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         }
         break;
     case R_X86_64_TPOFF64:
+	//This seems to resolve relications for TLS initial-exec access
+	// and is supposed to calculate full virtual address of thread-local variable
         if (sym) {
             auto sm = symbol(sym);
 	    ulong tls_offset;
@@ -114,7 +124,6 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
             }
 	    auto s_name = sm.obj->symbol_name(sm.symbol);
 
-	    //This seems to resolve relications for TLS initial-exec access
 	    printf("arch_relocate_rela: R_X86_64_TPOFF64, sym:%d, name:%s, this module:%d, symbol module:%d, tls_offset:%d, addend:%d, st_value:%d\n", 
                sym, s_name, _module_index, sm.obj->module_index(), tls_offset, addend, sm.symbol->st_value);
             *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;
