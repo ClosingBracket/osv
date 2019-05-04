@@ -80,9 +80,11 @@ SECTIONS
     . = ALIGN(64);
     .tdata : { *(.tdata .tdata.* .gnu.linkonce.td.*) } :tls :text
     .tbss : {
-        *(.tbss .tbss.* .gnu.linkonce.tb.* )
-	*(.pie_tls_reservation)
+        *(.tbss .tbss.* .gnu.linkonce.tb.*)
+        _pie_static_tls_start = .;
+        . = . + 64;
         . = ALIGN(64);
+        _pie_static_tls_end = .;
     } :tls :text
     .tls_template_size = SIZEOF(.tdata) + SIZEOF(.tbss);
     .bss : { *(.bss .bss.*) } :text

@@ -65,9 +65,6 @@ asm(".pushsection \".debug_gdb_scripts\", \"MS\",@progbits,1 \n"
     ".asciz \"scripts/loader.py\" \n"
     ".popsection \n");
 
-//__attribute__((section (".pie_tls_reservation"))) __thread char __pie_local_exec_tls_reservation[PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE] = {11,11,11,11};
-__attribute__((section (".pie_tls_reservation"))) __thread char __pie_local_exec_tls_reservation[PIE_LOCAL_EXEC_TLS_RESERVATION_SIZE];
-
 elf::Elf64_Ehdr* elf_header __attribute__ ((aligned(8)));
 
 size_t elf_size;
