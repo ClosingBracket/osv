@@ -78,9 +78,10 @@ SECTIONS
         _percpu_workers_end = .;
     }
     . = ALIGN(64);
-    .tdata : { *(.pie_tls_reservation .tdata .tdata.* .gnu.linkonce.td.*) } :tls :text
+    .tdata : { *(.tdata .tdata.* .gnu.linkonce.td.*) } :tls :text
     .tbss : {
-        *(.tbss .tbss.* .gnu.linkonce.tb.*)
+        *(.tbss .tbss.* .gnu.linkonce.tb.* )
+	*(.pie_tls_reservation)
         . = ALIGN(64);
     } :tls :text
     .tls_template_size = SIZEOF(.tdata) + SIZEOF(.tbss);

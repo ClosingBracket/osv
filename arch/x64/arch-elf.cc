@@ -172,6 +172,7 @@ void object::prepare_initial_tls(void* buffer, size_t size,
 
 void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
 {
+    printf("---> prepare_local_tls: _module_index: %d called !!", _module_index);
     if (!_static_tls && !is_executable()) {
         return;
     }

@@ -188,6 +188,14 @@ void thread::setup_tcb()
 		sched::tls.size + user_tls_size + sizeof(*_tcb), sched::tls.size, user_tls_size, sizeof(*_tcb));
         printf("setup_tcb: user_local_tls_size: %d\n", user_local_tls_size);
         memcpy(p + (tls.size + user_tls_size - user_local_tls_size), user_local_tls_data, user_local_tls_size);
+	char * r = static_cast<char*>(p + user_tls_size);
+	int c = 0;
+	for ( int i = 0; i < 256; i++ ) {
+	   if (*(r+i) == 11) {
+		 c++;
+           }
+        }
+        printf("setup_tcb: reserve count: %d\n", c);
     }
     _tcb = static_cast<thread_control_block*>(p + tls.size + user_tls_size);
     _tcb->self = _tcb;
