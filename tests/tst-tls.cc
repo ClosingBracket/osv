@@ -47,6 +47,8 @@ extern __thread int ex3 __attribute__ ((tls_model ("initial-exec")));
 __thread int v7 __attribute__ ((tls_model ("local-exec"))) = 789;
 #endif
 
+__thread int v8;
+
 extern void external_library();
 
 static void report(bool ok, std::string msg)
@@ -72,6 +74,8 @@ int main(int argc, char** argv)
 #ifndef __OSV__
     report(v7 == 789, "v7");
 #endif
+    v8 = 111;
+    report(v8 == 111, "v8");
 
     external_library();
     report(ex1 == 322, "ex1 modified");
@@ -111,6 +115,8 @@ int main(int argc, char** argv)
 #ifndef __OSV__
             report(v7 == 789, "v7 in new thread");
 #endif
+            v8 = 111;
+            report(v8 == 111, "v8 in new thread");
 
             external_library();
             report(ex1 == 322, "ex1 modified in new thread");
