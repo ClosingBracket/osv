@@ -986,12 +986,14 @@ void object::run_init_funcs(int argc, char** argv)
     if (dynamic_exists(DT_INIT)) {
         auto func = dynamic_ptr<void>(DT_INIT);
         if (func) {
+            printf("%d, %s: Running DT_INIT\n", sched::thread::current()->id(), _pathname.c_str());
             reinterpret_cast<void(*)(int, char**)>(func)(argc, argv);
         }
     }
     if (dynamic_exists(DT_INIT_ARRAY)) {
         auto funcs = dynamic_ptr<void(*)(int, char**)>(DT_INIT_ARRAY);
         auto nr = dynamic_val(DT_INIT_ARRAYSZ) / sizeof(*funcs);
+        printf("%d, %s: Running DT_INIT_ARRAY\n",  sched::thread::current()->id(), _pathname.c_str());
         for (auto i = 0u; i < nr; ++i) {
             funcs[i](argc, argv);
         }
