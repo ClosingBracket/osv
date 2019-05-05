@@ -936,6 +936,9 @@ thread::thread(std::function<void ()> func, attr attr, bool main, bool app)
     assert(_tls.size() == elf::program::core_module_index);
     _tls.push_back((char *)_tcb->tls_base);
     if (_app_runtime) {
+        printf("%d, %s: thread constructor -> setting static TLS offsets for new thread ...\n", 
+		    sched::thread::current()->id(), _app_runtime->app.lib()->pathname().c_str());
+
         auto& offsets = _app_runtime->app.lib()->initial_tls_offsets();
         for (unsigned i = 1; i < offsets.size(); i++) {
             if (!offsets[i]) {
@@ -966,6 +969,9 @@ thread::thread(std::function<void ()> func, attr attr, bool main, bool app)
             }
         }
     }
+    if (_app_runtime)
+       printf("%d: thread constructor -> new thread ID:%d\n",
+                    sched::thread::current()->id(), _id);
     // setup s_current before switching to the thread, so interrupts
     // can call thread::current()
     // remote_thread_local_var() doesn't work when there is no current

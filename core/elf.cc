@@ -1035,6 +1035,8 @@ void object::alloc_static_tls()
     if (!_static_tls && tls_size) {
         _static_tls = true;
         _static_tls_offset = _static_tls_alloc.fetch_add(tls_size, std::memory_order_relaxed);
+         printf("%d, %s: alloc_static_tls allocated static TLS area of size:%d at offset:%d\n",
+		       	 sched::thread::current()->id(), _pathname.c_str(), tls_size, _static_tls_offset);
     }
 }
 
@@ -1045,6 +1047,9 @@ bool object::is_core()
 
 void object::init_static_tls()
 {
+    printf("%d, %s: init_static_tls -> Initializing static TLS for this object and its dependencies ...\n", 
+		    sched::thread::current()->id(), _pathname.c_str());
+
     std::unordered_set<object*> deps;
     collect_dependencies(deps);
     bool static_tls = false;
