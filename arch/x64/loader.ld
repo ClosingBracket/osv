@@ -82,7 +82,7 @@ SECTIONS
     .tbss : {
         *(.tbss .tbss.* .gnu.linkonce.tb.*)
         _pie_static_tls_start = .;
-        . = . + 8192;
+        . = . + 64;
         . = ALIGN(64);
         _pie_static_tls_end = .;
     } :tls :text
