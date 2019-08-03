@@ -34,8 +34,26 @@ and http://osv.io/.
 
 In order to run an application on OSv, one needs to build an image by fusing OSv kernel and
 the application files together. This in high level can be achieved in two ways:
-* building OSv kernel from source and fusing the image by using the the scripts
-* capstan pre-build kernel .. 
+- by using the script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build) 
+ that builds the kernel from source and fuses it with application files 
+- by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses pre-built kernel 
+ and combines it with application files to produce final image 
+
+If your intention is to try to run your app on OSv with least effort, you should pursue the 'capstan'
+route. For introduction please read this [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan)
+and for more details about capstan read [this](https://github.com/cloudius-systems/capstan#documentation). 
+
+If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
+read remaining part of this page to guide how to setup your development environment and build OSv kernel
+and application images.
+
+### Setting up development environment
+
+### Building OSv and ...
+
+### Running
+
+### Testing
 
 ## Documentation
 
