@@ -1,17 +1,41 @@
 # OSv
 
-OSv is a new open-source operating system for virtual-machines.
-OSv was designed from the ground up to execute a single application on top
-of a hypervisor, resulting in superior performance and effortless management
-when compared to traditional operating systems which were designed for
-a vast range of physical machines.
+OSv is the versatile modular unikernel designed to run unmodified
+Linux applications securely on micro-VMs in the cloud. Built from
+the ground up for effortless deployment and management of microservices
+and serverless apps, with superior performance.
 
-OSv has new APIs for new applications, but also runs unmodified Linux
-applications (most of Linux's ABI is supported) and in particular can run
-an unmodified JVM, and applications built on top of one.
+OSv has new APIs for new applications, but also runs unmodified x86-64 Linux
+binaries **as is**, which effectively makes it a **Linux binary compatible unikernel** 
+(for more details about Linux ABI compatibility please read 
+[this doc](https://github.com/cloudius-systems/osv/wiki/OSv-Linux-ABI-Compatibility)).
+In particular OSv can run many managed language runtimes including unmodified
+[**JVM**](https://github.com/cloudius-systems/osv-apps/tree/master/java-example),
+**Python** [**2**](https://github.com/cloudius-systems/osv-apps/tree/master/python2x) and
+[**3**](https://github.com/cloudius-systems/osv-apps/tree/master/python3x), 
+[**Node.JS**](https://github.com/cloudius-systems/osv-apps/tree/master/node-from-host), 
+[**Ruby**](https://github.com/cloudius-systems/osv-apps/tree/master/ruby-example), **Erlang**, and applications built on top of one.
+It can also run applications written languages compiling directly to native machine code like
+**C**, **C++**, [**Golang**](https://github.com/cloudius-systems/osv-apps/tree/master/golang-httpserver)
+and [**Rust**](https://github.com/cloudius-systems/osv-apps/tree/master/rust-httpserver) as well as native images produced
+by [**GraalVM**](https://github.com/cloudius-systems/osv-apps/tree/master/graalvm-example).
 
-For more information about OSv, see http://osv.io/ and
-https://github.com/cloudius-systems/osv/wiki
+OSv can boot as fast as **~5 ms** on Firecracker using as low as 15 MiB of memory. 
+OSv can run on many hypervisors including QEMU/KVM, 
+[Firecracker](https://github.com/cloudius-systems/osv/wiki/Running-OSv-on-Firecracker),
+Xen, [VMWare](https://github.com/cloudius-systems/osv/wiki/Running-OSv-on-VMware-ESXi), 
+[VirtualBox](https://github.com/cloudius-systems/osv/wiki/Running-OSv-on-VirtualBox) and
+Hyperkit as well as open clouds like AWS EC2, GCE and OpenStack. 
+
+For more information about OSv, see [the main wiki page](https://github.com/cloudius-systems/osv/wiki)
+and http://osv.io/.
+
+## Building and Running Apps on OSv
+
+In order to run an application on OSv, one needs to build an image by fusing OSv kernel and
+the application files together. This in high level can be achieved in two ways:
+* building OSv kernel from source and fusing the image by using the the scripts
+* capstan pre-build kernel .. 
 
 ## Documentation
 
