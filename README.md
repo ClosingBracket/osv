@@ -49,16 +49,15 @@ and application images.
 
 ### Setting up development environment
 
-TODO: OSv can only be built on a 64-bit x86 Linux distribution. Please note that
-      this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
-
+OSv can only be built on a 64-bit x86 Linux distribution. Please note that
+this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
 
 In order to build OSv kernel you need a physical or virtual machine with Linux distribution on it and GCC toolchain and
-all necessary packages and libraries. The easiest way to set it up is to use 
+all necessary packages and libraries OSv build process depends on. The easiest way to set it up is to use 
 [Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) tha OSv comes with.
 You can use them to build your own Docker image and then start it in order to build OSv kernel.
 
-Otherwise, you can always manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
+Otherwise, you can manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
 to install GCC and all required packages, as long as it supports your Linux distribution and you have both git and python 2.7 installed on your machine:
 ```bash
 git clone https://github.com/cloudius-systems/osv.git
@@ -70,8 +69,17 @@ TODO: Extract the details about Debian, etc into a separate Wiki page and refere
 
 ### Building OSv kernel and creating images
 
-Building OSv kernel is as easy as using the [build shell script](https://github.com/cloudius-systems/osv/blob/master/scripts/build) like so:
+Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
+that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
+to build the kernel and by using number of Python scripts like module.py to build application and *fuse* it together with the kernel
+into a final image placed at ./build/release/usr.img (or ./build/$(arch)/usr.img in general). Please note that *building app* does
+not necessarily mean building from source as in many cases the app files would be simply located on and taken from Linux build machine
+(see [manifest_from_host.sh](https://github.com/cloudius-systems/osv/blob/master/scripts/manifest_from_host.sh) for details).
+
+The build script can be used like so per the examples below:
 ```bash
+./scripts/build                                    # Create default image that comes with command line and REST API server
+
 ./scripts/build -j4 fs=rofs image=native-example   # Create image with native-example app
 
 ./scripts/build JAVA_VERSION=10 image=openjdk-zulu-9-and-above,spring-boot-example
@@ -85,13 +93,11 @@ Building OSv kernel is as easy as using the [build shell script](https://github.
 ./script/build clean                               # Clean the build tree
 ```
 
-The build is the main shell script that orchestrates building OSv images by delegating to the main
-[makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile) to build kernel and number of Python scripts
-like module.py to build application and fuse together into a final image ./build/$(arch)/usr.img; for details how to use run ./scripts/build --help
-
---help
+For details how to use run the build script run ```./scripts/build --help```.
 
 ... TODO - revise
+mention ARCH - arm
+reference apps
 
 ### Running
 
