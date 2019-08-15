@@ -66,20 +66,28 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
     case R_X86_64_NONE:
         break;
     case R_X86_64_COPY: {
-        symbol_module sm = symbol_other(sym);
+        symbol_module sm = symbol_other(sym); //TODO
         memcpy(addr, sm.relocated_addr(), sm.size());
         break;
     }
-    case R_X86_64_64:
-        *static_cast<void**>(addr) = symbol(sym).relocated_addr() + addend;
+    case R_X86_64_64: {
+        auto _sym = symbol(sym, true);
+        if (_sym.symbol) {
+            *static_cast<void**>(addr) = _sym.relocated_addr() + addend;
+        }
         break;
+    }
     case R_X86_64_RELATIVE:
         *static_cast<void**>(addr) = _base + addend;
         break;
     case R_X86_64_JUMP_SLOT:
-    case R_X86_64_GLOB_DAT:
-        *static_cast<void**>(addr) = symbol(sym).relocated_addr();
+    case R_X86_64_GLOB_DAT: {
+        auto _sym = symbol(sym, true);
+        if (_sym.symbol) {
+            *static_cast<void**>(addr) = _sym.relocated_addr();
+        }
         break;
+    }
     // The next 3 types are intended to relocate symbols of thread local variables
     // defined with __thread modifier
     //
@@ -100,23 +108,32 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         } else {
             // The thread-local variable being accessed is located
             // in DIFFERENT shared object that the caller
-            *static_cast<u64*>(addr) = symbol(sym).obj->_module_index;
+            auto _sym = symbol(sym, true);
+            if (_sym.symbol) {
+                *static_cast<u64*>(addr) = _sym.obj->_module_index;
+            }
         }
         break;
-    case R_X86_64_DTPOFF64:
+    case R_X86_64_DTPOFF64: {
         // The thread-local variable being accessed is located
         // in DIFFERENT shared object that the caller
-        *static_cast<u64*>(addr) = symbol(sym).symbol->st_value;
+        auto _sym = symbol(sym, true);
+        if (_sym.symbol) {
+            *static_cast<u64*>(addr) = _sym.symbol->st_value;
+        }
         break;
+    }
     case R_X86_64_TPOFF64:
         // This type is intended to resolve symbols of thread-local variables in static TLS
         // accessed in initial-exec mode and is handled to calculate the virtual address of
         // target thread-local variable
         if (sym) {
-            auto sm = symbol(sym);
-            sm.obj->alloc_static_tls();
-            auto tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
-            *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;
+            auto sm = symbol(sym, true);
+            if (sm.symbol) {
+                sm.obj->alloc_static_tls();
+                auto tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+                *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;
+            }
         } else {
             // TODO: Which case does this handle?
             alloc_static_tls();
