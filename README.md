@@ -78,7 +78,8 @@ not necessarily mean building from source as in many cases the app files would b
 
 The build script can be used like so per the examples below:
 ```bash
-./scripts/build                                    # Create default image that comes with command line and REST API server
+./scripts/build                                    # Create default image that comes with command line and
+                                                   # REST API server
 
 ./scripts/build -j4 fs=rofs image=native-example   # Create image with native-example app
 
@@ -149,9 +150,10 @@ test invoke TCPExternalCommunication
 
 ### Testing
 
-....
-
-## Documentation
+- can be debugged with gdb
+- traced
+- profiled
+- REST api monitored
 
 * [Debugging OSv](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
 * [Trace Analysis](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
