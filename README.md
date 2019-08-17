@@ -44,7 +44,7 @@ route. For introduction please read this [crash course](https://github.com/cloud
 and for more details about capstan read [this](https://github.com/cloudius-systems/capstan#documentation).
 
 If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
-read remaining part of this page to guide how to setup your development environment and build OSv kernel
+read remaining part of this page to guide you how to setup your development environment and build OSv kernel
 and application images.
 
 ### Setting up development environment
@@ -54,8 +54,8 @@ this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
 
 In order to build OSv kernel you need a physical or virtual machine with Linux distribution on it and GCC toolchain and
 all necessary packages and libraries OSv build process depends on. The easiest way to set it up is to use 
-[Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) tha OSv comes with.
-You can use them to build your own Docker image and then start it in order to build OSv kernel.
+[Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) that OSv comes with.
+You can use them to build your own Docker image and then start it in order to build OSv kernel inside of it.
 
 Otherwise, you can manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
 to install GCC and all required packages, as long as it supports your Linux distribution and you have both git and python 2.7 installed on your machine:
@@ -71,9 +71,9 @@ TODO: Extract the details about Debian, etc into a separate Wiki page and refere
 
 Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
 that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
-to build the kernel and by using number of Python scripts like module.py to build application and *fuse* it together with the kernel
+to build the kernel and by using number of Python scripts like [module.py](https://github.com/cloudius-systems/osv/blob/master/scripts/module.py) to build application and *fuse* it together with the kernel
 into a final image placed at ./build/release/usr.img (or ./build/$(arch)/usr.img in general). Please note that *building app* does
-not necessarily mean building from source as in many cases the app files would be simply located on and taken from Linux build machine
+not necessarily mean building from source as in many cases the app files would be simply located on and taken from the Linux build machine
 (see [manifest_from_host.sh](https://github.com/cloudius-systems/osv/blob/master/scripts/manifest_from_host.sh) for details).
 
 The build script can be used like so per the examples below:
@@ -83,10 +83,10 @@ The build script can be used like so per the examples below:
 ./scripts/build -j4 fs=rofs image=native-example   # Create image with native-example app
 
 ./scripts/build JAVA_VERSION=10 image=openjdk-zulu-9-and-above,spring-boot-example
-                                                   # Create image with spring boot app with Java 10 jdk
+                                                   # Create image with spring boot app with Java 10 JRE
 
 ./scripts/manifest_from_host.sh -w ls && \
-./script/build --append-manifest                   # Create manifest for 'ls' executable
+./script/build --append-manifest                   # Create manifest for 'ls' executable takes from host
 
 ./script/build check                               # Create test image and run all tests in it
 
@@ -95,9 +95,13 @@ The build script can be used like so per the examples below:
 
 For details how to use run the build script run ```./scripts/build --help```.
 
-... TODO - revise
-mention ARCH - arm
-reference apps
+By default OSv builds kernel for x86_64 architecture but it is also possible to build one for ARM by adding **arch** parameter like so:
+```bash
+./scripts/build arch=aarch64
+```
+Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to lack of resources.
+
+For more information about various example apps you can build and run on OSv please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
 
 ### Running
 
@@ -110,6 +114,38 @@ Running OSv image is as easy as:
 --help
 
 ... TODO - revise
+
+By default, this runs OSv under KVM, with 4 VCPUs and 2GB of memory,
+and runs the default management application containing a shell, a
+REST API server and a browser base dashboard (at port 8000).
+
+If running under KVM you can terminate by hitting Ctrl+A X.
+
+
+## External Networking
+
+To start osv with external networking:
+
+```
+sudo ./scripts/run.py -n -v
+```
+
+The -v is for kvm's vhost that provides better performance
+and its setup requires a tap and thus we use sudo.
+
+By default OSv spawns a dhcpd that auto config the virtual nics.
+Static config can be done within OSv, configure networking like so:
+
+```
+ifconfig virtio-net0 192.168.122.100 netmask 255.255.255.0 up
+route add default gw 192.168.122.1
+```
+
+Test networking:
+
+```
+test invoke TCPExternalCommunication
+```
 
 ### Testing
 
