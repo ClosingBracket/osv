@@ -78,20 +78,23 @@ not necessarily mean building from source as in many cases the app files would b
 
 The build script can be used like so per the examples below:
 ```bash
-./scripts/build                                    # Create default image that comes with command line and
-                                                   # REST API server
+# Create default image that comes with command line and REST API server
+./scripts/build 
 
-./scripts/build -j4 fs=rofs image=native-example   # Create image with native-example app
+# Create image with native-example app
+./scripts/build -j4 fs=rofs image=native-example   
 
+# Create image with spring boot app with Java 10 JRE
 ./scripts/build JAVA_VERSION=10 image=openjdk-zulu-9-and-above,spring-boot-example
-                                                   # Create image with spring boot app with Java 10 JRE
 
-./scripts/manifest_from_host.sh -w ls && \
-./script/build --append-manifest                   # Create manifest for 'ls' executable takes from host
+ # Create manifest for 'ls' executable takes from host
+./scripts/manifest_from_host.sh -w ls && ./script/build --append-manifest                  
 
-./script/build check                               # Create test image and run all tests in it
+# Create test image and run all tests in it
+./script/build check                               
 
-./script/build clean                               # Clean the build tree
+# Clean the build tree
+./script/build clean                               
 ```
 
 For details how to use run the build script run ```./scripts/build --help```.
