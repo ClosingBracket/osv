@@ -87,7 +87,7 @@ The build script can be used like so per the examples below:
 # Create image with spring boot app with Java 10 JRE
 ./scripts/build JAVA_VERSION=10 image=openjdk-zulu-9-and-above,spring-boot-example
 
- # Create manifest for 'ls' executable takes from host
+ # Create image with 'ls' executable taken from the host
 ./scripts/manifest_from_host.sh -w ls && ./script/build --append-manifest                  
 
 # Create test image and run all tests in it
@@ -103,28 +103,22 @@ By default OSv builds kernel for x86_64 architecture but it is also possible to 
 ```bash
 ./scripts/build arch=aarch64
 ```
-Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to lack of resources.
+Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to lack of resources. 
 
 For more information about various example apps you can build and run on OSv please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
 
 ### Running
 
-Running OSv image is as easy as:
+Running an OSv image is as easy as:
 ```bash
 ./scripts/run.py
-./scripts/firecracker.py
+./scripts/firecracker.py #Version of run.py to run OSv on firecracker
 ``` 
 
---help
+For details how to use the script run ```./scripts/run.py --help```.
 
-... TODO - revise
-
-By default, this runs OSv under KVM, with 4 VCPUs and 2GB of memory,
-and runs the default management application containing a shell, a
-REST API server and a browser base dashboard (at port 8000).
-
+By default, the ```run.py``` runs OSv under KVM, with 4 VCPUs and 2GB of memory.
 If running under KVM you can terminate by hitting Ctrl+A X.
-
 
 ## External Networking
 
@@ -161,15 +155,10 @@ test invoke TCPExternalCommunication
 * [Debugging OSv](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
 * [Trace Analysis](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
 
-## Building
 
-OSv can only be built on a 64-bit x86 Linux distribution. Please note that
-this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
 
-If you wish, you can run the script 'scripts/setup.py' as root to install all dependencies.
-Otherwise, you may follow the manual instructions below.
+Move to a separate wiki.
 
-First, install prerequisite packages:
 
 **Fedora**
 
@@ -194,23 +183,6 @@ apt-get install build-essential libboost-all-dev genromfs autoconf libtool openj
 **Arch Linux**
 ```
 pacman -S base-devel git python apache-ant maven qemu gdb boost yaml-cpp unzip openssl-1.0
-```
-
-Apply the following patch to make it work with openssl-1.0 
-```
-diff --git a/modules/lua/Makefile b/modules/lua/Makefile
-index 9676f349..ddb6a075 100644
---- a/modules/lua/Makefile
-+++ b/modules/lua/Makefile
-@@ -123,7 +123,7 @@ $(CDIR)/ssl.lua: $(LUA_ROCKS_BIN)
- 
- # Workaround because LuaRocks ignores /lib64
- ifneq ("$(wildcard /usr/lib64/libssl.so*)", "")
--       out/bin/luarocks install LuaSec 0.5 OPENSSL_LIBDIR=/usr/lib64
-+       out/bin/luarocks install LuaSec 0.5 OPENSSL_LIBDIR=/usr/lib/openssl-1.0 OPENSSL_INCDIR=/usr/include/openssl-1.0
- else
-        out/bin/luarocks install LuaSec 0.5
- endif
 ```
 
 Before start building OSv, you'll need to add your account to kvm group.
