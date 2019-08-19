@@ -1,7 +1,7 @@
 # OSv
 
-OSv is the open-source versatile modular unikernel designed to run unmodified
-Linux applications securely on micro-VMs in the cloud. Built from
+OSv is an open-source versatile modular **unikernel** designed to run **unmodified
+Linux applications** securely on micro-VMs in the cloud. Built from
 the ground up for effortless deployment and management of microservices
 and serverless apps, with superior performance.
 
