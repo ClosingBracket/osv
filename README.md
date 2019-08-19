@@ -1,6 +1,6 @@
 # OSv
 
-OSv is the versatile modular unikernel designed to run unmodified
+OSv is the open-source versatile modular unikernel designed to run unmodified
 Linux applications securely on micro-VMs in the cloud. Built from
 the ground up for effortless deployment and management of microservices
 and serverless apps, with superior performance.
@@ -97,8 +97,7 @@ The build script can be used like so per the examples below:
 ./script/build clean                               
 ```
 
-Command nproc (embedded in bash/core-utils) will calculate the number of jobs/threads
-for make and scripts/build automatically.
+Command nproc will calculate the number of jobs/threads for make and scripts/build automatically.
 Alternatively, the environment variable MAKEFLAGS can be exported as follows:
 
 ```
@@ -107,12 +106,11 @@ export MAKEFLAGS=-j$(nproc)
 
 In that case, make and scripts/build do not need the parameter -j.
 
-For details how to use run the build script run ```./scripts/build --help```.
+For details on how to use the build script, please run ```./scripts/build --help```.
 
 The ```.scripts/build``` creates the image ```build/last/usr.img``` in qcow2 format.
 To convert this image to other formats, use the ```scripts/convert```
-tool, which can create an image in the vmdk, vdi, raw, or qcow2-old formats
-(qcow2-old is an older qcow2 format, compatible with older versions of QEMU).
+tool, which can create an image in the vmdk, vdi or raw formats.
 For example:
 
 ```
@@ -123,23 +121,27 @@ By default OSv builds kernel for x86_64 architecture but it is also possible to 
 ```bash
 ./scripts/build arch=aarch64
 ```
-Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to lack of resources. 
+Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to the lack of volunteers. 
 
-For more information about various example apps you can build and run on OSv please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
+TODO: Link to the wiki page about running apps - JVM, Rust, etc. For more information about various example apps you can build and run on OSv, please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
 
 ## Running OSv
 
-Running an OSv image is as easy as:
+Running an OSv image, built by ```scripts/build```, is as easy as:
 ```bash
 ./scripts/run.py
 ``` 
 
-By default, the ```run.py``` runs OSv under KVM, with 4 VCPUs and 2GB of memory.
-If running under KVM you can terminate by hitting Ctrl+A X.
+By default, the ```run.py``` runs OSv under KVM, with 4 VCPUs and 2GB of memory. You can control these and tens of other ones by passing relevant parameters to the ```run.py```. For details on how to use the script please run ```./scripts/run.py --help```.
 
-The ```run.py``` can run OSv image on QEMU/KVM, Xen and VMware. For details how to use the script run ```./scripts/run.py --help```.
+The ```run.py``` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM you can terminate by hitting Ctrl+A X.
 
-Alternatively you can use ./scripts/firecracker.py to run OSv on firecracker
+Alternatively you can use ```./scripts/firecracker.py``` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). This script automatically downloads firecracker and accepts number of parameters like number ot VCPUs, memory named exactly like ```run.py``` does.
+
+Please note that in order to run OSv with best performance on Linux under QEMU or Firecracker you need KVM enabled. The easiest way to verify KVM is enabled is to check if ```/dev/kvm``` is present and your user can read from and write to it. Adding your user to the kvm group may be necessary like so:
+```bash
+usermod -aG kvm <user name>
+```
 
 ### Networking
 
@@ -178,79 +180,6 @@ test invoke TCPExternalCommunication
 
 
 
-Before start building OSv, you'll need to add your account to kvm group.
-```
-usermod -aG kvm <user name>
-```
-
-To ensure functional C++11 support, Gcc 4.8 or above is required, as this was
-the first version to fully comply with the C++11 standard.
-
-Make sure all git submodules are up-to-date:
-
-```
-git submodule update --init --recursive
-```
-
-Finally, build everything at once:
-
-```
-make -j$(nproc)
-```
-
-to build only the OSv kernel, or more usefully,
-
-```
-scripts/build -j$(nproc)
-```
-
-to build an image of the OSv kernel and the default application.
-
-Command nproc (embedded in bash/core-utils) will calculte the number of jobs/threads for make and scripts/build automatically.
-Alternatively, the environment variable MAKEFLAGS can be exported as follows:
-
-```
-export MAKEFLAGS=-j$(nproc)
-```
-
-In that case, make and scripts/build do not need the parameter -j.
-
-scripts/build creates the image ```build/last/usr.img``` in qcow2 format.
-To convert this image to other formats, use the ```scripts/convert```
-tool, which can create an image in the vmdk, vdi, raw, or qcow2-old formats
-(qcow2-old is an older qcow2 format, compatible with older versions of QEMU).
-For example:
-
-```
-scripts/convert raw
-```
-
-By default make will use the static libraries and headers of gcc in external submodule. To change this pass `host` via *_env variables:
-
-```
-make build_env=host
-```
-
-This will use static libraries and headers in the system instead (make sure they are installed before run `make`),
-if you only want to use C++ static libraries in the system, just set `cxx_lib_env` to `host`:
-
-```
-make cxx_lib_env=host
-```
-
-## Running OSv
-
-```
-./scripts/run.py
-```
-
-By default, this runs OSv under KVM, with 4 VCPUs and 2GB of memory,
-and runs the default management application containing a shell, a
-REST API server and a browser base dashboard (at port 8000).
-
-If running under KVM you can terminate by hitting Ctrl+A X.
-
-
 ## External Networking
 
 To start osv with external networking:
@@ -274,16 +203,4 @@ Test networking:
 
 ```
 test invoke TCPExternalCommunication
-```
-
-## Running Java or C applications that already reside within the image:
-
-```
-# Building and running a simple java application example
-$ scripts/build image=java-example
-$ scripts/run.py -e "java.so -cp /java-example Hello"
-
-# Running an ifconfig by explicit execution of ifconfig.so (compiled C++ code)
-$ scripts/build
-$ sudo scripts/run.py -nv -e "/tools/ifconfig.so"
 ```
