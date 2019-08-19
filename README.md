@@ -138,14 +138,16 @@ The ```run.py``` can run OSv image on QEMU/KVM, Xen and VMware. If running under
 
 Alternatively you can use ```./scripts/firecracker.py``` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). This script automatically downloads firecracker and accepts number of parameters like number ot VCPUs, memory named exactly like ```run.py``` does.
 
-Please note that in order to run OSv with best performance on Linux under QEMU or Firecracker you need KVM enabled. The easiest way to verify KVM is enabled is to check if ```/dev/kvm``` is present and your user can read from and write to it. Adding your user to the kvm group may be necessary like so:
+Please note that in order to run OSv with best performance on Linux under QEMU or Firecracker you need KVM enabled (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). The easiest way to verify KVM is enabled is to check if ```/dev/kvm``` is present and your user can read from and write to it. Adding your user to the kvm group may be necessary like so:
 ```bash
 usermod -aG kvm <user name>
 ```
 
 ### Networking
 
-To start osv with external networking:
+SLIRP
+
+To start OSv with external networking:
 
 ```
 sudo ./scripts/run.py -n -v
@@ -154,7 +156,7 @@ sudo ./scripts/run.py -n -v
 The -v is for kvm's vhost that provides better performance
 and its setup requires a tap and thus we use sudo.
 
-By default OSv spawns a dhcpd that auto config the virtual nics.
+By default OSv spawns a dhcpd that automatically configures the virtual nics.
 Static config can be done within OSv, configure networking like so:
 
 ```
@@ -168,39 +170,8 @@ Test networking:
 test invoke TCPExternalCommunication
 ```
 
-## Testing, Debugging, Monitoring, Profiling OSv 
+## Debugging, Monitoring, Profiling OSv 
 
-- can be debugged with gdb
-- traced
-- profiled
-- REST api monitored
-
-* [Debugging OSv](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
-* [Trace Analysis](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
-
-
-
-## External Networking
-
-To start osv with external networking:
-
-```
-sudo ./scripts/run.py -n -v
-```
-
-The -v is for kvm's vhost that provides better performance
-and its setup requires a tap and thus we use sudo.
-
-By default OSv spawns a dhcpd that auto config the virtual nics.
-Static config can be done within OSv, configure networking like so:
-
-```
-ifconfig virtio-net0 192.168.122.100 netmask 255.255.255.0 up
-route add default gw 192.168.122.1
-```
-
-Test networking:
-
-```
-test invoke TCPExternalCommunication
-```
+- OSv can be debugged with gdb; for more details please read this [wiki](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
+- OSv kernel and application can be traced and profiled; for more details please read this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
+- OSv comes with the admin/montioring REST API server; for more details please read [this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
