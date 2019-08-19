@@ -123,8 +123,6 @@ By default OSv builds kernel for x86_64 architecture but it is also possible to 
 ```
 Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to the lack of volunteers. 
 
-TODO: Link to the wiki page about running apps - JVM, Rust, etc. For more information about various example apps you can build and run on OSv, please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
-
 ## Running OSv
 
 Running an OSv image, built by ```scripts/build```, is as easy as:
@@ -143,11 +141,11 @@ Please note that in order to run OSv with best performance on Linux under QEMU o
 usermod -aG kvm <user name>
 ```
 
+For more information about building and running JVM, Node.JS, Python and other managed runtimes as well as Rust, Golang or C/C++ apps on OSv, please read this [wiki page](https://github.com/cloudius-systems/osv/wiki#running-your-application-on-osv). For more information about various example apps you can build and run on OSv, please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
+
 ### Networking
 
-SLIRP
-
-To start OSv with external networking:
+By default the ```run.py```  starts OSv with [user networking/SLIRP](https://wiki.qemu.org/Documentation/Networking#User_Networking_.28SLIRP.29) on. To start OSv with more performant external networking:
 
 ```
 sudo ./scripts/run.py -n -v
