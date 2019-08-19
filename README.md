@@ -41,13 +41,13 @@ the application files together. This, in high level can be achieved in two ways:
 
 If your intention is to try to run your app on OSv with least effort, you should pursue the 'capstan'
 route. For introduction please read this [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan)
-and for more details about capstan read [this](https://github.com/cloudius-systems/capstan#documentation).
+and for more details about capstan read [this documentation](https://github.com/cloudius-systems/capstan#documentation).
 
 If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
 read remaining part of this page to guide you how to setup your development environment and build OSv kernel
 and application images.
 
-### Setting up development environment
+## Setting up development environment
 
 OSv can only be built on a 64-bit x86 Linux distribution. Please note that
 this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
@@ -65,9 +65,9 @@ cd osv && git submodule update --init --recursive
 ./scripts/setup.py
 ```
 
-TODO: Extract the details about Debian, etc into a separate Wiki page and reference it.
+The ```setup.py``` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, Debian, LinuxMint and RedHat ones (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora support is actively maintained and tested so your milage with other distributions may vary. 
 
-### Building OSv kernel and creating images
+## Building OSv kernel and creating images
 
 Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
 that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
@@ -107,7 +107,7 @@ Please note that even though the **aarch64** version of OSv kernel should build 
 
 For more information about various example apps you can build and run on OSv please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
 
-### Running
+## Running OSv
 
 Running an OSv image is as easy as:
 ```bash
