@@ -65,7 +65,7 @@ cd osv && git submodule update --init --recursive
 ./scripts/setup.py
 ```
 
-The ```setup.py``` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, Debian, LinuxMint and RedHat ones (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora support is actively maintained and tested so your milage with other distributions may vary. 
+The ```setup.py``` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, [Debian](https://github.com/cloudius-systems/osv/wiki/Building-OSv-on-Debian-stable), LinuxMint and RedHat ones (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora support is actively maintained and tested so your milage with other distributions may vary. 
 
 ## Building OSv kernel and creating images
 
@@ -97,7 +97,27 @@ The build script can be used like so per the examples below:
 ./script/build clean                               
 ```
 
+Command nproc (embedded in bash/core-utils) will calculate the number of jobs/threads
+for make and scripts/build automatically.
+Alternatively, the environment variable MAKEFLAGS can be exported as follows:
+
+```
+export MAKEFLAGS=-j$(nproc)
+```
+
+In that case, make and scripts/build do not need the parameter -j.
+
 For details how to use run the build script run ```./scripts/build --help```.
+
+The ```.scripts/build``` creates the image ```build/last/usr.img``` in qcow2 format.
+To convert this image to other formats, use the ```scripts/convert```
+tool, which can create an image in the vmdk, vdi, raw, or qcow2-old formats
+(qcow2-old is an older qcow2 format, compatible with older versions of QEMU).
+For example:
+
+```
+scripts/convert raw
+```
 
 By default OSv builds kernel for x86_64 architecture but it is also possible to build one for ARM by adding **arch** parameter like so:
 ```bash
@@ -112,15 +132,16 @@ For more information about various example apps you can build and run on OSv ple
 Running an OSv image is as easy as:
 ```bash
 ./scripts/run.py
-./scripts/firecracker.py #Version of run.py to run OSv on firecracker
 ``` 
-
-For details how to use the script run ```./scripts/run.py --help```.
 
 By default, the ```run.py``` runs OSv under KVM, with 4 VCPUs and 2GB of memory.
 If running under KVM you can terminate by hitting Ctrl+A X.
 
-## External Networking
+The ```run.py``` can run OSv image on QEMU/KVM, Xen and VMware. For details how to use the script run ```./scripts/run.py --help```.
+
+Alternatively you can use ./scripts/firecracker.py to run OSv on firecracker
+
+### Networking
 
 To start osv with external networking:
 
@@ -145,7 +166,7 @@ Test networking:
 test invoke TCPExternalCommunication
 ```
 
-### Testing
+## Testing, Debugging, Monitoring, Profiling OSv 
 
 - can be debugged with gdb
 - traced
@@ -157,49 +178,10 @@ test invoke TCPExternalCommunication
 
 
 
-Move to a separate wiki.
-
-
-**Fedora**
-
-```
-scripts/setup.py
-```
-
-**Debian stable(wheezy)**
-Debian stable(wheezy) requires to compile gcc, gdb and qemu.
-And also need to configure bridge manually.
-
-More details are available on wiki page:
-[Building OSv on Debian stable][]
-
-[Building OSv on Debian stable]: https://github.com/cloudius-systems/osv/wiki/Building-OSv-on-Debian-stable
-
-**Debian testing(jessie)**
-```
-apt-get install build-essential libboost-all-dev genromfs autoconf libtool openjdk-7-jdk ant qemu-utils maven libmaven-shade-plugin-java python-dpkt tcpdump gdb qemu-system-x86 gawk gnutls-bin openssl python-requests lib32stdc++-4.9-dev p11-kit
-```
-
-**Arch Linux**
-```
-pacman -S base-devel git python apache-ant maven qemu gdb boost yaml-cpp unzip openssl-1.0
-```
-
 Before start building OSv, you'll need to add your account to kvm group.
 ```
 usermod -aG kvm <user name>
 ```
-
-**Ubuntu**:
-
-```
-scripts/setup.py
-```
-
-You may use [Oracle JDK][] if you don't want to pull too many
-dependencies for ``openjdk-7-jdk``
-
-[Oracle JDK]: https://launchpad.net/~webupd8team/+archive/java
 
 To ensure functional C++11 support, Gcc 4.8 or above is required, as this was
 the first version to fully comply with the C++11 standard.
