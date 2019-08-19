@@ -39,7 +39,7 @@ the application files together. This, in high level can be achieved in two ways:
 - by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses *pre-built kernel*
  and combines it with application files to produce final image
 
-If your intention is to try to run your app on OSv with least effort, you should pursue the 'capstan'
+If your intention is to try to run your app on OSv with least effort, you should pursue the *capstan*
 route. For introduction please read this [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan)
 and for more details about capstan read [this documentation](https://github.com/cloudius-systems/capstan#documentation).
 
