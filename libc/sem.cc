@@ -11,8 +11,11 @@
 #include <memory>
 #include "libc.hh"
 
+#include <unordered_map>
+
 // FIXME: smp safety
 
+//TODO: Add open count for named semaphores
 struct indirect_semaphore : std::unique_ptr<semaphore> {
     explicit indirect_semaphore(unsigned units)
         : std::unique_ptr<semaphore>(new semaphore(units)) {}
@@ -68,5 +71,44 @@ int sem_trywait(sem_t* s)
 {
     if (!from_libc(s)->trywait())
         return libc_error(EAGAIN);
+    return 0;
+}
+
+//TODO: Need to maintain open count for each semaphore
+static std::unordered_map<std::string, indirect_semaphore> named_semaphores;
+static mutex named_semaphores_mutex;
+
+//TODO: Create common fun
+sem_t *sem_open(const char *name, int oflag)
+{
+    SCOPE_LOCK(named_semaphores_mutex);
+    auto semaphore = indirect_semaphore(0);
+    named_semaphores.emplace(std::string(name), semaphore(0));
+    return semaphore;
+}
+
+//TODO: Handle oflag (no need to worry about value)
+//TODO: Need to increment open count
+sem_t *sem_open(const char *name, int oflag, mode_t mode, unsigned int value)
+{
+    SCOPE_LOCK(named_semaphores_mutex);
+    auto semaphore = indirect_semaphore(value);
+    named_semaphores.emplace(std::string(name), semaphore(0));
+    return semaphore;
+}
+
+//TODO: Need to derement open count (decrement when 0?)
+int sem_close(sem_t *sem)
+{
+    //SCOPE_LOCK(named_semaphores_mutex);
+    return 0;
+}
+
+//TODO: Should remove from map but probably not destroy
+int sem_unlink(const char *name)
+{
+    SCOPE_LOCK(named_semaphores_mutex);
+    auto semaphore = named_semaphores.erase(std::string(name));
+    semaphore..~indirect_semaphore();
     return 0;
 }
