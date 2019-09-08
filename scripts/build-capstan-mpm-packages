@@ -1,0 +1,322 @@
+#!/bin/bash
+
+OSV_ROOT=$(realpath "$(dirname $0)/..")
+OSV_BUILD=$OSV_ROOT/build/release
+
+OSV_VERSION=$($OSV_ROOT/scripts/osv-version.sh | cut -d - -f 1 | grep -Po "[^v]*")
+OSV_COMMIT=$($OSV_ROOT/scripts/osv-version.sh | grep -Po "\-g.*" | grep -oP "[^-g]*")
+
+if [ "$OSV_COMMIT" != "" ]; then
+  OSV_VERSION="$OSV_VERSION-$OSV_COMMIT"
+fi
+
+PACKAGES=/tmp/capstan-packages
+CAPSTAN=capstan
+CAPSTAN_LOCAL_REPO=$HOME/.capstan
+OUTPUT=$CAPSTAN_LOCAL_REPO/packages
+
+clean_osv() {
+  cd "$OSV_ROOT" && ./scripts/build clean
+}
+
+build_osv_image() {
+  local image="$1"
+  local export_mode="$2"
+  local usrskel="$3"
+
+  echo "-------------------------------------"
+  echo "- Building OSv image $image ...      "
+  echo "-------------------------------------"
+
+  cd "$OSV_ROOT" && ./scripts/build -j4 image="$image" export="$export_mode" usrskel="$usrskel"
+
+  echo "-------------------------------------"
+  echo "- Built OSv image $image             "
+  echo "-------------------------------------"
+}
+
+prepare_package() {
+  local app_or_module_name="$1"
+  local package_dir="$PACKAGES/$app_or_module_name"
+
+  local module_yaml="$OSV_ROOT/modules/$app_or_module_name/mpm/package.yaml"
+  local app_yaml="$OSV_ROOT/apps/$app_or_module_name/mpm/package.yaml"
+  
+  if [ -f "$module_yaml" ]; then
+    package_name=$(echo $(grep 'name:' $module_yaml | cut -f 2 -d :))
+    package_title=$(echo $(grep 'title:' $module_yaml | cut -f 2 -d :))
+    package_version=$OSV_VERSION
+  elif [ -f "$app_yaml" ]; then
+    package_name=$(echo $(grep 'name:' $app_yaml | cut -f 2 -d :))
+    package_title=$(echo $(grep 'title:' $app_yaml | cut -f 2 -d :))
+    package_version=$(echo $(grep 'version:' $app_yaml | cut -f 2 -d :))
+  fi
+
+  if [ "$package_name" == "" ]; then
+    package_name="osv.$app_or_module_name"
+  fi
+
+  if [ "$package_title" == "" ]; then
+    package_title="$app_or_module_name"
+  fi
+
+  if [ "$package_version" == "" ]; then
+    package_version="1.0.0"
+  fi
+  
+  if [ -f /etc/os-release ]; then
+    platform=$(grep PRETTY_NAME /etc/os-release | cut -d = -f 2 | grep -o -P "[^\"]+")
+  elif [ -f /etc/lsb-release ]; then
+    platform=$(grep DISTRIB_DESCRIPTION /etc/lsb-release | cut -d = -f 2 | grep -o -P "[^\"]+")
+  else
+    platform="Unknown Linux"
+  fi
+ 
+  rm -rf $package_dir
+  mkdir -p $package_dir
+
+  cd $package_dir && $CAPSTAN package init --name "$package_name" --title "$package_title" \
+     --author "Anonymous" --version "$package_version" --platform "$platform"
+
+  if [ -f "$module_yaml" ]; then
+    grep -P '^require:|^-' $module_yaml >> $package_dir/meta/package.yaml
+  elif [ -f "$app_yaml" ]; then
+    grep -P '^require:|^-' $app_yaml >> $package_dir/meta/package.yaml
+  fi
+
+  cp $package_dir/meta/package.yaml $OUTPUT/${package_name}.yaml
+}
+
+set_package_command_line() {
+  local app_or_module_name="$1"
+  local package_dir="$PACKAGES/$app_or_module_name"
+
+  local command_line=$(cat $OSV_BUILD/cmdline)
+
+  if [ "$command_line" != "" ]; then
+    mkdir -p $package_dir/meta
+    cat << EOF > $package_dir/meta/run.yaml
+runtime: native
+config_set:
+  default:
+    bootcmd: "$command_line"
+config_set_default: default
+EOF
+    echo "Set package command like to: $command_line"
+  fi
+}
+
+build_package() {
+  local app_or_module_name="$1"
+  local package_dir="$PACKAGES/$app_or_module_name"
+
+  # Copy content
+  cp -rf $OSV_ROOT/build/export/. $package_dir
+
+  cd $package_dir && $CAPSTAN package build
+  mv $package_dir/*.mpm $OUTPUT
+
+  echo "-------------------------------------"
+  echo "- Built package $app_or_module_name"
+  echo "-------------------------------------"
+}
+
+build_osv_image_loader_and_bootstrap_package() {
+  #Build osv.loader and files that will make up bootstrap package
+  build_osv_image empty all default
+
+  #Copy loader.img as osv-loader.qemu
+  mkdir -p $PACKAGES/osv.loader
+  cp $OSV_BUILD/loader.img $PACKAGES/osv.loader/osv-loader.qemu
+  mkdir -p $CAPSTAN_LOCAL_REPO/repository/osv-loader/
+  cp $PACKAGES/osv.loader/osv-loader.qemu $CAPSTAN_LOCAL_REPO/repository/osv-loader/
+  cp $PACKAGES/osv.loader/osv-loader.qemu $OUTPUT
+
+  #Create bootstrap package
+  prepare_package "osv.bootstrap" "OSv Bootstrap" "$OSV_VERSION"
+  rm $PACKAGES/osv.bootstrap/tools/mount-nfs.so
+  rm $PACKAGES/osv.bootstrap/tools/umount.so
+  build_package "osv.bootstrap"
+}
+
+
+#----------------------
+
+build_run_java_package() {
+  build_osv_image "java-non-isolated" all none
+  prepare_package "osv.run-java" "Run Java apps" "$OSV_VERSION"
+  build_package "osv.run-java"
+}
+
+build_run_go_package() {
+  build_osv_image "golang" all none
+  prepare_package "osv.run-go" "Run Golang apps" "$OSV_VERSION"
+  build_package "osv.run-go"
+}
+
+build_openjdk8-compact_profile_package() {
+  profile="$1"
+  version="$2"
+  package_name="osv.openjdk8-zulu-compact$profile"
+  build_osv_image "openjdk8-zulu-compact$profile" selected none
+  prepare_package "$package_name" "Zulu Open JDK 8 compact profile $profile1" "$version" "osv.run-java"
+  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rm jre && rmdir java && ln -s j2re-compact${profile}-image/jre jre
+  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
+  build_package "$package_name"
+}
+
+build_openjdk8-full_package() {
+  version="$1"
+  package_name="osv.openjdk8-zulu-full"
+  build_osv_image "openjdk8-zulu-full" selected none
+  prepare_package "$package_name" "Zulu Open JDK 8" "$version" "osv.run-java"
+  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
+  build_package "$package_name"
+}
+
+build_openjdk8-zulu-compact3-with-java-beans_package() {
+  version="$1"
+  package_name="osv.openjdk8-zulu-compact3-with-java-beans"
+  build_osv_image "openjdk8-zulu-compact3-with-java-beans" selected none
+  prepare_package "$package_name" "Zulu Open JDK 8 with java.beans" "$version" "osv.run-java"
+  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rm jre && rmdir java && ln -s j2re-compact3-with-java-beans-image/jre jre
+  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
+  build_package "$package_name"
+}
+
+build_openjdk10-java-base_package() {
+  package_name="osv.openjdk10-java-base"
+  build_osv_image "openjdk10-java-base" selected none
+  prepare_package "$package_name" "Open JDK 10 (java-base)" "10.0.1" "osv.run-java"
+  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rmdir java && ln -s jdk-10.0.1-java-base/ java
+  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/java/lib/security/
+  build_package "$package_name"
+}
+
+# Needs /init/xx_auto_yy file with '/libhttpserver-api.so &!' to make it run automatically
+build_httpserver_api_package() {
+  build_osv_image "httpserver-api.fg" all none
+  prepare_package "osv.httpserver-api" "OSv httpserver with APIs (backend)" "$OSV_VERSION"
+  #rm $PACKAGES/osv.httpserver-api/usr/mgmt/plugins/libhttpserver-api_app.so  
+  build_package "osv.httpserver-api"
+}
+
+build_httpserver_html5_gui_package() {
+  build_osv_image "httpserver-html5-gui" selected none
+  prepare_package "osv.httpserver-html5-gui" "OSv HTML5 GUI (frontend)" "$OSV_VERSION" "osv.httpserver-api"
+  rm -rf $PACKAGES/osv.httpserver-html5-gui/init/
+  set_package_command_line "osv.httpserver-html5-gui" "/libhttpserver-api.so"
+  build_package "osv.httpserver-html5-gui"
+}
+
+build_httpserver_html5_cli_package() {
+  build_osv_image "httpserver-html5-cli" selected none
+  prepare_package "osv.httpserver-html5-cli" "OSv HTML5 Terminal (frontend)" "$OSV_VERSION" "osv.httpserver-api"
+  rm -rf $PACKAGES/osv.httpserver-html5-cli/init/
+  set_package_command_line "osv.httpserver-html5-cli" "/libhttpserver-api.so"
+  build_package "osv.httpserver-html5-cli"
+}
+
+build_node_package() {
+  build_osv_image "node" all none
+  prepare_package "osv.node-js" "Node JS" "8.11.2"
+  build_package "osv.node-js"
+}
+
+build_cli_package() {
+  apt-get install -y openssl1.0 libssl1.0-dev
+  build_osv_image "cli" all none
+  apt-get install -y libssl-dev node-gyp nodejs-dev npm
+  prepare_package "osv.cli" "Command Line" "$OSV_VERSION" "osv.httpserver-api"
+  set_package_command_line "osv.cli" "/cli/cli.so"
+  build_package "osv.cli"
+}
+
+build_lighttpd_package() {
+  build_osv_image "lighttpd" all none
+  prepare_package "osv.lighttpd" "Lighttpd" "1.4.45"
+  set_package_command_line "osv.lighttpd" "/lighttpd.so -D -f /lighttpd/lighttpd.conf"
+  build_package "osv.lighttpd"
+}
+
+build_nginx_package() {
+  build_osv_image "nginx" all none
+  prepare_package "osv.nginx" "NGINX" "1.12.2"
+  set_package_command_line "osv.nginx" "/nginx.so -c /nginx/conf/nginx.conf"
+  build_package "osv.nginx"
+}
+
+#----
+build_and_publish_mpm() {
+  local app_or_module_name="$1"
+  local package_dir="$PACKAGES/$app_or_module_name"
+
+  build_osv_image $app_or_module_name selected none
+
+  prepare_package $app_or_module_name
+  set_package_command_line $app_or_module_name
+  build_package $app_or_module_name
+
+  #rm -rf $package_dir
+}
+
+all() {
+ffmpeg
+libz
+
+run-java
+run-go
+
+java8
+java11
+
+python2 from host
+python3 from host
+node 10 from host
+
+build_and_publish_mpm http API 
+build_and_publish_mpm html cli
+build_and_publish_mpm html cli
+
+
+build_and_publish_mpm cli
+build_and_publish_mpm lighttpd
+build_and_publish_mpm nginx
+
+build_and_publish_mpm iperf3
+build_and_publish_mpm netperf
+build_and_publish_mpm redis-memonly
+build_and_publish_mpm memcached
+build_and_publish_mpm mysql
+}
+
+# ---- TESTS 
+#rust (hello,http)
+#golang (hello,http)
+#jvm (java):
+#  jetty (ab)
+#  tomcat (ab)
+#  spring boot (ab)
+#  elasticsearch (ab)
+#  apache-derby (only start)
+#graalvm (hello, isolates)
+#node express
+#python 2/3
+#lua
+#ffmpeg
+#mysql (bench)
+#sqlite
+#redis
+#iperf3
+#netperf
+#stream
+#
+# cli
+# httpserver-api REST test - exists test
+#   make check in
+
+#later JMV
+#specjvm
+#tomcat-benchamrk
+
+build_and_publish_mpm $1
