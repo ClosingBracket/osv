@@ -140,80 +140,22 @@ build_and_publish_mpm() {
   build_mpm $app_or_module_name
 }
 
-
-
-
-
-
+# -----------------------
+# Kernel and OSv modules
+# -----------------------
 
 build_osv_image_loader_and_bootstrap_package() {
-  #Build osv.loader and files that will make up bootstrap package
+  # Build osv.loader and files that will make up bootstrap package
   build_osv_image empty all default
 
   #Copy loader.img as osv-loader.qemu
-  mkdir -p $PACKAGES/osv.loader
-  cp $OSV_BUILD/loader.img $PACKAGES/osv.loader/osv-loader.qemu
   mkdir -p $CAPSTAN_LOCAL_REPO/repository/osv-loader/
-  cp $PACKAGES/osv.loader/osv-loader.qemu $CAPSTAN_LOCAL_REPO/repository/osv-loader/
-  cp $PACKAGES/osv.loader/osv-loader.qemu $OUTPUT
+  cp $OSV_BUILD/loader.img $CAPSTAN_LOCAL_REPO/repository/osv-loader/osv-loader.qemu
 
-  #Create bootstrap package
-  prepare_package "osv.bootstrap" "OSv Bootstrap" "$OSV_VERSION"
-  rm $PACKAGES/osv.bootstrap/tools/mount-nfs.so
-  rm $PACKAGES/osv.bootstrap/tools/umount.so
-  build_package "osv.bootstrap"
+  # Create bootstrap package
+  prepare_package empty
+  build_package empty
 }
-
-
-#----------------------
-
-build_run_java_package() {
-  build_osv_image "java-non-isolated" all none
-  prepare_package "osv.run-java" "Run Java apps" "$OSV_VERSION"
-  build_package "osv.run-java"
-}
-
-build_openjdk8-compact_profile_package() {
-  profile="$1"
-  version="$2"
-  package_name="osv.openjdk8-zulu-compact$profile"
-  build_osv_image "openjdk8-zulu-compact$profile" selected none
-  prepare_package "$package_name" "Zulu Open JDK 8 compact profile $profile1" "$version" "osv.run-java"
-  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rm jre && rmdir java && ln -s j2re-compact${profile}-image/jre jre
-  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
-  build_package "$package_name"
-}
-
-build_openjdk8-full_package() {
-  version="$1"
-  package_name="osv.openjdk8-zulu-full"
-  build_osv_image "openjdk8-zulu-full" selected none
-  prepare_package "$package_name" "Zulu Open JDK 8" "$version" "osv.run-java"
-  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
-  build_package "$package_name"
-}
-
-build_openjdk8-zulu-compact3-with-java-beans_package() {
-  version="$1"
-  package_name="osv.openjdk8-zulu-compact3-with-java-beans"
-  build_osv_image "openjdk8-zulu-compact3-with-java-beans" selected none
-  prepare_package "$package_name" "Zulu Open JDK 8 with java.beans" "$version" "osv.run-java"
-  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rm jre && rmdir java && ln -s j2re-compact3-with-java-beans-image/jre jre
-  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/jre/lib/security/
-  build_package "$package_name"
-}
-
-build_openjdk10-java-base_package() {
-  package_name="osv.openjdk10-java-base"
-  build_osv_image "openjdk10-java-base" selected none
-  prepare_package "$package_name" "Open JDK 10 (java-base)" "10.0.1" "osv.run-java"
-  cd $PACKAGES/${package_name}/usr/lib/jvm/ && rmdir java && ln -s jdk-10.0.1-java-base/ java
-  cd $PACKAGES/${package_name} && cp $OSV_ROOT/modules/ca-certificates/build/etc/pki/ca-trust/extracted/java/cacerts usr/lib/jvm/java/lib/security/
-  build_package "$package_name"
-}
-
-
-
 
 build_httpserver_api_package() {
   build_osv_image "httpserver-api.fg" all none
@@ -235,11 +177,28 @@ build_cli_package() {
   build_mpm "cli"
 }
 
+# -----------------------
+# JAVA - java run wrapper and prebuilt JDK images for 8 and 11
+# -----------------------
+build_run_java_package() {
+  build_osv_image "java-non-isolated" all none
+  build_mpm "java-non-isolated"
+}
 
+build_openjdk8-zulu-compact3-with-java-beans_package() {
+  build_osv_image "openjdk8-zulu-compact3-with-java-beans,ca-certificates" selected none
+  build_mpm "openjdk8-zulu-compact3-with-java-beans"
+}
+
+build_openjdk11-java-base_package() {
+  export JAVA_VERSION=11 
+  build_osv_image "openjdk-zulu-9-and-above,ca-certificates" selected none
+  build_mpm "openjdk-zulu-11"
+}
 
 #----------------
-
-
+# OTHER
+#----------------
 
 build_node_package() {
   build_osv_image "node" all none
@@ -328,4 +287,8 @@ build_and_publish_mpm mysql
 #build_httpserver_api_package
 #build_httpserver_html5_gui_package
 #build_httpserver_html5_cli_package
-build_cli_package
+#build_cli_package
+#build_osv_image_loader_and_bootstrap_package
+
+#build_openjdk8-zulu-compact3-with-java-beans_package
+build_openjdk11-java-base_package
