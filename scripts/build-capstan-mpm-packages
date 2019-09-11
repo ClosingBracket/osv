@@ -54,8 +54,10 @@ fi
 
 PACKAGES=/tmp/capstan-packages
 CAPSTAN=capstan
+
 CAPSTAN_LOCAL_REPO=$HOME/.capstan
 OUTPUT=$CAPSTAN_LOCAL_REPO/packages
+mkdir -p $OUTPUT
 
 ASK=0
 
@@ -288,7 +290,7 @@ build_kernel_and_standard_osv_apps() {
 
   build_run_java_package
   ASK=0
-  build_and_publish_mpm run-go
+  build_and_publish_mpm golang
 }
 
 build_java_jdk_packages() {
