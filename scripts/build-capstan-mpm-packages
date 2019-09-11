@@ -135,8 +135,13 @@ build_mpm() {
 
 build_and_publish_mpm() {
   local app_or_module_name="$1"
-
-  build_osv_image $app_or_module_name selected none
+  local osv_image_suffix="$2"
+ 
+  if [ "$osv_image_suffix" == "" ]; then
+    build_osv_image $app_or_module_name selected none
+  else
+    build_osv_image "$app_or_module_name,$app_or_module_name.$osv_image_suffix" selected none
+  fi
   build_mpm $app_or_module_name
 }
 
@@ -177,11 +182,22 @@ build_cli_package() {
   build_mpm "cli"
 }
 
+build_unit_tests_package() {
+  build_osv_image "fonts,java-base,java-non-isolated,java-cmd,java-tests,tests" selected none
+  build_mpm "tests"
+}
+
+build_http_server_tests_package() {
+  build_osv_image "josvsym,httpserver-jolokia-plugin,httpserver-jvm-plugin" selected none
+  #build_osv_image "josvsym,httpserver-jolokia-plugin,httpserver-jvm-plugin,certs" selected none
+  build_mpm "httpserver-api-tests"
+}
+
 # -----------------------
 # JAVA - java run wrapper and prebuilt JDK images for 8 and 11
 # -----------------------
 build_run_java_package() {
-  build_osv_image "java-non-isolated" all none
+  build_osv_image "java-base,java-non-isolated" selected none
   build_mpm "java-non-isolated"
 }
 
@@ -190,105 +206,101 @@ build_openjdk8-zulu-compact3-with-java-beans_package() {
   build_mpm "openjdk8-zulu-compact3-with-java-beans"
 }
 
-build_openjdk11-java-base_package() {
+build_openjdk11-zulu-package() {
   export JAVA_VERSION=11 
   build_osv_image "openjdk-zulu-9-and-above,ca-certificates" selected none
-  build_mpm "openjdk-zulu-11"
+  build_mpm "openjdk-zulu-9-and-above"
 }
 
 #----------------
 # OTHER
 #----------------
 
-build_node_package() {
-  build_osv_image "node" all none
-  prepare_package "osv.node-js" "Node JS" "8.11.2"
-  build_package "osv.node-js"
+build_kernel_and_standard_osv_apps() {
+  build_osv_image_loader_and_bootstrap_package
+
+  build_httpserver_api_package
+  build_httpserver_html5_gui_package
+  build_httpserver_html5_cli_package
+  build_cli_package
+
+  build_run_java_package
+  build_and_publish_mpm run-go
 }
 
-build_lighttpd_package() {
-  build_osv_image "lighttpd" all none
-  prepare_package "osv.lighttpd" "Lighttpd" "1.4.45"
-  set_package_command_line "osv.lighttpd" "/lighttpd.so -D -f /lighttpd/lighttpd.conf"
-  build_package "osv.lighttpd"
+build_java_jdk_packages() {
+  build_openjdk8-zulu-compact3-with-java-beans_package
+  build_openjdk11-zulu-package
 }
 
-build_nginx_package() {
-  build_osv_image "nginx" all none
-  prepare_package "osv.nginx" "NGINX" "1.12.2"
-  set_package_command_line "osv.nginx" "/nginx.so -c /nginx/conf/nginx.conf"
-  build_package "osv.nginx"
+build_java_example_apps() {
+  build_and_publish_mpm jetty
+  build_and_publish_mpm elasticsearch
+  build_and_publish_mpm apache-derby
+  build_and_publish_mpm spring-boot-example
+  build_and_publish_mpm apache-kafka native
+  build_and_publish_mpm apache-kafka zookeeper
+  build_and_publish_mpm vertx native
 }
 
-#----
+build_other_example_apps() {
+  build_and_publish_mpm lighttpd
+  PYTHON_VERSION=2 build_and_publish_mpm python-from-host
+  PYTHON_VERSION=3 build_and_publish_mpm python-from-host
+  build_and_publish_mpm nginx
+  build_and_publish_mpm node-from-host
+  build_and_publish_mpm stream
+  build_and_publish_mpm iperf3
+  build_and_publish_mpm netperf
+  build_and_publish_mpm redis-memonly
+  build_and_publish_mpm memcached
+  build_and_publish_mpm mysql
+  build_and_publish_mpm lua-hello-from-host
+  build_and_publish_mpm ffmpeg
 
-all() {
-ffmpeg
-libz
-
-run-java
-run-go
-
-java8
-java11
-
-python2 from host
-python3 from host
-node 10 from host
-
-build_and_publish_mpm http API 
-build_and_publish_mpm html cli
-build_and_publish_mpm html cli
-
-
-build_and_publish_mpm cli
-
-
-build_and_publish_mpm lighttpd
-build_and_publish_mpm nginx
-
-build_and_publish_mpm iperf3
-build_and_publish_mpm netperf
-build_and_publish_mpm redis-memonly
-build_and_publish_mpm memcached
-build_and_publish_mpm mysql
+  #Add core utils
 }
+
+# ...
+# Copy rust,vertx and node apps used for perm tests
 
 # ---- TESTS 
-#rust (hello,http)
-#golang (hello,http)
-#jvm (java):
-#  jetty (ab)
-#  tomcat (ab)
-#  spring boot (ab)
-#  elasticsearch (ab)
-#  apache-derby (only start)
-#graalvm (hello, isolates)
-#node express
-#python 2/3
-#lua
-#ffmpeg
-#mysql (bench)
-#sqlite
-#redis
-#iperf3
-#netperf
-#stream
-#
-# cli
-# httpserver-api REST test - exists test
-#   make check in
+build_test_apps() {
+  build_and_publish_mpm rust-example
+  build_and_publish_mpm rust-httpserver
+  build_and_publish_mpm golang-example
+  build_and_publish_mpm golang-httpserver
+  build_and_publish_mpm golang-pie-example
+  build_and_publish_mpm golang-pie-httpserver
+  build_and_publish_mpm graalvm-example
+  build_and_publish_mpm graalvm-httpserver
+  build_and_publish_mpm graalvm-netty-plot
 
-#later JMV
-#specjvm
-#tomcat-benchamrk
+  #jvm (java):
+  #  jetty (ab)
+  #  tomcat (ab)
+  #  spring boot (ab)
+  #  elasticsearch (ab)
+  #  apache-derby (only start)
+  #node express
+  #python 2/3
+  #lua
+  #ffmpeg
+  #mysql (bench)
+  #redis
+  #iperf3
+  #netperf
+  #stream
+  #
+  # cli
+  # httpserver-api REST test - exists test
+  #   make check in
+  #later JMV
+  #specjvm
+  #tomcat-benchamrk
+}
 
 #build_and_publish_mpm $1
-#build_httpserver_api_package
-#build_httpserver_html5_gui_package
-#build_httpserver_html5_cli_package
-#build_cli_package
-#build_osv_image_loader_and_bootstrap_package
 
-#build_openjdk8-zulu-compact3-with-java-beans_package
-build_openjdk11-java-base_package
+#build_unit_tests_package
+build_http_server_tests_package
