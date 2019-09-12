@@ -96,6 +96,11 @@ prepare_package() {
 
   local module_yaml="$OSV_ROOT/modules/$app_or_module_name/mpm/package.yaml"
   local app_yaml="$OSV_ROOT/apps/$app_or_module_name/mpm/package.yaml"
+
+  local package_name
+  local package_title
+  local package_version
+  local platform
   
   if [ -f "$module_yaml" ]; then
     package_name=$(echo $(grep 'name:' $module_yaml | cut -f 2 -d :))
@@ -187,7 +192,7 @@ build_mpm() {
   if [[ $ASK -ne 0 ]]; then
     read -p "Continue building next package [y/N]? :" -n 1 -t 30 -s
     echo
-    if [[ ! "$REPLY" =~ ^[Yy]$ ]]; then
+    if [[ ! "$REPLY" =~ ^[Yy]$ && "$REPLY" != "" ]]; then
       echo "Aborted."
       rm -rf $package_dir
       exit 1
@@ -289,8 +294,9 @@ build_kernel_and_standard_osv_apps() {
   build_cli_package
 
   build_run_java_package
-  ASK=0
   build_and_publish_mpm golang
+  ASK=0
+  build_and_publish_mpm libz
 }
 
 build_java_jdk_packages() {
@@ -307,7 +313,6 @@ build_java_example_apps() {
   build_and_publish_mpm apache-derby
   build_and_publish_mpm spring-boot-example
   build_and_publish_mpm apache-kafka native
-  build_and_publish_mpm apache-kafka zookeeper
   ASK=0
   build_and_publish_mpm vertx native
 }
