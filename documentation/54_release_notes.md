@@ -4,9 +4,9 @@ From the beginning OSv was designed to implement a subset of Linux POSIX API sup
 
 This release offers a breakthrough and allows runnning unmodified Linux **position-independant executables** (so called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on Internet and build it as shared library*.
 
-This release also make OSv more Linux-compatible from other end - booting on hypervisor. The release 0.53 made OSv kernel "look like" ELF64 uncompressed Linux kernel, this release has enhanced OSv loader to "look like" vmlinuz and allow to run on Hyperkit and 
-Mention like Linxu to a hypervisor - started with Firecracker, now as vmlinuz to Hyperkit and ELF64 PVH/HVM loader.
+In addition this release makes OSv more Linux-compatible from other end - booting on hypervisor. The previous release 0.53 made OSv kernel *"look like"* ELF64 uncompressed Linux kernel. The new release 0.54 has enhanced OSv loader to *"look like"* vmlinuz and thus allow booting on Docker's Hyperkit on OSX. The OSv loader has also been enhanced to boot as Linux ELF64 PVH/HVM loader or QEMU with `--kernel` option.
 
+Finally two new 
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
 # Another version
