@@ -1,3 +1,61 @@
+This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it easier to run unmodified Linux apps on OSv "as-is".
+
+OSv was designed from the beginning to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or like Java rely on OSv version of /usr/bin/java wrapper to run on OSv. This meant that one could NOT run a Linux executable "as is". In other words OSv has always been *Linux-compatible at source level but not at binary level*.
+
+This release offers a breakthrough and allows runnning unmodified Linux **position-independant executables** (so called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on Internet and build it as shared library*.
+
+Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
+
+# Another version
+* Linux compatibility - apps
+    * PIEs (getopt shortcoming)
+    * non-PIEs - java with front-end bin/java executable
+    * Kernel re-mapped higher
+    * mention local-exec TLS coming
+* Linux compatibility - booting; looks like Linux to hypervisor
+    * vmlinuz - for Hyperkit
+    * PVH/HVM to QEMU
+* Tooling/usability
+    * scripts/manifest_from_host.sh
+    * scripts/build-capstan-mpm-packages
+    * Docker files to build on Ubuntu and Fedora
+* Hypervisors
+    * Docker Hyperkit 
+    * QEMU PVH/HVM boot
+* Bugs
+    * RAMFS
+    * Dynamic Linker
+* Documentation
+    * Refreshed main README
+    * OSv-apps
+    * Scripts
+    * Still many Wiki pages to get updated
+* Apps
+    * *from-host*
+    * from Docker image
+
+# Features Highlights
+* Enhannced dynamic linker to support position-dependent executables
+* 
+* Full support of PIEs
+* QEMU direct boot (PVH/HVM boot)
+* Hyperkit
+* GraalVM isolates
+Dockerfiles
+Add basic sysfs
+Support libnuma
+Can run many core-utils (ls, cat, find, tree, …)
+Can run unmodified Linux executables:
+* Java
+* Python 2 and 3
+* Node
+* Lua
+* Ffmpeg
+MySQL on RAMFS
+Apps:
+
+It does by removing key limitations in dynamic linker 
+
 ##### KANATSU Minoru (1):
 * [libc: add __explicit_bzero_chk()](https://github.com/cloudius-systems/osv/commit/982acdbd)
 
