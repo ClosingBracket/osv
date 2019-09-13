@@ -150,7 +150,7 @@ Logically commits:
 * [imgedit.py: do not open a port to the entire world](https://github.com/cloudius-systems/osv/commit/e37d8edb)
 * [sched.hh: add missing include](https://github.com/cloudius-systems/osv/commit/9e34f428)
 
-##### Waldemar Kozaczuk (89):
+##### Waldemar Kozaczuk (87):
 * [Added initial version of README under scripts directory](https://github.com/cloudius-systems/osv/commit/14b2fe27)
 * [Lowered default ZFS qcow2 image size from 10GB to to 256MB](https://github.com/cloudius-systems/osv/commit/979f685c)
 * [Add script to setup external bridge](https://github.com/cloudius-systems/osv/commit/e36de53b)
@@ -183,7 +183,6 @@ Logically commits:
 * [mprotect: page-align len parameter instead of returning error](https://github.com/cloudius-systems/osv/commit/276aa1bf)
 * [procfs: populate maps file with i-node numbers](https://github.com/cloudius-systems/osv/commit/6f8d6cdd)
 * [procfs: Add device ID information to the maps file](https://github.com/cloudius-systems/osv/commit/ef0696c5)
-* [firecracker: bumped the version to 0.17.0](https://github.com/cloudius-systems/osv/commit/6c09383b)
 * [syscall: add getpid](https://github.com/cloudius-systems/osv/commit/0dd2ce0f)
 * [signal: tag user handler thread as an application one](https://github.com/cloudius-systems/osv/commit/33bea608)
 * [Make OSv boot as vmlinuz](https://github.com/cloudius-systems/osv/commit/1e460f59)
@@ -232,7 +231,6 @@ Logically commits:
 * [fs: extracted common pseudofs logic](https://github.com/cloudius-systems/osv/commit/30c9e8a0)
 * [fs: add subset of sysfs implementation needed by numa library](https://github.com/cloudius-systems/osv/commit/d14a5dca)
 * [ramfs: make sure to pass absolute paths for mkbootfs.py](https://github.com/cloudius-systems/osv/commit/7635774c)
-* [firecracker: upgraded to 0.18](https://github.com/cloudius-systems/osv/commit/d1f5f3e1)
 * [ramfs: make sure i-node number stay the same after node allocation](https://github.com/cloudius-systems/osv/commit/0b75cf74)
 * [scripts: fix export_manifest.py to handle all symlinks properly](https://github.com/cloudius-systems/osv/commit/4120ae29)
 * [scripts: enhance manifest_from_host.sh to put cmdline example for executables](https://github.com/cloudius-systems/osv/commit/0d913b6d)
