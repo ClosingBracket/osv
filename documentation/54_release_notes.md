@@ -1,9 +1,10 @@
-This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it easier to run unmodified Linux apps on OSv "as-is".
+This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it possible to run unmodified Linux apps on OSv "as-is".
 
-OSv was designed from the beginning to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or like Java rely on OSv version of /usr/bin/java wrapper to run on OSv. This meant that one could NOT run a Linux executable "as is". In other words OSv has always been *Linux-compatible at source level but not at binary level*.
+From the beginning OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some like Java rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words OSv has always been *Linux-compatible at source level but not at binary level*.
 
 This release offers a breakthrough and allows runnning unmodified Linux **position-independant executables** (so called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on Internet and build it as shared library*.
 
+This release also make OSv more Linux-compatible from other end - booting on hypervisor. The release 0.53 made OSv kernel "look like" ELF64 uncompressed Linux kernel, this release has enhanced OSv loader to "look like" vmlinuz and allow to run on Hyperkit and 
 Mention like Linxu to a hypervisor - started with Firecracker, now as vmlinuz to Hyperkit and ELF64 PVH/HVM loader.
 
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
