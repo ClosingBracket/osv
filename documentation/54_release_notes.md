@@ -4,6 +4,8 @@ OSv was designed from the beginning to implement a subset of Linux POSIX API sup
 
 This release offers a breakthrough and allows runnning unmodified Linux **position-independant executables** (so called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on Internet and build it as shared library*.
 
+Mention like Linxu to a hypervisor - started with Firecracker, now as vmlinuz to Hyperkit and ELF64 PVH/HVM loader.
+
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
 # Another version
@@ -55,6 +57,61 @@ MySQL on RAMFS
 Apps:
 
 It does by removing key limitations in dynamic linker 
+
+# LOgically commits
+Logically commits:
+* Move kernel from 0x00200000 to 0x40200000 (2nd GiB) in virtual memory to make space for position-dependent executables
+* Dynamic linker
+    * delay other symbols until called 
+    * bugs:
+        * skip old version symbols
+* Allow running non-PIEs 
+    * bin/java
+    * ...
+* Unit tests on Firecracker
+* Improve Golang PIEs
+* Hyperkit
+    * basic support of 32-bit HPET counter
+    * generate vmlinuz bootloader
+* Support OpenSSL 1.1
+* Support Mono
+* Many apps from host
+* Lua 5.3
+* RAMFS
+    * bugs
+        * delay freeing data until i-node closed
+        * keep i-node number the same
+    * speedup slow write/append
+* PROCFS
+    * i-node in mmaps
+    * 
+* Support GCC 9
+* Refreshed main README
+* Enhanced firecracker script
+* Added many GNU libc extensions
+    * error()
+    * __prognames and __progname_full
+* Boot message
+    * prints cmdline and boottime
+* Tools
+    * manifest_from_host to allow building images from artifacts on host “as-is” without need to compile
+    * tool (build-capstan-mpm-packages) to create MPP packages 
+* Support latest QEMU 4.x
+* Supports PIEs with parameters (getopt)
+* Enhance epoll_pwait()
+* VFS
+    * harden open()/sys_open()/task_conv() to handle null path
+    * enhance __fxstata to handle AT_SYMLINK_NOFOLLOW
+* Elf
+    * Handle new DT_RUNPATH
+* Cmdline:
+    * make “!” suffix terminate all lingering threads
+* Improve memory utilization
+    * start using memory below kernel
+* Bugs
+    * scheduler
+    * fix sem_trywait() to allow Java 12
+
 
 ##### KANATSU Minoru (1):
 * [libc: add __explicit_bzero_chk()](https://github.com/cloudius-systems/osv/commit/982acdbd)
