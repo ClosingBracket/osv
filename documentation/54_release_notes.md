@@ -1,5 +1,6 @@
 This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it possible to run unmodified Linux apps on OSv "as-is".
 
+# Overview
 From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some like Java rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
 
 This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on the Internet and build it as shared library*.
@@ -9,7 +10,7 @@ In addition, this release makes OSv more Linux-compatible from another end - boo
 Finally two new 
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
-# Another version
+# Features Highlights
 * Linux compatibility - apps
     * PIEs (getopt shortcoming)
     * non-PIEs - java with front-end bin/java executable
@@ -37,7 +38,7 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * *from-host*
     * from Docker image
 
-# Features Highlights
+
 * Enhannced dynamic linker to support position-dependent executables
 * 
 * Full support of PIEs
@@ -113,7 +114,28 @@ Logically commits:
     * scheduler
     * fix sem_trywait() to allow Java 12
 
+# Closed issues
+* #1050 - Can't run anything with 1.01G of memory
+* #1049 - tst_huge hangs with memory over 1GB.
+* #1048 - VM with memory larger than 4GB doesn't boot
+* #1043 - Map kernel higher in virtual memory
+* #1039 - Handle new DT_RUNPATH in object::load_needed()
+* #1035 - iperf3 fails with exception nested to deeply on ROFS/RamFS image
+* #1034 - Build failures when build directory's pathname has a space
+* #1031 - The graalvm-example fails with graalvm 1.0.0-rc13
+* #1026 - golang-pie-httpserver crashes on control-C
+* #1023 - Ignore missing symbols when loading objects with BIND_NOW in relocate_rela()
+* #1022 - lua package requires openssl 1.0
+* #1012 - Improve physical memory utilization by using memory below 2MB
+* #884 - slow write/append to files on ramfs high priority low-difficulty ramfs
+* #689 - PIE applications using "optarg" do not work on newer gcc
+* #561 - OSv failed to run a pthread application.
+* #534 - imgedit.py can't always connect to qemu-nbd
+* #305 - Fail to run iperf3 on osv
+* #190 - Allow running a single unmodified regular (non-PIE) Linux executable
+* #34 - Mono support
 
+# Commits by author
 ##### KANATSU Minoru (1):
 * [libc: add __explicit_bzero_chk()](https://github.com/cloudius-systems/osv/commit/982acdbd)
 
