@@ -1,7 +1,7 @@
 This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it possible to run unmodified Linux apps on OSv "as-is".
 
 # Overview
-From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some like Java rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
+From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some, like Java, rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
 
 This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a **binary from Linux host and run it on OSv** without having to locate the source code on the Internet and build it as shared library.
 
@@ -21,28 +21,40 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
       * `__prognames` and `__progname_full`
     * Added missing pseudo-files to procfs and minimal sysfs in order to support **libnuma** which allows programs like ffmpeg use x265 codec on OSv "as-is"
     * Encanced `/proc/self/maps` to include i-node number and device-id to support GraalVM apps with isolates
+    * Enhance epoll_pwait()
     * Improved dynamic linker by making it:
       * ignore old version symbols so that new version symbols are resolved properly instead
       * delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv 
 * Booting    
     * vmlinuz - for Hyperkit
     * PVH/HVM to QEMU
+    * Support latest QEMU 4.x
 * Tooling/usability
     * scripts/manifest_from_host.sh
     * scripts/build-capstan-mpm-packages
     * Docker files to build on Ubuntu and Fedora
     * Tweaked OSv code to support compilation by GCC 9
+* Unit tests on Firecracker
 * Hypervisors
     * Docker Hyperkit 
     * QEMU PVH/HVM boot
+    * basic support of 32-bit HPET counter
+*  VFS
+    * harden open()/sys_open()/task_conv() to handle null path
+    * enhance __fxstata to handle AT_SYMLINK_NOFOLLOW
 * Improved RAMFS by: 
     * bugs
         * delay freeing data until i-node closed
         * keep i-node number the same
     * speedup slow write/append 
-Bugs
-    * RAMFS
+ * Bugs
     * Dynamic Linker
+       * Handle new DT_RUNPATH
+       
+    * fix sem_trywait() to allow Java 12
+* Improve memory utilization
+    * start using memory below kernel
+* make “!” suffix terminate all lingering threads
 * Documentation
     * Refreshed main README
     * OSv-apps
@@ -51,71 +63,32 @@ Bugs
 * Apps
     * *from-host*
     * from Docker image
+    * GraalVM isolates
+    * Can run many core-utils (ls, cat, find, tree, …)
+    * Support Mono
+    * Can run unmodified Linux executables:
+      * Java
+      * Python 2 and 3
+      * Node
+      * Lua
+      * Ffmpeg
+      * MySQL on RAMFS
+      
+# Logically commits
 
-java with front-end bin/java executable
 * 
-* 
-* 
-* QEMU direct boot (PVH/HVM boot)
-* Hyperkit
-* GraalVM isolates
-Dockerfiles
-Add basic sysfs
-Support libnuma
-Can run many core-utils (ls, cat, find, tree, …)
-Can run unmodified Linux executables:
-* Java
-* Python 2 and 3
-* Node
-* Lua
-* Ffmpeg
-MySQL on RAMFS
-Apps:
-
-It does by removing key limitations in dynamic linker 
-
-# LOgically commits
-Logically commits:
-* 
-
-* Allow running non-PIEs 
-    * bin/java
-    * ...
-* Unit tests on Firecracker
 * Improve Golang PIEs
-* Hyperkit
-    * basic support of 32-bit HPET counter
-    * generate vmlinuz bootloader
+* 
 * Support OpenSSL 1.1
-* Support Mono
+* 
 * Many apps from host
 * Lua 5.3
-* 
-*
-* Support GCC 9
 * Refreshed main README
-* Enhanced firecracker script
-* 
 * Boot message
     * prints cmdline and boottime
 * Tools
     * manifest_from_host to allow building images from artifacts on host “as-is” without need to compile
     * tool (build-capstan-mpm-packages) to create MPP packages 
-* Support latest QEMU 4.x
-* Supports PIEs with parameters (getopt)
-* Enhance epoll_pwait()
-* VFS
-    * harden open()/sys_open()/task_conv() to handle null path
-    * enhance __fxstata to handle AT_SYMLINK_NOFOLLOW
-* Elf
-    * Handle new DT_RUNPATH
-* Cmdline:
-    * make “!” suffix terminate all lingering threads
-* Improve memory utilization
-    * start using memory below kernel
-* Bugs
-    * scheduler
-    * fix sem_trywait() to allow Java 12
 
 # Closed issues
 * #1050 - Can't run anything with 1.01G of memory
