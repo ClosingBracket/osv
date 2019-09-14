@@ -13,7 +13,7 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
 # Highlights
 ## Linux compatibility
 * Applications
-    * Enhanced **getopt** family of functions to work with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
+    * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
     * Enhanced dynamic linker to be capable of executing **position-dependent executables**
     * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
     * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
@@ -21,47 +21,46 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
     * Enhanced `epoll_pwait()` implementation
     * Improved dynamic linker by making it:
-      * ignore old version symbols so that new version symbols are resolved correctly instead
-      * delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv 
+      * Ignore old version symbols so that new version symbols are resolved correctly instead
+      * Delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv
+      * Handle DT_RUNPATH
 * Booting    
     * Added vmlinuz-compatible version of kernel to allow OSv boot on Docker's Hyperkit 
     * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
-    * Supports latest QEMU 4.x
-    * Added basic support of 32-bit HPET counter
-* Tooling/usability
-    * scripts/manifest_from_host.sh
-    * scripts/build-capstan-mpm-packages
-    * Docker files to build on Ubuntu and Fedora
-    * Tweaked OSv code to support compilation by GCC 9
-* Added ability to execute unit tests on Firecracker
+    * Added support of QEMU 4.x
+    * Enhanced HPET driver to support 32-bit main counter
+## Filesystem improvements
 * VFS
-    * harden open()/sys_open()/task_conv() to handle null path
-    * enhance __fxstata to handle AT_SYMLINK_NOFOLLOW
-* Improved RAMFS by: 
+    * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
+    * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
+* RAMFS 
     * bugs
         * delay freeing data until i-node closed
         * keep i-node number the same
     * speedup slow write/append 
- * Bugs
-    * Dynamic Linker
-       * Handle new DT_RUNPATH
-       
+
+## Tools/usability
+    * 
+    * `manifest_from_host.sh` to allow building images from artifacts on host “as-is” without need to compile
+    * `build-capstan-mpm-packages` to create MPM packages
+    * Docker files to build on Ubuntu and Fedora
+    * Tweaked OSv code to support compilation by GCC 9
+* Added ability to execute unit tests on Firecracker
+* Bugs
     * fix sem_trywait() to allow Java 12
-* Improve memory utilization
-    * start using memory below kernel
+* Improved memory utilization by using memory below kernel
 * make “!” suffix terminate all lingering threads
-* Documentation
+* Improved Documentation
     * Refreshed main README
     * OSv-apps
     * Scripts
-    * Still many Wiki pages to get updated
 * Apps
     * *from-host*
     * from Docker image
     * GraalVM isolates
     * Can run many core-utils (ls, cat, find, tree, …)
     * Support Mono
-    * Can run unmodified Linux executables:
+    * Can run unmodified Linux executables (from host):
       * Java
       * Python 2 and 3
       * Node
@@ -72,14 +71,9 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
 # Logically commits
 * Improve Golang PIEs
 * Support OpenSSL 1.1
-* Many apps from host
 * Lua 5.3
-* Refreshed main README
 * Boot message
     * prints cmdline and boottime
-* Tools
-    * manifest_from_host to allow building images from artifacts on host “as-is” without need to compile
-    * tool (build-capstan-mpm-packages) to create MPP packages 
 
 # Closed issues
 * #1050 - Can't run anything with 1.01G of memory
@@ -94,7 +88,7 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
 * #1023 - Ignore missing symbols when loading objects with BIND_NOW in relocate_rela()
 * #1022 - lua package requires openssl 1.0
 * #1012 - Improve physical memory utilization by using memory below 2MB
-* #884 - slow write/append to files on ramfs high priority low-difficulty ramfs
+* #884 - slow write/append to files on ramfs
 * #689 - PIE applications using "optarg" do not work on newer gcc
 * #561 - OSv failed to run a pthread application.
 * #534 - imgedit.py can't always connect to qemu-nbd
