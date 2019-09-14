@@ -3,30 +3,44 @@ This new release of OSv focuses on improving Linux compatibility and tooling aim
 # Overview
 From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some like Java rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
 
-This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a Linux binary from Linux host and run it on OSv *without having to locate the source code on the Internet and build it as shared library*.
+This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a **binary from Linux host and run it on OSv** without having to locate the source code on the Internet and build it as shared library.
 
 In addition, this release makes OSv more Linux-compatible from another end - booting on a hypervisor. The previous release 0.53 made OSv kernel *"look like"* ELF64 uncompressed Linux kernel. The new release 0.54 has enhanced OSv loader to *"look like"* **vmlinuz** and thus allow booting on Docker's **Hyperkit** on OSX. The OSv loader has also been enhanced to boot as Linux ELF64 **PVH/HVM** loader on QEMU with `--kernel` option.
 
 Finally two new 
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
-# Features Highlights
-* Linux compatibility - apps
-    * PIEs (getopt shortcoming)
-    * non-PIEs - java with front-end bin/java executable
-    * Kernel re-mapped higher
-    * mention local-exec TLS coming
-* Linux compatibility - booting; looks like Linux to hypervisor
+# Highlights
+## Linux compatibility
+* Applications
+    * Enhanced **getopt** family of functions to work with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
+    * Enhanced dynamic linker to be capable of executing **position-dependent executables**
+    * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
+    * Added new GNU libc extensions
+      * `error()`
+      * `__prognames` and `__progname_full`
+    * Added missing pseudo-files to procfs and minimal sysfs in order to support **libnuma** which allows programs like ffmpeg use x265 codec on OSv "as-is"
+    * Encanced `/proc/self/maps` to include i-node number and device-id to support GraalVM apps with isolates
+    * Improved dynamic linker by making it:
+      * ignore old version symbols so that new version symbols are resolved properly instead
+      * delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv 
+* Booting    
     * vmlinuz - for Hyperkit
     * PVH/HVM to QEMU
 * Tooling/usability
     * scripts/manifest_from_host.sh
     * scripts/build-capstan-mpm-packages
     * Docker files to build on Ubuntu and Fedora
+    * Tweaked OSv code to support compilation by GCC 9
 * Hypervisors
     * Docker Hyperkit 
     * QEMU PVH/HVM boot
-* Bugs
+* Improved RAMFS by: 
+    * bugs
+        * delay freeing data until i-node closed
+        * keep i-node number the same
+    * speedup slow write/append 
+Bugs
     * RAMFS
     * Dynamic Linker
 * Documentation
@@ -38,10 +52,10 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * *from-host*
     * from Docker image
 
-
-* Enhannced dynamic linker to support position-dependent executables
+java with front-end bin/java executable
 * 
-* Full support of PIEs
+* 
+* 
 * QEMU direct boot (PVH/HVM boot)
 * Hyperkit
 * GraalVM isolates
@@ -62,11 +76,8 @@ It does by removing key limitations in dynamic linker
 
 # LOgically commits
 Logically commits:
-* Move kernel from 0x00200000 to 0x40200000 (2nd GiB) in virtual memory to make space for position-dependent executables
-* Dynamic linker
-    * delay other symbols until called 
-    * bugs:
-        * skip old version symbols
+* 
+
 * Allow running non-PIEs 
     * bin/java
     * ...
@@ -79,20 +90,12 @@ Logically commits:
 * Support Mono
 * Many apps from host
 * Lua 5.3
-* RAMFS
-    * bugs
-        * delay freeing data until i-node closed
-        * keep i-node number the same
-    * speedup slow write/append
-* PROCFS
-    * i-node in mmaps
-    * 
+* 
+*
 * Support GCC 9
 * Refreshed main README
 * Enhanced firecracker script
-* Added many GNU libc extensions
-    * error()
-    * __prognames and __progname_full
+* 
 * Boot message
     * prints cmdline and boottime
 * Tools
@@ -150,7 +153,7 @@ Logically commits:
 * [imgedit.py: do not open a port to the entire world](https://github.com/cloudius-systems/osv/commit/e37d8edb)
 * [sched.hh: add missing include](https://github.com/cloudius-systems/osv/commit/9e34f428)
 
-##### Waldemar Kozaczuk (87):
+##### Waldemar Kozaczuk (86):
 * [Added initial version of README under scripts directory](https://github.com/cloudius-systems/osv/commit/14b2fe27)
 * [Lowered default ZFS qcow2 image size from 10GB to to 256MB](https://github.com/cloudius-systems/osv/commit/979f685c)
 * [Add script to setup external bridge](https://github.com/cloudius-systems/osv/commit/e36de53b)
@@ -163,7 +166,6 @@ Logically commits:
 * [Simplify building images out of artifacts found on host filesystem](https://github.com/cloudius-systems/osv/commit/83128b2b)
 * [Move getopt* files to libc folder and convert to C++](https://github.com/cloudius-systems/osv/commit/7a4d96b6)
 * [Enhance getopt family of functions to work with PIEs](https://github.com/cloudius-systems/osv/commit/e688e21f)
-* [Updated firecracker.py to download latest version 0.16.0](https://github.com/cloudius-systems/osv/commit/e1292e79)
 * [Tweaked nbd_client.py to properly handle handshake and transport flags in new handshake protocol](https://github.com/cloudius-systems/osv/commit/9cb7e73e)
 * [Tweak open() and sys_open() to return EFAULT error when pathname null](https://github.com/cloudius-systems/osv/commit/a0dcf853)
 * [elf: handle new DT_RUNPATH](https://github.com/cloudius-systems/osv/commit/31926c3d)
