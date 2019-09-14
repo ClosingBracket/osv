@@ -16,30 +16,25 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * Enhanced **getopt** family of functions to work with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
     * Enhanced dynamic linker to be capable of executing **position-dependent executables**
     * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
-    * Added new GNU libc extensions
-      * `error()`
-      * `__prognames` and `__progname_full`
-    * Added missing pseudo-files to procfs and minimal sysfs in order to support **libnuma** which allows programs like ffmpeg use x265 codec on OSv "as-is"
-    * Encanced `/proc/self/maps` to include i-node number and device-id to support GraalVM apps with isolates
-    * Enhance epoll_pwait()
+    * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
+    * Added missing pseudo-files to procfs and minimal implementation of **sysfs** in order to support **libnuma** to allow programs like ffmpeg using x265 codec run on OSv "as-is"
+    * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
+    * Enhanced `epoll_pwait()` implementation
     * Improved dynamic linker by making it:
-      * ignore old version symbols so that new version symbols are resolved properly instead
+      * ignore old version symbols so that new version symbols are resolved correctly instead
       * delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv 
 * Booting    
-    * vmlinuz - for Hyperkit
-    * PVH/HVM to QEMU
-    * Support latest QEMU 4.x
+    * Added vmlinuz-compatible version of kernel to allow OSv boot on Docker's Hyperkit 
+    * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
+    * Supports latest QEMU 4.x
+    * Added basic support of 32-bit HPET counter
 * Tooling/usability
     * scripts/manifest_from_host.sh
     * scripts/build-capstan-mpm-packages
     * Docker files to build on Ubuntu and Fedora
     * Tweaked OSv code to support compilation by GCC 9
-* Unit tests on Firecracker
-* Hypervisors
-    * Docker Hyperkit 
-    * QEMU PVH/HVM boot
-    * basic support of 32-bit HPET counter
-*  VFS
+* Added ability to execute unit tests on Firecracker
+* VFS
     * harden open()/sys_open()/task_conv() to handle null path
     * enhance __fxstata to handle AT_SYMLINK_NOFOLLOW
 * Improved RAMFS by: 
@@ -75,12 +70,8 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
       * MySQL on RAMFS
       
 # Logically commits
-
-* 
 * Improve Golang PIEs
-* 
 * Support OpenSSL 1.1
-* 
 * Many apps from host
 * Lua 5.3
 * Refreshed main README
