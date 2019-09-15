@@ -37,26 +37,22 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * Greatly improved speed of write/append operations 
     * Fixed bugs
         * Delay freeing data until i-node closed
-        * Keep i-node number the same 
-
+        * Keep i-node number the same
 ### Tools
     * Added script `manifest_from_host.sh` to allow building images from artifacts on host “as-is” without need to compile
     * Added script `build-capstan-mpm-packages` to create capstan MPM packages
     * Added Ubuntu- and Fedora-based Docker files to help create build and test environment
     * Enhanced `test.py` to allow executing unit tests on Firecracker
-    Tweaked OSv code to support compilation by GCC 9
-
 ### Bugs and other enhancements
     * Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
     * Improved memory utilization by using memory below kernel
     * Introduced new command line suffix `!` allowing to force termination of lingering threads
     * Revamped building the cli and httpserver apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation 
-
+    * Tweaked OSv code to support compilation by GCC 9
 ### Improved Documentation
     * Refreshed main README
     * OSv-apps
-    * Scripts
-    
+    * Scripts   
 ### Apps
     * From Docker image demo app
     * GraalVM isolates
