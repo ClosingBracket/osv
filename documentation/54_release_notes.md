@@ -11,7 +11,7 @@ Finally two new
 Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
 # Highlights
-## Linux compatibility
+### Linux compatibility
 * Applications
     * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
     * Enhanced dynamic linker to be capable of executing **position-dependent executables**
@@ -29,37 +29,40 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
     * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
     * Added support of QEMU 4.x
     * Enhanced HPET driver to support 32-bit main counter
-## Filesystem improvements
+### Filesystem improvements
 * VFS
     * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
     * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
 * RAMFS 
-    * bugs
-        * delay freeing data until i-node closed
-        * keep i-node number the same
-    * speedup slow write/append 
+    * Greatly improved speed of write/append operations 
+    * Fixed bugs
+        * Delay freeing data until i-node closed
+        * Keep i-node number the same 
 
-## Tools/usability
-    * 
-    * `manifest_from_host.sh` to allow building images from artifacts on host “as-is” without need to compile
-    * `build-capstan-mpm-packages` to create MPM packages
-    * Docker files to build on Ubuntu and Fedora
-    * Tweaked OSv code to support compilation by GCC 9
-* Added ability to execute unit tests on Firecracker
-* Bugs
-    * fix sem_trywait() to allow Java 12
-* Improved memory utilization by using memory below kernel
-* make “!” suffix terminate all lingering threads
-* Improved Documentation
+### Tools
+    * Added script `manifest_from_host.sh` to allow building images from artifacts on host “as-is” without need to compile
+    * Added script `build-capstan-mpm-packages` to create capstan MPM packages
+    * Added Ubuntu- and Fedora-based Docker files to help create build and test environment
+    * Enhanced `test.py` to allow executing unit tests on Firecracker
+    Tweaked OSv code to support compilation by GCC 9
+
+### Bugs and other enhancements
+    * Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
+    * Improved memory utilization by using memory below kernel
+    * Introduced new command line suffix `!` allowing to force termination of lingering threads
+    * Revamped building the cli and httpserver apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation 
+
+### Improved Documentation
     * Refreshed main README
     * OSv-apps
     * Scripts
-* Apps
-    * *from-host*
-    * from Docker image
+    
+### Apps
+    * From Docker image demo app
     * GraalVM isolates
     * Can run many core-utils (ls, cat, find, tree, …)
     * Support Mono
+    * Improve suppoort of Golang PIEs 
     * Can run unmodified Linux executables (from host):
       * Java
       * Python 2 and 3
@@ -67,13 +70,6 @@ Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan).
       * Lua
       * Ffmpeg
       * MySQL on RAMFS
-      
-# Logically commits
-* Improve Golang PIEs
-* Support OpenSSL 1.1
-* Lua 5.3
-* Boot message
-    * prints cmdline and boottime
 
 # Closed issues
 * #1050 - Can't run anything with 1.01G of memory
