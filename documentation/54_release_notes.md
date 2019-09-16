@@ -1,71 +1,65 @@
 This new release of OSv focuses on improving Linux compatibility and tooling aimed to make it possible to run unmodified Linux apps on OSv "as-is".
 
 # Overview
-From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some, like Java, rely on OSv version of /usr/bin/java wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
+From the beginning, OSv was designed to implement a subset of Linux POSIX API superset. But until this release most Linux applications had to be **re-compiled from source** as shared libraries or some, like Java, rely on OSv version of `/usr/bin/java` wrapper to run. This meant that one could NOT run a Linux executable "as is". In other words, OSv has always been *Linux-compatible at source level but not at binary level*.
 
-This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a **binary from Linux host and run it on OSv** without having to locate the source code on the Internet and build it as shared library.
+This release offers a breakthrough and allows running unmodified Linux **position-independent executables** (so-called "pies") and **position-dependant executables** "as-is" as long as they *do not use "fork/execve" or other unsupported Linux API*. It means that very often one can take a **binary from Linux host and run it on OSv** without having to locate the source code on the Internet and build it as a shared library.
 
 In addition, this release makes OSv more Linux-compatible from another end - booting on a hypervisor. The previous release 0.53 made OSv kernel *"look like"* ELF64 uncompressed Linux kernel. The new release 0.54 has enhanced OSv loader to *"look like"* **vmlinuz** and thus allow booting on Docker's **Hyperkit** on OSX. The OSv loader has also been enhanced to boot as Linux ELF64 **PVH/HVM** loader on QEMU with `--kernel` option.
-
-Finally two new 
-Mention tooling - manifest_from_host.sh and build_capstan_mpm_ (better capstan). Example to run docker image.
 
 # Highlights
 ### Linux compatibility
 * Applications
-    * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
-    * Enhanced dynamic linker to be capable of executing **position-dependent executables**
-    * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
-    * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
-    * Added missing pseudo-files to procfs and minimal implementation of **sysfs** in order to support **libnuma** to allow programs like ffmpeg using x265 codec run on OSv "as-is"
-    * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
-    * Enhanced `epoll_pwait()` implementation
-    * Improved dynamic linker by making it:
-      * Ignore old version symbols so that new version symbols are resolved correctly instead
-      * Delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv
-      * Handle DT_RUNPATH
-* Booting    
-    * Added vmlinuz-compatible version of kernel to allow OSv boot on Docker's Hyperkit 
-    * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
-    * Added support of QEMU 4.x
-    * Enhanced HPET driver to support 32-bit main counter
+    * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
+    * Enhanced dynamic linker to be capable of executing **position-dependent executables**
+    * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
+    * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
+    * Added missing pseudo-files to procfs and minimal implementation of **sysfs** in order to support **libnuma** to allow programs like ffmpeg using x265 codec run on OSv "as-is"
+    * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
+    * Enhanced `epoll_pwait()` implementation
+    * Improved dynamic linker by making it:
+      * Ignore old version symbols so that new version symbols are resolved correctly instead
+      * Delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv
+      * Handle DT_RUNPATH
+* Booting    
+    * Added vmlinuz-compatible version of the kernel to allow OSv boot on Docker's Hyperkit 
+    * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
+    * Added support of QEMU 4.x
+    * Enhanced HPET driver to support 32-bit main counter
 ### Filesystem improvements
 * VFS
-    * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
-    * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
+    * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
+    * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
 * RAMFS 
-    * Greatly improved speed of write/append operations 
-    * Fixed bugs
-        * Delay freeing data until i-node closed
-        * Keep i-node number the same
+    * Greatly improved speed of write/append operations 
+    * Fixed bugs
+        * Delay freeing data until i-node closed
+        * Keep i-node number the same
 ### Tools
- * Added script `manifest_from_host.sh` to allow building images from artifacts on host “as-is” without need to compile
- * Added script `build-capstan-mpm-packages` to create capstan MPM packages
- * Added Ubuntu- and Fedora-based Docker files to help create build and test environment
- * Enhanced `test.py` to allow executing unit tests on Firecracker
+ * Added script `manifest_from_host.sh` to allow building images from artifacts on Linux host “as-is” without need to compile
+ * Added script `build-capstan-mpm-packages` to create capstan MPM packages
+ * Added Ubuntu- and Fedora-based Docker files to help create build and test environment
+ * Enhanced `test.py` to allow executing unit tests on Firecracker
 ### Bugs and other enhancements
- * Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
- * Improved memory utilization by using memory below kernel
- * Introduced new command line suffix `!` allowing to force termination of lingering threads
- * Revamped building the cli and httpserver apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation 
- * Tweaked OSv code to support compilation by GCC 9
+ * Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
+ * Improved memory utilization by using memory below the kernel
+ * Introduced new command line suffix `!` allowing to force termination of lingering threads
+ * Revamped building of the `cli` and `httpserver` apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation 
+ * Tweaked OSv code to support compilation by GCC 9
 ### Improved Documentation
- * Refreshed main README
- * OSv-apps
- * Scripts   
+ * Refreshed main README
+ * OSv-apps
+ * Scripts   
 ### Apps
- * From Docker image demo app
- * GraalVM isolates
- * Can run many core-utils (ls, cat, find, tree, …)
- * Support Mono
- * Improve suppoort of Golang PIEs 
- * Can run unmodified Linux executables (from host):
-   * Java
-   * Python 2 and 3
-   * Node
-   * Lua
-   * Ffmpeg
-   * MySQL on RAMFS
+* Added number of `*-from-host` apps that demonstrate building images out of binaries from Linux host:
+   * Java
+   * Python
+   * Node
+   * Lua
+   * Ffmpeg 
+* Added demo app - `openjdk12-jre-from-docker` that creates an image out of a Docker image * Added demo app that demonstrates running GraalVM isolates
+ * Added an example of a basic mono app
+ * Improved support of Golang PIEs 
 
 # Closed issues
 * #1050 - Can't run anything with 1.01G of memory
