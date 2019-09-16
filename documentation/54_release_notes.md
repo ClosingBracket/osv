@@ -57,7 +57,8 @@ In addition, this release makes OSv more Linux-compatible from another end - boo
   * Node
   * Lua
   * Ffmpeg 
-* Added demo app - `openjdk12-jre-from-docker` that creates an image out of a Docker image * Added demo app that demonstrates running GraalVM isolates
+* Added demo app - `openjdk12-jre-from-docker` that creates an image out of a Docker image
+* Added demo app that demonstrates running GraalVM isolates
 * Added an example of a basic mono app
 * Improved support of Golang PIEs 
 
