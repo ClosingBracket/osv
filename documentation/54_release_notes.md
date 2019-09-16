@@ -10,56 +10,56 @@ In addition, this release makes OSv more Linux-compatible from another end - boo
 # Highlights
 ### Linux compatibility
 * Applications
-    * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
-    * Enhanced dynamic linker to be capable of executing **position-dependent executables**
-    * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
-    * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
-    * Added missing pseudo-files to procfs and minimal implementation of **sysfs** in order to support **libnuma** to allow programs like ffmpeg using x265 codec run on OSv "as-is"
-    * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
-    * Enhanced `epoll_pwait()` implementation
-    * Improved dynamic linker by making it:
-      * Ignore old version symbols so that new version symbols are resolved correctly instead
-      * Delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv
-      * Handle DT_RUNPATH
-* Booting    
-    * Added vmlinuz-compatible version of the kernel to allow OSv boot on Docker's Hyperkit 
-    * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
-    * Added support of QEMU 4.x
-    * Enhanced HPET driver to support 32-bit main counter
+  * Enhanced **getopt** family of functions to work correctly with both **position-independent executables** and **position-dependent executables** in order to allow receiving program arguments
+  * Enhanced dynamic linker to be capable of executing **position-dependent executables**
+  * Mapped kernel higher in virtual memory - from 0x00200000 to **0x40200000** (2nd GiB) in order to make space for position-dependent executables
+  * Added new GNU libc extensions: `error()`, `__prognames` and `__progname_full`
+  * Added missing pseudo-files to procfs and minimal implementation of **sysfs** in order to support **libnuma** to allow programs like ffmpeg using x265 codec run on OSv "as-is"
+  * Encanced `/proc/self/maps` to include i-node number and device ID to support GraalVM apps with isolates
+  * Enhanced `epoll_pwait()` implementation
+  * Improved dynamic linker by making it:
+    * Ignore old version symbols so that new version symbols are resolved correctly instead
+    * Delay resolving symbols found missing during `relocate_rela()` phase for certain relocation types to allow more unmodified Linux executables run on OSv
+    * Handle DT_RUNPATH
+* Booting
+  * Added vmlinuz-compatible version of the kernel to allow OSv boot on Docker's Hyperkit
+  * Enhanced loader to support [PVH/HVM](https://patchwork.kernel.org/patch/10741013/) boot to allow OSV run on QEMU with `--kernel` option
+  * Added support of QEMU 4.x
+  * Enhanced HPET driver to support 32-bit main counter
 ### Filesystem improvements
 * VFS
-    * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
-    * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
-* RAMFS 
-    * Greatly improved speed of write/append operations 
-    * Fixed bugs
-        * Delay freeing data until i-node closed
-        * Keep i-node number the same
+  * Hardened implementation of `open()/sys_open()/task_conv()` to handle null path
+  * Enhanced `__fxstata` to handle `AT_SYMLINK_NOFOLLOW`
+* RAMFS
+  * Greatly improved speed of write/append operations
+  * Fixed bugs
+    * Delay freeing data until i-node closed
+    * Keep i-node number the same
 ### Tools
- * Added script `manifest_from_host.sh` to allow building images from artifacts on Linux host “as-is” without need to compile
- * Added script `build-capstan-mpm-packages` to create capstan MPM packages
- * Added Ubuntu- and Fedora-based Docker files to help create build and test environment
- * Enhanced `test.py` to allow executing unit tests on Firecracker
+* Added script `manifest_from_host.sh` to allow building images from artifacts on Linux host “as-is” without need to compile
+* Added script `build-capstan-mpm-packages` to create capstan MPM packages
+* Added Ubuntu- and Fedora-based Docker files to help create build and test environment
+* Enhanced `test.py` to allow executing unit tests on Firecracker
 ### Bugs and other enhancements
- * Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
- * Improved memory utilization by using memory below the kernel
- * Introduced new command line suffix `!` allowing to force termination of lingering threads
- * Revamped building of the `cli` and `httpserver` apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation 
- * Tweaked OSv code to support compilation by GCC 9
+* Fixed `sem_trywait()` that for example allows Java 12 run properly on OSv
+* Improved memory utilization by using memory below the kernel
+* Introduced new command line suffix `!` allowing to force termination of lingering threads
+* Revamped building of the `cli` and `httpserver` apps to use OpenSSL 1.1 and Lua 5.3 and minimize compilation
+* Tweaked OSv code to support compilation by GCC 9
 ### Improved Documentation
- * Refreshed main README
- * OSv-apps
- * Scripts   
+* Refreshed main README
+* OSv-apps
+* Scripts   
 ### Apps
 * Added number of `*-from-host` apps that demonstrate building images out of binaries from Linux host:
-   * Java
-   * Python
-   * Node
-   * Lua
-   * Ffmpeg 
+  * Java
+  * Python
+  * Node
+  * Lua
+  * Ffmpeg 
 * Added demo app - `openjdk12-jre-from-docker` that creates an image out of a Docker image * Added demo app that demonstrates running GraalVM isolates
- * Added an example of a basic mono app
- * Improved support of Golang PIEs 
+* Added an example of a basic mono app
+* Improved support of Golang PIEs 
 
 # Closed issues
 * #1050 - Can't run anything with 1.01G of memory
