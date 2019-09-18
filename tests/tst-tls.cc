@@ -114,3 +114,14 @@ int main(int argc, char** argv)
 
     std::cout << "SUMMARY: " << tests << " tests, " << fails << " failures\n";
 }
+
+//TODL: Modifye test to make sure that file size TLS of main PIE is smaller than TLS memory size - BUG 
+#ifndef __SHARED_OBJECT__
+static void before_main(void) __attribute__((constructor));
+static void before_main(void)
+{
+	printf("--> before_main: %d\n", v7);
+}
+#endif
+
+

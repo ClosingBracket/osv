@@ -225,7 +225,10 @@ void thread::setup_tcb()
         // at the end of area as described in the ascii art for executables
         // TLS layout
         auto executable_tls_offset = total_tls_size - executable_tls_size;
-        memcpy(p + executable_tls_offset, executable_tls_data, executable_tls_size);
+        memset(p + executable_tls_offset, 0, executable_tls_size);
+	//TODO: Copy only file size or mqke executable_tls_data zero-ed properly before
+        memcpy(p + executable_tls_offset, executable_tls_data, 48);
+	printf("setup_tcb: tls_size: %d, %p\n", executable_tls_size, executable_tls_data);
     }
     _tcb = static_cast<thread_control_block*>(p + total_tls_size);
     _tcb->self = _tcb;
