@@ -371,6 +371,7 @@ public:
     std::vector<ptrdiff_t>& initial_tls_offsets() { return _initial_tls_offsets; }
     bool is_executable() { return _is_executable; }
     ulong get_tls_size();
+    void copy_local_tls(void* to_addr);
 protected:
     virtual void load_segment(const Elf64_Phdr& segment) = 0;
     virtual void unload_segment(const Elf64_Phdr& segment) = 0;

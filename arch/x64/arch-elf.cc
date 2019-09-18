@@ -200,4 +200,11 @@ void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
     offsets[_module_index] = offset;
 }
 
+void object::copy_local_tls(void* to_addr)
+{
+    memcpy(to_addr, _tls_segment, _tls_init_size); //file size - 48 (0x30) for example and 80 (0x50) for httpserver
+    memset(to_addr + _tls_init_size, 0, _tls_uninit_size);
+    printf("copy_local_tls: init size: %d, uninit size:%d\n", _tls_init_size, _tls_uninit_size);
+}
+
 }
