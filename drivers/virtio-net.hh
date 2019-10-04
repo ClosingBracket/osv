@@ -220,6 +220,7 @@ public:
     static void free_buffer_and_refcnt(void* buffer, void* refcnt);
     static void free_buffer(iovec iov) { do_free_buffer(iov.iov_base); }
     static void do_free_buffer(void* buffer);
+    static bool use_large_buffer;
 
     bool ack_irq();
 

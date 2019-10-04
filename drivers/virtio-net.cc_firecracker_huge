@@ -63,7 +63,6 @@ extern int maxnic;
 namespace virtio {
 
 int net::_instance = 0;
-bool net::use_large_buffer = false;
 
 #define net_tag "virtio-net"
 #define net_d(...)   tprintf_d(net_tag, __VA_ARGS__)
@@ -378,7 +377,6 @@ void net::read_config()
     net_i("Features: %s=%d", "host tso4", _host_tso4);
 
     printf("VIRTIO_NET_F_MRG_RXBUF: %d\n", _mergeable_bufs);
-    use_large_buffer = !_mergeable_bufs;
 }
 
 /**
@@ -477,10 +475,7 @@ void net::receiver()
             // Bad packet/buffer - discard and continue to the next one
             if (len < _hdr_size + ETHER_HDR_LEN) {
                 rx_drops++;
-                if (use_large_buffer)
-                   free(page);
-                else
-                   memory::free_page(page);
+                memory::free_page(page);
 
                 continue;
             }
@@ -588,13 +583,7 @@ void net::free_buffer_and_refcnt(void* buffer, void* refcnt)
 void net::do_free_buffer(void* buffer)
 {
     buffer = align_down(buffer, page_size);
-    if (use_large_buffer) {
-        printf("--> Freeing 17 pages: %p\n", buffer);
-        free(buffer);
-    } else {
-        printf("--> Freeing single page: %p\n", buffer);
-        memory::free_page(buffer);
-    }
+    memory::free_page(buffer);
 }
 
 void net::fill_rx_ring()
@@ -604,27 +593,19 @@ void net::fill_rx_ring()
     vring* vq = _rxq.vqueue;
 
     while (vq->avail_ring_not_empty()) {
-        void *page;
-        int pages_num = use_large_buffer ? 17 : 1;
-        if (use_large_buffer) {
-            page = aligned_alloc(memory::page_size, pages_num * memory::page_size);
-            printf("--> Allocated 17 pages: %p\n", page);
-        } else {
-            page = memory::alloc_page();
-            printf("--> Allocated single page: %p\n", page);
-        }
+        //auto page = memory::alloc_page();
+        auto page = malloc(16 * memory::page_size);
 
         vq->init_sg();
-        vq->add_in_sg(page, pages_num * memory::page_size);
+        vq->add_in_sg(page, memory::page_size * 16);
         if (!vq->add_buf(page)) {
-            if (use_large_buffer)
-               free(page);
-            else
-               memory::free_page(page);
+            //memory::free_page(page);
+            free(page);
             break;
         }
         added++;
     }
+    printf("net: Allocated %d pages\n", added * 16);
 
     trace_virtio_net_fill_rx_ring_added(_ifn->if_index, added);
 
