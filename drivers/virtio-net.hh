@@ -109,6 +109,8 @@ public:
         VIRTIO_NET_CSUM_OFFLOAD = CSUM_TCP | CSUM_UDP,
     };
 
+    const int LARGE_BUFFER_SIZE_IN_PAGES = 17;
+
     struct net_config {
         /* The config defining mac address (if VIRTIO_NET_F_MAC) */
         u8 mac[6];
@@ -218,9 +220,10 @@ public:
     void fill_rx_ring();
     mbuf* packet_to_mbuf(const std::vector<iovec>& iovec);
     static void free_buffer_and_refcnt(void* buffer, void* refcnt);
+    static void free_large_buffer_and_refcnt(void* buffer, void* refcnt);
     static void free_buffer(iovec iov) { do_free_buffer(iov.iov_base); }
     static void do_free_buffer(void* buffer);
-    static bool use_large_buffer;
+    static void do_free_large_buffer(void* buffer);
 
     bool ack_irq();
 
@@ -267,6 +270,7 @@ private:
     bool _guest_tso4 = false;
     bool _host_tso4 = false;
     bool _guest_ufo = false;
+    bool _use_large_buffers = false;
 
     u32 _hdr_size;
 
