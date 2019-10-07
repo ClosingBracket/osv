@@ -640,7 +640,7 @@ void net::fill_rx_ring()
     if (added)
         vq->kick();
 
-    printf("--> Allocated %d pages!\n", added * size_in_pages);
+    //printf("--> Allocated %d pages!\n", added * size_in_pages);
 }
 
 inline int net::txq::try_xmit_one_locked(void* _req)
