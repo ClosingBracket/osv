@@ -479,7 +479,7 @@ void net::receiver()
             if (len < _hdr_size + ETHER_HDR_LEN) {
                 rx_drops++;
                 if (_use_large_buffers) {
-                   free(buffer);
+                   memory::free_phys_contiguous_aligned(buffer);
                 } else {
                    memory::free_page(buffer);
                 }
@@ -497,7 +497,7 @@ void net::receiver()
 
             packet.push_back({buffer + _hdr_size, len - _hdr_size});
 
-            // Read the fragments
+            // Read the fragments - only applies if _mergeable_bufs is ON
             while (--nbufs > 0) {
                 buffer = vq->get_buf_elem(&len);
                 if (!buffer) {
@@ -604,7 +604,7 @@ void net::do_free_buffer(void* buffer)
 void net::do_free_large_buffer(void* buffer)
 {
     buffer = align_down(buffer, page_size);
-    free(buffer);
+    memory::free_phys_contiguous_aligned(buffer);
 }
 
 void net::fill_rx_ring()
@@ -617,7 +617,7 @@ void net::fill_rx_ring()
     while (vq->avail_ring_not_empty()) {
         void *buffer;
         if (_use_large_buffers) {
-            buffer = aligned_alloc(memory::page_size, size_in_pages * memory::page_size);
+            buffer = memory::alloc_phys_contiguous_aligned(size_in_pages * memory::page_size, memory::page_size);
         } else {
             buffer = memory::alloc_page();
         }
@@ -626,7 +626,7 @@ void net::fill_rx_ring()
         vq->add_in_sg(buffer, size_in_pages * memory::page_size);
         if (!vq->add_buf(buffer)) {
             if (_use_large_buffers) {
-               free(buffer);
+               memory::free_phys_contiguous_aligned(buffer);
             } else {
                memory::free_page(buffer);
             }
