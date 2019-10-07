@@ -589,10 +589,10 @@ void net::do_free_buffer(void* buffer)
 {
     buffer = align_down(buffer, page_size);
     if (use_large_buffer) {
-        printf("--> Freeing 17 pages: %p\n", buffer);
+        //printf("--> Freeing 17 pages: %p\n", buffer);
         free(buffer);
     } else {
-        printf("--> Freeing single page: %p\n", buffer);
+        //printf("--> Freeing single page: %p\n", buffer);
         memory::free_page(buffer);
     }
 }
@@ -608,10 +608,10 @@ void net::fill_rx_ring()
         int pages_num = use_large_buffer ? 17 : 1;
         if (use_large_buffer) {
             page = aligned_alloc(memory::page_size, pages_num * memory::page_size);
-            printf("--> Allocated 17 pages: %p\n", page);
+            //printf("--> Allocated 17 pages: %p\n", page);
         } else {
             page = memory::alloc_page();
-            printf("--> Allocated single page: %p\n", page);
+            //printf("--> Allocated single page: %p\n", page);
         }
 
         vq->init_sg();
@@ -630,6 +630,12 @@ void net::fill_rx_ring()
 
     if (added)
         vq->kick();
+
+    if (use_large_buffer) {
+        printf("--> Allocated %d pages!\n", added * 17);
+    } else {
+        printf("--> Allocated %d pages!\n", added);
+    }
 }
 
 inline int net::txq::try_xmit_one_locked(void* _req)
