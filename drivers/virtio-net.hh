@@ -14,6 +14,7 @@
 #include <bsd/sys/sys/mbuf.h>
 
 #include <osv/percpu_xmit.hh>
+#include <osv/contiguous_alloc.hh>
 
 #include "drivers/virtio.hh"
 #include "drivers/pci-device.hh"
@@ -108,7 +109,10 @@ public:
         ETH_ALEN = 14,
         VIRTIO_NET_CSUM_OFFLOAD = CSUM_TCP | CSUM_UDP,
     };
-
+    // If VIRTIO_NET_F_MRG_RXBUF is not negotiated, the VirtIO spec
+    // mandates the guest to use large receive buffers of at least 65562 bytes size
+    // For simplicity we are rounding this up to the number of full pages which is 17
+    // 65562 = 16 * 4096 + 26 = 65536 + 26 <= 17 * 4096
     const int LARGE_BUFFER_SIZE_IN_PAGES = 17;
 
     struct net_config {
@@ -482,6 +486,15 @@ private:
      * @param out_data output buffer
      */
     void fill_qstats(const struct txq& txq, struct if_data* out_data) const;
+
+    void free_buffer(void *buffer)
+    {
+        if (_use_large_buffers) {
+            memory::free_phys_contiguous_aligned(buffer);
+        } else {
+            memory::free_page(buffer);
+        }
+    }
 
     /* We currently support only a single Rx+Tx queue */
     struct rxq _rxq;

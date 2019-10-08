@@ -376,7 +376,11 @@ void net::read_config()
     net_i("Features: %s=%d,%s=%d", "Guest_csum", _guest_csum, "guest tso4", _guest_tso4);
     net_i("Features: %s=%d,%s=%d", "host tso4", _host_tso4, "MRG_RX_BUF", _mergeable_bufs);
 
-    if (!_mergeable_bufs && (_guest_tso4 || _guest_ufo)) { // For explanation please see "5.1.6.3.1 Driver Requirements: Setting Up Receive Buffers" in virtio spec
+    // If VIRTIO_NET_F_MRG_RXBUF is not negotiated and VIRTIO_NET_F_GUEST_TSO4
+    // or VIRTIO_NET_F_GUEST_UFO are, the VirtIO spec mandates the guest to use
+    // large receive buffers
+    // For details please see "5.1.6.3.1 Driver Requirements: Setting Up Receive Buffers" in VirtIO spec
+    if (!_mergeable_bufs && (_guest_tso4 || _guest_ufo)) {
         net_i("Set up to use large receive buffers");
         _use_large_buffers = true;
     }
@@ -478,12 +482,7 @@ void net::receiver()
             // Bad packet/buffer - discard and continue to the next one
             if (len < _hdr_size + ETHER_HDR_LEN) {
                 rx_drops++;
-                if (_use_large_buffers) {
-                   memory::free_phys_contiguous_aligned(buffer);
-                } else {
-                   memory::free_page(buffer);
-                }
-
+                free_buffer(buffer);
                 continue;
             }
 
@@ -625,11 +624,7 @@ void net::fill_rx_ring()
         vq->init_sg();
         vq->add_in_sg(buffer, size_in_pages * memory::page_size);
         if (!vq->add_buf(buffer)) {
-            if (_use_large_buffers) {
-               memory::free_phys_contiguous_aligned(buffer);
-            } else {
-               memory::free_page(buffer);
-            }
+            free_buffer(buffer);
             break;
         }
         added++;
@@ -639,8 +634,6 @@ void net::fill_rx_ring()
 
     if (added)
         vq->kick();
-
-    //printf("--> Allocated %d pages!\n", added * size_in_pages);
 }
 
 inline int net::txq::try_xmit_one_locked(void* _req)
