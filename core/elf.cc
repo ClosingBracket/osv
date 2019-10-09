@@ -477,7 +477,8 @@ void object::load_segments()
         if (tls_size > pie_static_tls_maximum_size) {
             std::cout << "WARNING: " << pathname() << " is a PIE using TLS of size " << tls_size
                   << " which is greater than " << pie_static_tls_maximum_size << " bytes limit. "
-                  << "Either increase the limit or link with '-shared' instead of '-pie'.\n";
+                  << "Either increase the size of TLS reserve in arch/x64/loader.ld or "
+                  << "link with '-shared' instead of '-pie'.\n";
         }
     }
 }

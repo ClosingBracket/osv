@@ -43,6 +43,7 @@ extern __thread int ex3 __attribute__ ((tls_model ("initial-exec")));
 // error, because local-exec is not allowed in shared libraries, just in
 // executables (including PIE).
 __thread int v7 __attribute__ ((tls_model ("local-exec"))) = 789;
+__thread int v8 __attribute__ ((tls_model ("local-exec")));
 #endif
 
 extern void external_library();
@@ -115,12 +116,12 @@ int main(int argc, char** argv)
     std::cout << "SUMMARY: " << tests << " tests, " << fails << " failures\n";
 }
 
-//TODL: Modifye test to make sure that file size TLS of main PIE is smaller than TLS memory size - BUG 
 #ifndef __SHARED_OBJECT__
 static void before_main(void) __attribute__((constructor));
 static void before_main(void)
 {
-	printf("--> before_main: %d\n", v7);
+    report(v7 == 789, "v7 in init function");
+    report(v8 == 0, "v8 in init function");
 }
 #endif
 
