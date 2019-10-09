@@ -955,6 +955,7 @@ objects += core/app.o
 objects += core/libaio.o
 objects += core/osv_execve.o
 objects += core/osv_c_wrappers.o
+objects += core/options.o
 
 #include $(src)/libc/build.mk:
 libc =
@@ -1861,8 +1862,7 @@ else
     boost-includes = -isystem $(miscbase)/usr/include
 endif
 
-boost-libs := $(boost-lib-dir)/libboost_program_options$(boost-mt).a \
-              $(boost-lib-dir)/libboost_system$(boost-mt).a
+boost-libs := $(boost-lib-dir)/libboost_system$(boost-mt).a
 
 ifeq ($(nfs), true)
 	nfs-lib = $(out)/libnfs.a
