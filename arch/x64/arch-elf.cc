@@ -62,7 +62,6 @@ bool arch_init_reloc_dyn(struct init_table *t, u32 type, u32 sym,
 bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
                                 Elf64_Sxword addend)
 {
-    //printf("elf::arch_relocate_rela [%s] %d\n", pathname().c_str(), sym);
     switch (type) {
     case R_X86_64_NONE:
         break;
@@ -105,7 +104,6 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         // This type and next R_X86_64_DTPOFF64 are intended to prepare execution of __tls_get_addr()
         // which provides dynamic access of thread local variable
         // This calculates the module index of the ELF containing the variable
-        printf("elf::arch_relocate_rela [%s] R_X86_64_DTPMOD64\n", pathname().c_str());
         if (sym == STN_UNDEF) {
             // The thread-local variable being accessed is within
             // the SAME shared object as the caller
@@ -120,14 +118,12 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
     case R_X86_64_DTPOFF64:
         // The thread-local variable being accessed is located
         // in DIFFERENT shared object that the caller
-        printf("elf::arch_relocate_rela [%s] R_X86_64_DTPOFF64\n", pathname().c_str());
         *static_cast<u64*>(addr) = symbol(sym).symbol->st_value;
         break;
     case R_X86_64_TPOFF64:
         // This type is intended to resolve symbols of thread-local variables in static TLS
         // accessed in initial-exec mode and is handled to calculate the virtual address of
         // target thread-local variable
-        printf("elf::arch_relocate_rela [%s] R_X86_64_TPOFF64\n", pathname().c_str());
         if (sym) {
             auto sm = symbol(sym);
             ulong tls_offset;
@@ -189,12 +185,10 @@ void object::prepare_initial_tls(void* buffer, size_t size,
 
 void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
 {
-    printf("-->prepare_local_tls: 1\n");
     if (!_static_tls && !is_executable()) {
         return;
     }
 
-    printf("-->prepare_local_tls: 2\n");
     offsets.resize(std::max(_module_index + 1, offsets.size()));
     auto offset = - get_tls_size();
     offsets[_module_index] = offset;
@@ -204,7 +198,6 @@ void object::copy_local_tls(void* to_addr)
 {
     memcpy(to_addr, _tls_segment, _tls_init_size); //file size - 48 (0x30) for example and 80 (0x50) for httpserver
     memset(to_addr + _tls_init_size, 0, _tls_uninit_size);
-    printf("copy_local_tls: init size: %d, uninit size:%d\n", _tls_init_size, _tls_uninit_size);
 }
 
 }

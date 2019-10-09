@@ -224,8 +224,6 @@ void thread::setup_tcb()
         // TLS layout
         auto executable_tls_offset = total_tls_size - executable_tls_size;
         _app_runtime->app.lib()->copy_local_tls(p + executable_tls_offset);
-	printf("setup_tcb: total tls_size: %d\n", total_tls_size);
-	printf("setup_tcb: executable tls_size: %d\n", executable_tls_size);
     }
     _tcb = static_cast<thread_control_block*>(p + total_tls_size);
     _tcb->self = _tcb;

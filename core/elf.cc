@@ -1030,13 +1030,11 @@ std::string object::pathname()
 // Run the object's static constructors or similar initialization
 void object::run_init_funcs(int argc, char** argv)
 {
-    printf("elf::run_init_funcs [%s]\n", pathname().c_str());
     // Invoke any init functions if present and pass in argc and argv
     // The reason why we pass argv and argc is explained in issue #795
     if (dynamic_exists(DT_INIT)) {
         auto func = dynamic_ptr<void>(DT_INIT);
         if (func) {
-            printf("elf::run_init_funcs [%s] executing %p\n", pathname().c_str(), func);
             reinterpret_cast<void(*)(int, char**)>(func)(argc, argv);
         }
     }
@@ -1044,7 +1042,6 @@ void object::run_init_funcs(int argc, char** argv)
         auto funcs = dynamic_ptr<void(*)(int, char**)>(DT_INIT_ARRAY);
         auto nr = dynamic_val(DT_INIT_ARRAYSZ) / sizeof(*funcs);
         for (auto i = 0u; i < nr; ++i) {
-            printf("elf::run_init_funcs [%s] executing array %p\n", pathname().c_str(), funcs[i]);
             funcs[i](argc, argv);
         }
     }
@@ -1108,9 +1105,6 @@ void object::init_static_tls()
         // alignment of the TLS segment defined in loader.ld.
         _initial_tls_size = align_up(_initial_tls_size, (size_t)64);
     }
-    printf("elf::init_static_tls [%s] - this TLS size: %d\n", pathname().c_str(), this->get_tls_size());
-    printf("elf::init_static_tls [%s] - this static TLS end: %d\n", pathname().c_str(), this->static_tls_end());
-    printf("elf::init_static_tls [%s] - %d\n", pathname().c_str(), static_tls);
     if (!static_tls) {
         _initial_tls_size = 0;
         return;
