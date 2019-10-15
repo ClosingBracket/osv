@@ -126,14 +126,20 @@ class SupervisedProcess:
             self.cv.release()
 
         line = ''
+        ch_bytes = ''
         while True:
-            ch = self.process.stdout.read(1).decode()
-            if ch == '' and self.process.poll() != None:
-                break
-            line += ch
-            if ch == '\n':
-                append_line(line)
-                line = ''
+            ch_bytes = ch_bytes + self.process.stdout.read(1)
+            try:
+                ch = ch_bytes.decode('utf-8')
+                if ch == '' and self.process.poll() != None:
+                    break
+                line += ch
+                if ch == '\n':
+                    append_line(line)
+                    line = ''
+                ch_bytes = ''
+            except UnicodeError:
+                continue
 
         if line:
             append_line(line)
@@ -227,6 +233,18 @@ class Guest(SupervisedProcess):
 def wait_for_line(guest, text):
     for line in guest.read_lines():
         if line == text:
+            return
+    raise Exception('Text not found in output: ' + text)
+
+def wait_for_line_starts(guest, text):
+    for line in guest.read_lines():
+        if line.startswith(text):
+            return
+    raise Exception('Text not found in output: ' + text)
+
+def wait_for_line_contains(guest, text):
+    for line in guest.read_lines():
+        if text in line:
             return
     raise Exception('Text not found in output: ' + text)
 
