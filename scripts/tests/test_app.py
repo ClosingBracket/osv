@@ -1,3 +1,4 @@
+#!/usr/bin/python
 from testing import *
 import argparse
 import subprocess
