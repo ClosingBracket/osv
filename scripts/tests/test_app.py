@@ -3,12 +3,15 @@ from testing import *
 import argparse
 import subprocess
 
-def run(command, hypervisor_name, image_path=None, line=None):
+def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, host_port=None):
     py_args = []
     if image_path != None:
-        py_args = ['--image', image_path]
+        py_args = ['--image', image_path, '--novnc', '--nogdb']
 
-    app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args)
+    if guest_port != None and host_port != None:
+        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, forward=[(host_port, guest_port)])
+    else:
+        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args)
 
     if line != None:
         wait_for_line_starts(app, line)
@@ -25,7 +28,9 @@ if __name__ == "__main__":
                         help="expect line in guest output")
     parser.add_argument("-e", "--execute", action="store", default='runscript /run/default;', metavar="CMD",
                         help="edit command line before execution")
+    parser.add_argument("--guest_port", action="store", default=None, help="guest port")
+    parser.add_argument("--host_port", action="store", default=None, help="host port")
 
     cmdargs = parser.parse_args()
     set_verbose_output(True)
-    run(cmdargs.execute, cmdargs.hypervisor, cmdargs.image, cmdargs.line)
+    run(cmdargs.execute, cmdargs.hypervisor, cmdargs.image, cmdargs.line, cmdargs.guest_port, cmdargs.host_port)
