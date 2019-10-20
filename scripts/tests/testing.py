@@ -94,7 +94,7 @@ def scan_errors(s,scan_for_failed_to_load_object_error=True):
 
 class SupervisedProcess:
     def __init__(self, args, show_output=False, show_output_on_error=True, scan_for_failed_to_load_object_error=True):
-        self.process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
         self.cv = threading.Condition()
         self.lines = []
         self.output_collector_done = False
@@ -171,6 +171,7 @@ class SupervisedProcess:
 
     def join(self):
         self.output_collector_thread.join()
+        self.process.stdin.close()
         if self.process.returncode:
             raise Exception('Guest failed (returncode=%d)' % self.proces.returncode)
         if self.failed:
@@ -190,6 +191,10 @@ class SupervisedProcess:
     def failed(self):
         assert not self.output_collector_thread.isAlive()
         return self.has_errors or self.process.returncode
+
+    def write_line_to_input(self, line):
+        self.process.stdin.write(line + "\n")
+        self.process.stdin.flush()
 
 def run_command_in_guest(command, **kwargs):
     common_parameters = ["-e", "--power-off-on-abort " + command]

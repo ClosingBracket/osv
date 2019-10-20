@@ -39,10 +39,6 @@ osv.apache-kafka #Cannot connect tp each other
 osv.mysql
 osv.redis-memonly
 
----- HERE
-osv.netperf
-osv.memcached
-
 # Requires input
 osv.cli
 
@@ -55,5 +51,9 @@ osv.openjdk11-zulu
 osv.openjdk8-zulu-compact3-with-java-beans
 osv.run-go
 osv.run-java
+
+-- LATER
+osv.netperf
+osv.memcached
 
 -- Think of Ruby

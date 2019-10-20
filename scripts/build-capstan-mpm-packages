@@ -257,8 +257,13 @@ build_unit_tests_package() {
 }
 
 build_http_server_tests_package() {
-  build_osv_image "josvsym,httpserver-jolokia-plugin,httpserver-jvm-plugin,certs" selected none
+  build_osv_image "josvsym,httpserver-jolokia-plugin,httpserver-jvm-plugin,certs,httpserver-api-tests" selected none
   build_mpm "httpserver-api-tests"
+}
+
+build_http_server_https_tests_package() {
+  build_osv_image "httpserver-api-https-tests" selected none
+  build_mpm "httpserver-api-https-tests"
 }
 
 # -----------------------
@@ -342,6 +347,7 @@ build_test_apps() {
   ASK=1
   build_unit_tests_package
   build_http_server_tests_package
+  build_http_server_https_tests_package
 
   build_and_publish_mpm rust-example
   build_and_publish_mpm rust-httpserver
