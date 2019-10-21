@@ -100,8 +100,8 @@ test_apps_with_tester()
 test_unit_tests()
 {
   compose_test_app "unit-tests" && run_test_app "tests"
-  #compose_test_app "httpserver-api-tests" && run_test_app "httpserver-api" http
-  #compose_test_app "httpserver-api-https-tests" && run_test_app "httpserver-api" https
+  compose_test_app "httpserver-api-tests" && run_test_app "httpserver-api" http
+  compose_test_app "httpserver-api-https-tests" "httpserver-api-tests" && run_test_app "httpserver-api" https
 }
 
 #test_simple_apps
