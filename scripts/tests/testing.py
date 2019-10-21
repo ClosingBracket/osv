@@ -8,7 +8,7 @@ import socket
 tests = []
 _verbose_output = False
 
-osv_base = '.'
+osv_base = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../..')
 
 class TestFailed(Exception):
     pass

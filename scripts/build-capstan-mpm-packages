@@ -314,7 +314,8 @@ build_java_jdk_packages() {
 build_java_example_apps() {
   ASK=1
   build_and_publish_mpm jetty
-  build_and_publish_mpm elasticsearch
+  build_and_publish_mpm tomcat
+  build_and_publish_mpm elasticsearch #FAILS
   build_and_publish_mpm apache-derby
   build_and_publish_mpm spring-boot-example
   build_and_publish_mpm apache-kafka native
@@ -362,7 +363,8 @@ build_test_apps() {
   build_and_publish_mpm graalvm-netty-plot
 
   ASK=0
-  build_and_publish_mpm node-express-example
+  build_and_publish_mpm node-express-example #FAILS
+  build_and_publish_mpm node-socketio-example
 }
 
 case "$1" in

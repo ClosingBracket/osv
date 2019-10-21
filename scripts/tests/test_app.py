@@ -7,7 +7,8 @@ from time import sleep
 def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, host_port=None, input_lines=[]):
     py_args = []
     if image_path != None:
-        py_args = ['--image', image_path, '--novnc', '--nogdb']
+        py_args = ['--image', image_path]
+        #py_args = ['--image', image_path, '--novnc', '--nogdb']
 
     if guest_port != None and host_port != None:
         app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, forward=[(host_port, guest_port)])

@@ -33,8 +33,10 @@ def run(command, hypervisor_name, host_port, guest_port, http_path, expected_htt
         check_with_curl(app_url, expected_http_line)
 
     if no_keep_alive:
+        print('--> NO Keep ALIVE')
         output = subprocess.check_output(["ab", "-l", "-c", str(concurrency), "-n", str(count), app_url]).split('\n')
     else:
+        print('--> Keep ALIVE')
         output = subprocess.check_output(["ab", "-l", "-k", "-c", str(concurrency), "-n", str(count), app_url]).split('\n')
 
     failed_requests = 1
