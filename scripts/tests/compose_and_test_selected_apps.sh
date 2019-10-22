@@ -58,7 +58,7 @@ test_simple_apps()
   compose_and_run_test_app "golang-pie-example"
   compose_and_run_test_app "graalvm-example"
   compose_and_run_test_app "graalvm-example"
-  compose_and_run_test_app "lua-hello-from-host
+  compose_and_run_test_app "lua-hello-from-host"
   compose_and_run_test_app "rust-example"
   compose_and_run_test_app "stream"
   compose_test_app "python2-from-host" && run_test_app "python-from-host"
@@ -85,32 +85,59 @@ test_http_apps()
 
 test_apps_with_tester()
 {
-  compose_and_run_test_app "iperf3" && run_test_app "
-  compose_and_run_test_app "graalvm-netty-plot" && run_test_app "
-  compose_test_app "ffmpeg" "" "libz" # && run_test_app "TODO handle parameter passed to test.sh
-  compose_and_run_test_app "redis-memonly" && run_test_app "
-  compose_and_run_test_app "cli" && run_test_app "
-  #-----------------------
-  ## compose_test_app "elasticsearch" && run_test_app "
-  ## compose_test_app "apache-derby"  && run_test_app "#ADD tester
-  ## compose_test_app "apache-kafka"  && run_test_app "#Cannot connect tp each other
-  #compose_test_app "mysql"  && run_test_app "FAILS
+  compose_and_run_test_app "iperf3"
+  compose_and_run_test_app "graalvm-netty-plot"
+  compose_test_app "ffmpeg" "libz" && run_test_app "ffmpeg" "video_subclip" && run_test_app "ffmpeg" "video_transcode"
+  compose_and_run_test_app "redis-memonly"
+  compose_and_run_test_app "cli"
+  compose_and_run_test_app "mysql"
+  compose_test_app "apache-derby" "run-java" "openjdk8-zulu-compact3-with-java-beans" && run_test_app "apache-derby"
+  compose_test_app "apache-kafka" "run-java" "openjdk8-zulu-compact3-with-java-beans" && run_test_app "apache-kafka"
+  compose_and_run_test_app "elasticsearch" #TODO: Understand why guest fails in the end
 }
 
-test_unit_tests()
+run_unit_tests()
 {
   compose_test_app "unit-tests" && run_test_app "tests"
-  compose_test_app "httpserver-api-tests" && run_test_app "httpserver-api" http
-  compose_test_app "httpserver-api-https-tests" "httpserver-api-tests" && run_test_app "httpserver-api" https
+  compose_test_app "httpserver-api-tests" && run_test_app "httpserver-api" "http"
+  compose_test_app "httpserver-api-https-tests" "httpserver-api-tests" && run_test_app "httpserver-api" "https"
 }
 
-#test_simple_apps
-#test_http_apps
-#test_apps_with_tester
-test_unit_tests
+if [ "$1" == "" ]; then
+  echo "Usage: $0 <test_type> OR <test_app_name>"
+  exit 1
+fi
+
+case "$1" in
+  simple)
+    echo "Testing simple apps ..."
+    echo "-----------------------------------"
+    test_simple_apps;;
+  http)
+    echo "Testing HTTP apps ..."
+    echo "-----------------------------------"
+    test_http_apps;;
+  with_tester)
+    echo "Testing apps with custom tester ..."
+    echo "-----------------------------------"
+    test_apps_with_tester;;
+  unit_tests)
+    echo "Running unit tests ..."
+    echo "-----------------------------------"
+    run_unit_tests;;
+  all)
+    echo "Running all tests ..."
+    echo "-----------------------------------"
+    test_simple_apps
+    test_http_apps
+    test_apps_with_tester
+    run_unit_tests;;
+  *)
+    compose_and_run_test_app $1
+esac
 
 #
-#-- LATER
+#TODO
 #osv.netperf
 #osv.memcached
 #

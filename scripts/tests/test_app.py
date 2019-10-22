@@ -4,11 +4,10 @@ import argparse
 import subprocess
 from time import sleep
 
-def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, host_port=None, input_lines=[]):
+def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, host_port=None, input_lines=[], kill_app=False):
     py_args = []
     if image_path != None:
         py_args = ['--image', image_path]
-        #py_args = ['--image', image_path, '--novnc', '--nogdb']
 
     if guest_port != None and host_port != None:
         app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, forward=[(host_port, guest_port)])
@@ -22,6 +21,9 @@ def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, h
 
     for line in input_lines:
         app.write_line_to_input(line)
+
+    if kill_app:
+       app.kill()
 
     app.join()
 
@@ -38,8 +40,9 @@ if __name__ == "__main__":
     parser.add_argument("--guest_port", action="store", default=None, help="guest port")
     parser.add_argument("--host_port", action="store", default=None, help="host port")
     parser.add_argument("--input_line", action="append", default=[], help="input line")
+    parser.add_argument("--kill", action="store_true", help="kill the app instead of waiting until terminates itself")
 
     cmdargs = parser.parse_args()
     set_verbose_output(True)
     run(cmdargs.execute, cmdargs.hypervisor, cmdargs.image, cmdargs.line, 
-        cmdargs.guest_port, cmdargs.host_port, cmdargs.input_line)
+        cmdargs.guest_port, cmdargs.host_port, cmdargs.input_line, cmdargs.kill)
