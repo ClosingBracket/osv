@@ -9,10 +9,11 @@ def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, h
     if image_path != None:
         py_args = ['--image', image_path]
 
+    pipe_guest_stdin= len(input_lines) > 0
     if guest_port != None and host_port != None:
-        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, forward=[(host_port, guest_port)])
+        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, forward=[(host_port, guest_port)], pipe_stdin=pipe_guest_stdin)
     else:
-        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args)
+        app = run_command_in_guest(command, hypervisor=hypervisor_name, run_py_args=py_args, pipe_stdin=pipe_guest_stdin)
 
     if line != None:
         if len(input_lines) > 0:

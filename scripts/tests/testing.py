@@ -93,8 +93,12 @@ def scan_errors(s,scan_for_failed_to_load_object_error=True):
     return False
 
 class SupervisedProcess:
-    def __init__(self, args, show_output=False, show_output_on_error=True, scan_for_failed_to_load_object_error=True):
-        self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+    def __init__(self, args, show_output=False, show_output_on_error=True, scan_for_failed_to_load_object_error=True, pipe_stdin=False):
+        if pipe_stdin: 
+            self.process = subprocess.Popen(args, stdout=subprocess.PIPE, stdin=subprocess.PIPE)
+        else:
+            self.process = subprocess.Popen(args, stdout=subprocess.PIPE)
+        self.pipe_stdin = pipe_stdin
         self.cv = threading.Condition()
         self.lines = []
         self.output_collector_done = False
@@ -173,7 +177,8 @@ class SupervisedProcess:
 
     def join(self):
         self.output_collector_thread.join()
-        self.process.stdin.close()
+        if self.pipe_stdin:
+            self.process.stdin.close()
         if self.process.returncode:
             raise Exception('Guest failed (returncode=%d)' % self.proces.returncode)
         if self.failed:
@@ -210,7 +215,7 @@ def run_command_in_guest(command, **kwargs):
 
 class Guest(SupervisedProcess):
     def __init__(self, args, forward=[], hold_with_poweroff=False, show_output_on_error=True,
-                 scan_for_failed_to_load_object_error=True, run_py_args=[], hypervisor='qemu'):
+                 scan_for_failed_to_load_object_error=True, run_py_args=[], hypervisor='qemu', pipe_stdin=False):
 
         if hypervisor == 'firecracker':
             run_script = os.path.join(osv_base, "scripts/firecracker.py")
@@ -231,7 +236,8 @@ class Guest(SupervisedProcess):
         SupervisedProcess.__init__(self, [run_script] + run_py_args + args,
             show_output=_verbose_output,
             show_output_on_error=show_output_on_error,
-            scan_for_failed_to_load_object_error=scan_for_failed_to_load_object_error)
+            scan_for_failed_to_load_object_error=scan_for_failed_to_load_object_error,
+            pipe_stdin=pipe_stdin)
 
     def kill(self):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
