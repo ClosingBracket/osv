@@ -247,15 +247,15 @@ class Guest(SupervisedProcess):
         s.close()
 
 def wait_for_line(guest, text):
-    return _wait_for_line(guest, lambda line: line == text)
+    return _wait_for_line(guest, lambda line: line == text, text)
 
 def wait_for_line_starts(guest, text):
-    return _wait_for_line(guest, lambda line: line.startswith(text))
+    return _wait_for_line(guest, lambda line: line.startswith(text), text)
 
 def wait_for_line_contains(guest, text):
-    return _wait_for_line(guest, lambda line: text in line)
+    return _wait_for_line(guest, lambda line: text in line, text)
 
-def _wait_for_line(guest, predicate):
+def _wait_for_line(guest, predicate, text):
     for line in guest.read_lines():
         if predicate(line):
             return

@@ -13,6 +13,7 @@ usage() {
 	  -c              Compose test app image only
 	  -r              Run test app only (must have been composed earlier)
 	  -R              Compose test app image with RoFS (ZFS is the default)
+	  -l              Use latest OSv kernel from build/last to build test image
 	EOF
 	exit ${1:-0}
 }
@@ -20,12 +21,14 @@ usage() {
 FS=zfs
 COMPOSE_ONLY=false
 RUN_ONLY=false
+LOADER="osv-loader"
 
-while getopts crRh: OPT ; do
+while getopts crRlh: OPT ; do
 	case ${OPT} in
 	c) COMPOSE_ONLY=true;;
 	r) RUN_ONLY=true;;
 	R) FS=rofs;;
+        l) LOADER="osv-latest-loader";;
 	h) usage;;
 	?) usage 1;;
 	esac
@@ -34,7 +37,8 @@ done
 shift $((OPTIND - 1))
 [[ -z $1 ]] && usage 1
 
-TEST="$1"
+TEST_APP_PACKAGE_NAME="$1"
+TEST_OSV_APP_NAME="$2"
 
 compose_test_app()
 {
@@ -53,19 +57,28 @@ compose_test_app()
       DEPENDENCIES="--require osv.$DEPENDANT_PKG2 $DEPENDENCIES"
     fi
 
-    echo "-----------------------------------"
-    echo " Composing $APP_NAME ... "
-    echo "-----------------------------------"
+    echo "-------------------------------------------------------"
+    echo " Composing $APP_NAME into $FS image at $IMAGE_PATH ... "
+    echo "-------------------------------------------------------"
+
+    #Copy latest OSv kernel if requested by user
+    local LOADER_OPTION=""
+    if [ "$LOADER" != "osv-loader" ]; then
+      mkdir -p "$CAPSTAN_REPO/repository/$LOADER"
+      cp -a $OSV_DIR/build/last/loader.img "$CAPSTAN_REPO/repository/$LOADER/$LOADER.qemu"
+      LOADER_OPTION="--loader_image $LOADER"
+      echo "Using latest OSv kernel from $OSV_DIR/build/last/loader.img !"
+    fi
 
     TEMPDIR=$(mktemp -d) && pushd $TEMPDIR > /dev/null && \
-      capstan package compose $DEPENDENCIES --fs $FS "test-$APP_NAME" && \
+      capstan package compose $DEPENDENCIES --fs $FS $LOADER_OPTION "test-$APP_NAME" && \
       rmdir $TEMPDIR && popd > /dev/null
   else
     echo "Reusing the test image: $IMAGE_PATH that must have been composed before!"
   fi
 
   if [ -f "$IMAGE_PATH" ]; then
-    cp $CAPSTAN_REPO/repository/"test-$APP_NAME"/"test-$APP_NAME".qemu $OSV_DIR/build/release/usr.img
+    cp $CAPSTAN_REPO/repository/"test-$APP_NAME"/"test-$APP_NAME".qemu $OSV_DIR/build/last/usr.img
   else
     echo "Could not find test image: $IMAGE_PATH!" 
     exit 1
@@ -78,9 +91,9 @@ run_test_app()
   local TEST_PARAMETER=$2
 
   if [ $COMPOSE_ONLY == false ]; then
-    echo "-----------------------------------"
+    echo "-------------------------------------------------------"
     echo " Testing $OSV_APP_NAME ... "
-    echo "-----------------------------------"
+    echo "-------------------------------------------------------"
 
     if [ -f $OSV_DIR/apps/$OSV_APP_NAME/test.sh ]; then
       $OSV_DIR/apps/$OSV_APP_NAME/test.sh $TEST_PARAMETER
@@ -150,7 +163,7 @@ run_unit_tests()
 }
 
 
-case "$TEST" in
+case "$TEST_APP_PACKAGE_NAME" in
   simple)
     echo "Testing simple apps ..."
     echo "-----------------------------------"
@@ -175,7 +188,11 @@ case "$TEST" in
     test_http_apps
     test_apps_with_tester;;
   *)
-    compose_and_run_test_app $TEST
+    if [ "$TEST_OSV_APP_NAME" == "" ]; then
+      compose_and_run_test_app "$TEST_APP_PACKAGE_NAME"
+    else
+      compose_test_app "$TEST_APP_PACKAGE_NAME" && run_test_app "$TEST_OSV_APP_NAME"
+    fi
 esac
 
 #
