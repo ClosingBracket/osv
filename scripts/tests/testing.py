@@ -105,6 +105,7 @@ class SupervisedProcess:
         self.output_collector_thread = threading.Thread(target=self._output_collector)
         self.output_collector_thread.start()
         self.scan_for_failed_to_load_object_error = scan_for_failed_to_load_object_error
+        self.line_with_err = ""
 
     def _output_collector(self):
         def append_line(line):
@@ -112,6 +113,7 @@ class SupervisedProcess:
 
             if not self.has_errors and scan_errors(line,self.scan_for_failed_to_load_object_error):
                 self.has_errors = True
+                self.line_with_err = line
                 if self.show_output_on_error and not self.show_output:
                     sys.stdout.write(self.output)
                     sys.stdout.flush()
@@ -196,6 +198,9 @@ class SupervisedProcess:
         self.process.stdin.write(line + "\n")
         self.process.stdin.flush()
 
+    def line_with_error(self):
+        return self.line_with_err
+
 def run_command_in_guest(command, **kwargs):
     common_parameters = ["-e", "--power-off-on-abort " + command]
     if 'hypervisor' in kwargs.keys() and kwargs['hypervisor'] == 'firecracker':
@@ -236,20 +241,17 @@ class Guest(SupervisedProcess):
         s.close()
 
 def wait_for_line(guest, text):
-    for line in guest.read_lines():
-        if line == text:
-            return
-    raise Exception('Text not found in output: ' + text)
+    return _wait_for_line(guest, lambda line: line == text)
 
 def wait_for_line_starts(guest, text):
-    for line in guest.read_lines():
-        if line.startswith(text):
-            return
-    raise Exception('Text not found in output: ' + text)
+    return _wait_for_line(guest, lambda line: line.startswith(text))
 
 def wait_for_line_contains(guest, text):
+    return _wait_for_line(guest, lambda line: text in line)
+
+def _wait_for_line(guest, predicate):
     for line in guest.read_lines():
-        if text in line:
+        if predicate(line):
             return
     raise Exception('Text not found in output: ' + text)
 
