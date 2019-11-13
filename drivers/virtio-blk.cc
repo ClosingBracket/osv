@@ -102,7 +102,7 @@ bool blk::ack_irq()
 {
     auto isr = _dev.read_and_ack_isr();
     auto queue = get_virt_queue(0);
-    printf("------> Acked\n");
+    //printf("------> Acked\n");
 
     if (isr) {
         queue->disable_interrupts();
@@ -126,7 +126,7 @@ blk::blk(virtio_device& virtio_dev)
 
     // Step 7 - generic init of virtqueues
     probe_virt_queues();
-    printf("blk: device setup with interrupt irq: %ld!\n", _dev.get_irq());
+    //printf("blk: device setup with interrupt irq: %ld!\n", _dev.get_irq());
 
     //register the single irq callback for the block
     sched::thread* t = sched::thread::make([this] { this->req_done(); },
@@ -192,38 +192,38 @@ void blk::read_config()
 
     if (get_guest_feature_bit(VIRTIO_BLK_F_SIZE_MAX)) {
         READ_CONFIGURATION_FIELD(blk_config,size_max,_config.size_max)
-        printf("blk config: size_max: %ld\n", _config.size_max);
+        //printf("blk config: size_max: %ld\n", _config.size_max);
         trace_virtio_blk_read_config_size_max(_config.size_max);
     }
     if (get_guest_feature_bit(VIRTIO_BLK_F_SEG_MAX)) {
         READ_CONFIGURATION_FIELD(blk_config,seg_max,_config.seg_max)
-        printf("blk config: seg_max: %ld\n", _config.seg_max);
+        //printf("blk config: seg_max: %ld\n", _config.seg_max);
         trace_virtio_blk_read_config_seg_max(_config.seg_max);
     }
     if (get_guest_feature_bit(VIRTIO_BLK_F_GEOMETRY)) {
         READ_CONFIGURATION_FIELD(blk_config,geometry,_config.geometry)
-        printf("blk config: geometry: %ld\n", _config.geometry);
+        //printf("blk config: geometry: %ld\n", _config.geometry);
         trace_virtio_blk_read_config_geometry((u32)_config.geometry.cylinders, (u32)_config.geometry.heads, (u32)_config.geometry.sectors);
     }
     if (get_guest_feature_bit(VIRTIO_BLK_F_BLK_SIZE)) {
         READ_CONFIGURATION_FIELD(blk_config,blk_size,_config.blk_size)
-        printf("blk config: block size: %ld\n", _config.blk_size);
+        //printf("blk config: block size: %ld\n", _config.blk_size);
         trace_virtio_blk_read_config_blk_size(_config.blk_size);
     }
     if (get_guest_feature_bit(VIRTIO_BLK_F_TOPOLOGY)) {
         READ_CONFIGURATION_FIELD(blk_config,topology,_config.topology)
-        printf("blk config: topology: %ld\n", _config.topology);
+        //printf("blk config: topology: %ld\n", _config.topology);
         trace_virtio_blk_read_config_topology((u32)_config.topology.physical_block_exp, (u32)_config.topology.alignment_offset,
           (u32)_config.topology.min_io_size, (u32)_config.topology.opt_io_size);
     }
     if (get_guest_feature_bit(VIRTIO_BLK_F_CONFIG_WCE)) {
         trace_virtio_blk_read_config_wce((u32)_config.wce);
-        printf("blk config: wce: %ld\n", _config.wce);
+        //printf("blk config: wce: %ld\n", _config.wce);
     }
 
     if (get_guest_feature_bit(VIRTIO_BLK_F_RO)) {
         set_readonly();
-        printf("blk config: READ ONLY\n");
+        //printf("blk config: READ ONLY\n");
         trace_virtio_blk_read_config_ro();
     }
 }

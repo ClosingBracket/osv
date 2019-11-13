@@ -28,20 +28,20 @@ virtio_driver::virtio_driver(virtio_device& dev)
         _queues[i] = nullptr;
     }
  
-    printf("-> virtio_driver: constructor\n");
+    //printf("-> virtio_driver: constructor\n");
 
     // Initialize device
     _dev.init();
-    printf("-> virtio_driver: device initialized\n");
+    //printf("-> virtio_driver: device initialized\n");
 
     // Step 1 - make sure the device is reset
     reset_device();
-    printf("-> virtio_driver: device reset\n");
+    //printf("-> virtio_driver: device reset\n");
 
     // Steps 2 & 3 - acknowledge device
     add_dev_status(VIRTIO_CONFIG_S_ACKNOWLEDGE);
     add_dev_status(VIRTIO_CONFIG_S_DRIVER);
-    printf("-> virtio_driver: device acknowledged\n");
+    //printf("-> virtio_driver: device acknowledged\n");
 }
 
 virtio_driver::~virtio_driver()
@@ -79,9 +79,9 @@ void virtio_driver::setup_features()
         //
         // Step 6 - re-read device status to ensure the FEATURES_OK bit is still set
         assert(get_dev_status() & VIRTIO_CONFIG_S_FEATURES_OK);
-        printf("-> virtio_driver: device is modern\n");
+        //printf("-> virtio_driver: device is modern\n");
     }
-    printf("-> virtio_driver: setup features\n");
+    //printf("-> virtio_driver: setup features\n");
 }
 
 void virtio_driver::dump_config()
@@ -149,7 +149,7 @@ void virtio_driver::probe_virt_queues()
         virtio_d("Queue[%d] -> size %d, paddr %x\n", (_num_queues-1), qsize, queue->get_paddr());
 
     } while (true);
-    printf("-> virtio_driver: detected %d queues\n", _num_queues);
+    //printf("-> virtio_driver: detected %d queues\n", _num_queues);
 
     //for (u32 _q = 0; _q < _num_queues; _q++)
     //    _dev.activate_queue(_q);
