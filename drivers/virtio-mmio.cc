@@ -54,7 +54,7 @@ void mmio_device::set_enabled_features(u64 features)
 void mmio_device::kick_queue(int queue_num)
 {
     //printf("!! Kicking queue: %d at %p\n", queue_num, _addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY);
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, 0);
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, queue_num);
 }
 
 void mmio_device::select_queue(int queue_num)
