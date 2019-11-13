@@ -53,7 +53,8 @@ void mmio_device::set_enabled_features(u64 features)
 
 void mmio_device::kick_queue(int queue_num)
 {
-    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, queue_num);
+    printf("!! Kicking queue: %d at %p\n", queue_num, _addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY);
+    mmio_setl(_addr_mmio + VIRTIO_MMIO_QUEUE_NOTIFY, 0);
 }
 
 void mmio_device::select_queue(int queue_num)
@@ -195,6 +196,7 @@ void parse_mmio_device_configuration(char *cmdline)
     // We are assuming the mmio devices information is appended to the
     // command line (at least it is the case with the firecracker) so
     // once we parse those we strip it away so only plain OSv command line is left
+    printf("CmdLine: %s\n", cmdline);
     mmio_device_info_entries = new std::vector<struct mmio_device_info>();
     for( auto device_info = parse_mmio_device_info(cmdline); device_info != nullptr; device_info = parse_mmio_device_info(cmdline))
         mmio_device_info_entries->push_back(*device_info);

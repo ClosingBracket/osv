@@ -48,6 +48,20 @@ void poweroff(void)
         // first to to power off on non-firecracker platforms
         // without using ACPI
         processor::outb(0xfe, 0x64);
+        //printf("Olo\n");
+
+        /* This is a special power-off sequence supported by Bochs and
+           QEMU, but not by physical hardware. */
+        // From https://www.cs.usfca.edu/~benson/cs326/pintos/pintos/src/devices/shutdown.c
+        //const char s[] = "Shutdown";
+        //const char *p;
+        //for (p = s; *p != '\0'; p++)
+        //   processor::outb(*p, 0x8900);
+        //for (int i = 0; i < 8; i++)
+        //processor::outw(0x2000, 0xB004);
+        //processor::outw(0xB004, 0x2000);
+        processor::lidt(processor::desc_ptr(0, 0));
+        __asm__ __volatile__("int3");
     }
 
     // We shouldn't get here on x86.

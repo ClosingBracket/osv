@@ -15,11 +15,12 @@
 #include <osv/mmu.hh>
 #include <osv/sched.hh>
 
+#define CONF_logger_debug 1
 #define virtio_tag "virtio"
-#define virtio_d(...)   tprintf_d(virtio_tag, __VA_ARGS__)
-#define virtio_i(...)   tprintf_i(virtio_tag, __VA_ARGS__)
-#define virtio_w(...)   tprintf_w(virtio_tag, __VA_ARGS__)
-#define virtio_e(...)   tprintf_e(virtio_tag, __VA_ARGS__)
+#define virtio_d(...)   printf(__VA_ARGS__)
+#define virtio_i(...)   printf(__VA_ARGS__)
+#define virtio_w(...)   printf(__VA_ARGS__)
+#define virtio_e(...)   printf(__VA_ARGS__)
 
 static TRACEPOINT(trace_vring_get_buf_finalize, "vring=%p: _used_ring_host_head %d",
                                          void*, int);
