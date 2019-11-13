@@ -142,6 +142,7 @@ void virtio_driver::probe_virt_queues()
 
         // Activate queue
         _dev.setup_queue(queue);
+        _dev.activate_queue(_num_queues);
         _num_queues++;
 
         // Debug print
@@ -150,8 +151,8 @@ void virtio_driver::probe_virt_queues()
     } while (true);
     printf("-> virtio_driver: detected %d queues\n", _num_queues);
 
-    for (u32 _q = 0; _q < _num_queues; _q++)
-        _dev.activate_queue(_q);
+    //for (u32 _q = 0; _q < _num_queues; _q++)
+    //    _dev.activate_queue(_q);
 }
 
 vring* virtio_driver::get_virt_queue(unsigned idx)
