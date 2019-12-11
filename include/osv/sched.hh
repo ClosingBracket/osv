@@ -41,6 +41,9 @@ void cancel_this_thread_alarm();
 namespace elf {
     struct tls_data;
 }
+namespace mmu {
+extern unsigned __thread stack_page_read_counter;
+}
 
 namespace osv {
 
@@ -1000,6 +1003,7 @@ inline void preempt()
 
 inline void preempt_disable()
 {
+    arch::read_next_stack_page();
     ++preempt_counter;
     barrier();
 }
@@ -1008,6 +1012,7 @@ inline void preempt_enable()
 {
     barrier();
     --preempt_counter;
+    --mmu::stack_page_read_counter;
     if (preemptable() && need_reschedule && arch::irq_enabled()) {
         cpu::schedule();
     }

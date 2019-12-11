@@ -148,6 +148,11 @@ void thread::init_stack()
     _state.rip = reinterpret_cast<void*>(thread_main);
     _state.rsp = stacktop;
     _state.exception_stack = _arch.exception_stack + sizeof(_arch.exception_stack);
+
+    // Since thread stacks are lazily allocated and the thread initially starts
+    // running with preemption disabled, we need to pre-fault the first stack page.
+    volatile char r = *((char*)(stacktop-1));
+    (void) r; // trick the compiler into thinking that r is used
 }
 
 void thread::setup_tcb()

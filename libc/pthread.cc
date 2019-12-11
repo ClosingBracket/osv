@@ -139,7 +139,8 @@ namespace pthread_private {
             return {attr.stack_begin, attr.stack_size};
         }
         size_t size = attr.stack_size;
-        void *addr = mmu::map_anon(nullptr, size, mmu::mmap_populate, mmu::perm_rw);
+        printf("--> Created stack of size: %ld\n", size);
+        void *addr = mmu::map_anon(nullptr, size, mmu::mmap_stack, mmu::perm_rw);
         mmu::mprotect(addr, attr.guard_size, 0);
         sched::thread::stack_info si{addr, size};
         si.deleter = free_stack;

@@ -43,6 +43,8 @@ extern const char text_start[], text_end[];
 
 namespace mmu {
 
+unsigned __thread stack_page_read_counter = 1;
+
 namespace bi = boost::intrusive;
 
 class vma_compare {
