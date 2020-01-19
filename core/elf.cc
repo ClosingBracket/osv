@@ -30,7 +30,7 @@
 
 #include "arch.hh"
 
-#define ELF_DEBUG_ENABLED 0
+#define ELF_DEBUG_ENABLED 1
 
 #if ELF_DEBUG_ENABLED
 #define elf_debug(format,...) kprintf("ELF [tid:%d, %s]: " format, sched::thread::current()->id(), _pathname.c_str(), ##__VA_ARGS__)
