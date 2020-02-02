@@ -5,7 +5,6 @@
  * BSD license as described in the LICENSE file in the top-level directory.
  */
 
-
 #include <sys/cdefs.h>
 
 #include "drivers/virtio.hh"

@@ -15,12 +15,6 @@ namespace virtio {
 class fs : public virtio_driver {
 public:
 
-    // The feature bitmap for virtio blk
-    enum {
-        VIRTIO_BLK_F_BARRIER    = 0,  /* Does host support barriers? */
-        VIRTIO_BLK_F_CONFIG_WCE = 11, /* Writeback mode available in config */
-    };
-
     enum blk_request_type {
         VIRTIO_BLK_T_IN = 0,
         VIRTIO_BLK_T_OUT = 1,
@@ -41,47 +35,19 @@ public:
         VIRTIO_BLK_S_UNSUPP = 2,
     };
 
-    struct blk_config {
-            /* The capacity (in 512-byte sectors). */
-            u64 capacity;
-            /* The maximum segment size (if VIRTIO_BLK_F_SIZE_MAX) */
-            u32 size_max;
-            /* The maximum number of segments (if VIRTIO_BLK_F_SEG_MAX) */
-            u32 seg_max;
-            /* geometry the device (if VIRTIO_BLK_F_GEOMETRY) */
-            struct blk_geometry {
-                    u16 cylinders;
-                    u8 heads;
-                    u8 sectors;
-            } geometry;
-
-            /* block size of device (if VIRTIO_BLK_F_BLK_SIZE) */
-            u32 blk_size;
-
-            struct blk_topology {
-                    /* the next 4 entries are guarded by VIRTIO_BLK_F_TOPOLOGY  */
-                    /* exponent for physical block per logical block. */
-                    u8 physical_block_exp;
-                    /* alignment offset in logical blocks. */
-                    u8 alignment_offset;
-                    /* minimum I/O size without performance penalty in logical blocks. */
-                    u16 min_io_size;
-                    /* optimal sustained I/O size in logical blocks. */
-                    u32 opt_io_size;
-            } topology;
-
-            /* writeback mode (if VIRTIO_BLK_F_CONFIG_WCE) */
-            u8 wce;
+    struct virtio_fs_config {
+        char tag[36];
+        u32 num_queues;
     } __attribute__((packed));
 
     /* This is the first element of the read scatter-gather list. */
     struct blk_outhdr {
-            /* VIRTIO_BLK_T* */
-            u32 type;
-            /* io priority. */
-            u32 ioprio;
-            /* Sector (ie. 512 byte offset) */
-            u64 sector;
+        /* VIRTIO_BLK_T* */
+        u32 type;
+        /* io priority. */
+        u32 ioprio;
+        /* Sector (ie. 512 byte offset) */
+        u64 sector;
     };
 
     struct blk_res {
