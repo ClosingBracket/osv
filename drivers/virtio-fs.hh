@@ -9,50 +9,44 @@
 #define VIRTIO_BLK_DRIVER_H
 #include "drivers/virtio.hh"
 #include "drivers/virtio-device.hh"
+#include "fs/virtiofs/fuse_kernel.h"
 
 namespace virtio {
 
+struct fuse_input_arg
+{
+    unsigned size;
+    const void *value;
+};
+
+struct fuse_output_arg
+{
+    unsigned size;
+    void *value;
+};
+
+struct fuse_request
+{
+    struct fuse_in_header in_header;
+    struct fuse_out_header out_header;
+
+    uint64_t node_id;
+    uint32_t opcode;
+
+    unsigned short num_of_input_args;
+    unsigned short num_of_output_args;
+
+    struct fuse_input_arg input_args[3];
+    struct fuse_output_arg output_args[2];
+};
+
 class fs : public virtio_driver {
 public:
-
-    enum blk_request_type {
-        VIRTIO_BLK_T_IN = 0,
-        VIRTIO_BLK_T_OUT = 1,
-        /* This bit says it's a scsi command, not an actual read or write. */
-        VIRTIO_BLK_T_SCSI_CMD = 2,
-        /* Cache flush command */
-        VIRTIO_BLK_T_FLUSH = 4,
-        /* Get device ID command */
-        VIRTIO_BLK_T_GET_ID = 8,
-        /* Barrier before this op. */
-        VIRTIO_BLK_T_BARRIER = 0x80000000,
-    };
-
-    enum blk_res_code {
-        /* And this is the final byte of the write scatter-gather list. */
-        VIRTIO_BLK_S_OK = 0,
-        VIRTIO_BLK_S_IOERR = 1,
-        VIRTIO_BLK_S_UNSUPP = 2,
-    };
 
     struct virtio_fs_config {
         char tag[36];
         u32 num_queues;
     } __attribute__((packed));
-
-    /* This is the first element of the read scatter-gather list. */
-    struct blk_outhdr {
-        /* VIRTIO_BLK_T* */
-        u32 type;
-        /* io priority. */
-        u32 ioprio;
-        /* Sector (ie. 512 byte offset) */
-        u64 sector;
-    };
-
-    struct blk_res {
-        u8 status;
-    };
 
     explicit fs(virtio_device& dev);
     virtual ~fs();
@@ -62,7 +56,7 @@ public:
 
     virtual u32 get_driver_features();
 
-    int make_request(struct bio*);
+    int make_request(struct fuse_request*);
 
     void req_done();
     int64_t size();
@@ -74,18 +68,8 @@ public:
 
     static hw_driver* probe(hw_device* dev);
 private:
-
-    struct blk_req {
-        blk_req(struct bio* b) :bio(b) {};
-        ~blk_req() {};
-
-        blk_outhdr hdr;
-        blk_res res;
-        struct bio* bio;
-    };
-
     std::string _driver_name;
-    blk_config _config;
+    virtio_fs_config _config;
 
     //maintains the virtio instance number for multiple drives
     static int _instance;

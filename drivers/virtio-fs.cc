@@ -205,63 +205,43 @@ int64_t fs::size()
     return _config.capacity * sector_size;
 }
 
-int fs::make_request(struct bio* bio)
+int fs::make_request(struct fuse_request* req)
 {
     // The lock is here for parallel requests protection
     WITH_LOCK(_lock) {
 
-        if (!bio) return EIO;
+        if (!req) return EIO;
 
+        /*
         if (get_guest_feature_bit(VIRTIO_BLK_F_SEG_MAX)) {
             if (bio->bio_bcount/mmu::page_size + 1 > _config.seg_max) {
                 trace_virtio_blk_make_request_seg_max(bio->bio_bcount, _config.seg_max);
                 return EIO;
             }
-        }
+        }*/
 
         auto* queue = get_virt_queue(0);
-        blk_request_type type;
-
-        switch (bio->bio_cmd) {
-        case BIO_READ:
-            type = VIRTIO_BLK_T_IN;
-            break;
-        case BIO_WRITE:
-            if (is_readonly()) {
-                trace_virtio_blk_make_request_readonly();
-                biodone(bio, false);
-                return EROFS;
-            }
-            type = VIRTIO_BLK_T_OUT;
-            break;
-        case BIO_FLUSH:
-            type = VIRTIO_BLK_T_FLUSH;
-            break;
-        default:
-            return ENOTBLK;
-        }
-
-        auto* req = new blk_req(bio);
-        blk_outhdr* hdr = &req->hdr;
-        hdr->type = type;
-        hdr->ioprio = 0;
-        hdr->sector = bio->bio_offset / sector_size;
 
         queue->init_sg();
-        queue->add_out_sg(hdr, sizeof(struct blk_outhdr));
-
-        if (bio->bio_data && bio->bio_bcount > 0) {
-            if (type == VIRTIO_BLK_T_OUT)
-                queue->add_out_sg(bio->bio_data, bio->bio_bcount);
-            else
-                queue->add_in_sg(bio->bio_data, bio->bio_bcount);
+        queue->add_out_sg(&req->in_header, sizeof(struct fuse_in_header));
+        //
+        // Add fuse in arguments as out sg
+        size_t input_args_size = 0;
+        for (int i = 0; i < req->num_of_input_args; i++) {
+            input_args_size += req->input_args[i].size;
         }
+        queue->add_out_sg(req->input_args, input_args_size);
 
-        req->res.status = 0;
-        queue->add_in_sg(&req->res, sizeof (struct blk_res));
+        queue->add_in_sg(&req->out_header, sizeof(struct fuse_out_header));
+        //
+        // Add fuse out arguments as in sg
+        size_t output_args_size = 0;
+        for (int i = 0; i < req->num_of_output_args; i++) {
+            output_args_size += req->output_args[i].size;
+        }
+        queue->add_in_sg(req->output_args, output_args_size);
 
         queue->add_buf_wait(req);
-
         queue->kick();
 
         return 0;
