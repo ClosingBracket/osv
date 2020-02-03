@@ -55,7 +55,7 @@ bool fs::ack_irq()
 
 }
 
-fs::blk(virtio_device& virtio_dev)
+fs::fs(virtio_device& virtio_dev)
     : virtio_driver(virtio_dev), _ro(false)
 {
     _driver_name = "virtio-fs";
@@ -103,6 +103,7 @@ fs::blk(virtio_device& virtio_dev)
     // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
+    /*
     struct blk_priv* prv;
     struct device *dev;
     std::string dev_name("vblk");
@@ -112,12 +113,12 @@ fs::blk(virtio_device& virtio_dev)
     prv = reinterpret_cast<struct blk_priv*>(dev->private_data);
     prv->drv = this;
     dev->size = prv->drv->size();
-    read_partition_table(dev);
+    read_partition_table(dev);*/
 
-    debugf("virtio-blk: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
+    //debugf("virtio-fs: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
 }
 
-fs::~blk()
+fs::~fs()
 {
     //TODO: In theory maintain the list of free instances and gc it
     // including the thread objects and their stack
@@ -128,6 +129,7 @@ fs::~blk()
 
 void fs::read_config()
 {
+    /*
     READ_CONFIGURATION_FIELD(blk_config,capacity,_config.capacity)
     trace_virtio_blk_read_config_capacity(_config.capacity);
 
@@ -157,21 +159,22 @@ void fs::read_config()
     if (get_guest_feature_bit(VIRTIO_BLK_F_RO)) {
         set_readonly();
         trace_virtio_blk_read_config_ro();
-    }
+    }*/
 }
 
 void fs::req_done()
 {
     auto* queue = get_virt_queue(0);
-    blk_req* req;
+    fuse_request* req;
 
     while (1) {
 
         virtio_driver::wait_for_queue(queue, &vring::used_ring_not_empty);
-        trace_virtio_blk_wake();
+        //trace_virtio_blk_wake();
 
         u32 len;
-        while((req = static_cast<blk_req*>(queue->get_buf_elem(&len))) != nullptr) {
+        while((req = static_cast<fuse_request*>(queue->get_buf_elem(&len))) != nullptr) {
+            /*
             if (req->bio) {
                 switch (req->res.status) {
                 case VIRTIO_BLK_S_OK:
@@ -189,20 +192,13 @@ void fs::req_done()
                }
             }
 
-            delete req;
+            delete req;*/
             queue->get_buf_finalize();
         }
 
         // wake up the requesting thread in case the ring was full before
         queue->wakeup_waiter();
     }
-}
-
-static const int sector_size = 512;
-
-int64_t fs::size()
-{
-    return _config.capacity * sector_size;
 }
 
 int fs::make_request(struct fuse_request* req)
@@ -250,6 +246,8 @@ int fs::make_request(struct fuse_request* req)
 
 u32 fs::get_driver_features()
 {
+    return virtio_driver::get_driver_features();
+    /*
     auto base = virtio_driver::get_driver_features();
     return (base | ( 1 << VIRTIO_BLK_F_SIZE_MAX)
                  | ( 1 << VIRTIO_BLK_F_SEG_MAX)
@@ -257,7 +255,7 @@ u32 fs::get_driver_features()
                  | ( 1 << VIRTIO_BLK_F_RO)
                  | ( 1 << VIRTIO_BLK_F_BLK_SIZE)
                  | ( 1 << VIRTIO_BLK_F_CONFIG_WCE)
-                 | ( 1 << VIRTIO_BLK_F_WCE));
+                 | ( 1 << VIRTIO_BLK_F_WCE));*/
 }
 
 hw_driver* fs::probe(hw_device* dev)

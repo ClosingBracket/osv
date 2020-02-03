@@ -829,6 +829,7 @@ drivers += drivers/vmxnet3-queues.o
 drivers += drivers/virtio-blk.o
 drivers += drivers/virtio-scsi.o
 drivers += drivers/virtio-rng.o
+drivers += drivers/virtio-fs.o
 drivers += drivers/kvmclock.o drivers/xenclock.o drivers/hypervclock.o
 drivers += drivers/acpi.o
 drivers += drivers/hpet.o
