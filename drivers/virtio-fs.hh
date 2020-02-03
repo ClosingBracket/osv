@@ -47,7 +47,6 @@ struct fuse_request
 };
 
 void fuse_req_wait(struct fuse_request* req);
-void fuse_req_done(struct fuse_request* req);
 
 class fs : public virtio_driver {
 public:

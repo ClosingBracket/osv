@@ -46,11 +46,37 @@ void fuse_req_wait(struct fuse_request* req)
     }
 }
 
-void fuse_req_done(struct fuse_request* req)
+static void fuse_req_done(struct fuse_request* req)
 {
     WITH_LOCK(req->req_mutex) {
         req->req_wait.wake_one(req->req_mutex);
     }
+}
+
+static void fuse_req_enqueue_input(vring* queue, struct fuse_request* req)
+{
+    // Header goes first
+    queue->add_out_sg(&req->in_header, sizeof(struct fuse_in_header));
+    //
+    // Add fuse in arguments as out sg
+    size_t input_args_size = 0;
+    for (int i = 0; i < req->num_of_input_args; i++) {
+            input_args_size += req->input_args[i].size;
+    }
+    queue->add_out_sg(req->input_args, input_args_size);
+}
+
+static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
+{
+    // Header goes first
+    queue->add_in_sg(&req->out_header, sizeof(struct fuse_out_header));
+    //
+    // Add fuse out arguments as in sg
+    size_t output_args_size = 0;
+    for (int i = 0; i < req->num_of_output_args; i++) {
+        output_args_size += req->output_args[i].size;
+    }
+    queue->add_in_sg(req->output_args, output_args_size);
 }
 
 int fs::_instance = 0;
@@ -189,25 +215,9 @@ int fs::make_request(struct fuse_request* req)
 
         // LOOK at fs/fuse/virtio_fs.c:virtio_fs_enqueue_req()
         queue->init_sg();
-        // INPUT
-        queue->add_out_sg(&req->in_header, sizeof(struct fuse_in_header));
-        //
-        // Add fuse in arguments as out sg
-        size_t input_args_size = 0;
-        for (int i = 0; i < req->num_of_input_args; i++) {
-            input_args_size += req->input_args[i].size;
-        }
-        queue->add_out_sg(req->input_args, input_args_size);
 
-        // OUTPUT
-        queue->add_in_sg(&req->out_header, sizeof(struct fuse_out_header));
-        //
-        // Add fuse out arguments as in sg
-        size_t output_args_size = 0;
-        for (int i = 0; i < req->num_of_output_args; i++) {
-            output_args_size += req->output_args[i].size;
-        }
-        queue->add_in_sg(req->output_args, output_args_size);
+        fuse_req_enqueue_input(queue, req);
+        fuse_req_enqueue_output(queue, req);
 
         auto* fs_request = new fs_req(req);
         queue->add_buf_wait(fs_request);
