@@ -26,16 +26,7 @@
 
 #include <osv/device.h>
 
-//TRACEPOINT(trace_virtio_blk_make_request_seg_max, "request of size %d needs more segment than the max %d", size_t, u32);
-//TRACEPOINT(trace_virtio_blk_make_request_readonly, "write on readonly device");
-//TRACEPOINT(trace_virtio_blk_wake, "");
-//TRACEPOINT(trace_virtio_blk_strategy, "bio=%p", struct bio*);
-//TRACEPOINT(trace_virtio_blk_req_ok, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
-//TRACEPOINT(trace_virtio_blk_req_unsupp, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
-//TRACEPOINT(trace_virtio_blk_req_err, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
-
 using namespace memory;
-
 
 namespace virtio {
 
@@ -84,7 +75,7 @@ int fs::_instance = 0;
 bool fs::ack_irq()
 {
     auto isr = _dev.read_and_ack_isr();
-    auto queue = get_virt_queue(0);
+    auto queue = get_virt_queue(VQ_REQUEST);
 
     if (isr) {
         queue->disable_interrupts();
@@ -106,6 +97,11 @@ fs::fs(virtio_device& virtio_dev)
     setup_features();
     read_config();
 
+    if (_config.num_queues < 1) {
+        printf("--> Expected at least one request queue -> baling out!\n");
+        return;
+    }
+
     // Step 7 - generic init of virtqueues
     probe_virt_queues();
 
@@ -113,11 +109,11 @@ fs::fs(virtio_device& virtio_dev)
     sched::thread* t = sched::thread::make([this] { this->req_done(); },
             sched::thread::attr().name("virtio-fs"));
     t->start();
-    auto queue = get_virt_queue(0);
+    auto queue = get_virt_queue(VQ_REQUEST);
 
     interrupt_factory int_factory;
     int_factory.register_msi_bindings = [queue, t](interrupt_manager &msi) {
-        msi.easy_register( {{ 0, [=] { queue->disable_interrupts(); }, t }});
+        msi.easy_register( {{ VQ_REQUEST, [=] { queue->disable_interrupts(); }, t }});
     };
 
     int_factory.create_pci_interrupt = [this,t](pci::device &pci_dev) {
@@ -164,28 +160,15 @@ fs::~fs()
     // including the thread objects and their stack
 }
 
-#define READ_CONFIGURATION_FIELD(config,field_name,field) \
-    virtio_conf_read(offsetof(config,field_name), &field, sizeof(field));
-
 void fs::read_config()
 {
-    /*
-    READ_CONFIGURATION_FIELD(blk_config,capacity,_config.capacity)
-    trace_virtio_blk_read_config_capacity(_config.capacity);
-
-    if (get_guest_feature_bit(VIRTIO_BLK_F_SIZE_MAX)) {
-        READ_CONFIGURATION_FIELD(blk_config,size_max,_config.size_max)
-        trace_virtio_blk_read_config_size_max(_config.size_max);
-    }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_RO)) {
-        set_readonly();
-        trace_virtio_blk_read_config_ro();
-    }*/
+    virtio_conf_read(0, &(_config.tag[0]), sizeof(_config.tag));
+    virtio_conf_read(offsetof(fs_config,num_queues), &(_config.num_queues), sizeof(_config.num_queues));
 }
 
 void fs::req_done()
 {
-    auto* queue = get_virt_queue(0);
+    auto* queue = get_virt_queue(VQ_REQUEST);
     fs_req* req;
 
     while (1) {
@@ -211,7 +194,7 @@ int fs::make_request(struct fuse_request* req)
 
         if (!req) return EIO;
 
-        auto* queue = get_virt_queue(0);
+        auto* queue = get_virt_queue(VQ_REQUEST);
 
         // LOOK at fs/fuse/virtio_fs.c:virtio_fs_enqueue_req()
         queue->init_sg();

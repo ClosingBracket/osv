@@ -16,6 +16,11 @@
 
 namespace virtio {
 
+enum {
+   VQ_HIPRIO,
+   VQ_REQUEST
+};
+
 struct fuse_input_arg
 {
     unsigned size;
@@ -51,7 +56,7 @@ void fuse_req_wait(struct fuse_request* req);
 class fs : public virtio_driver {
 public:
 
-    struct virtio_fs_config {
+    struct fs_config {
         char tag[36];
         u32 num_queues;
     } __attribute__((packed));
@@ -84,7 +89,7 @@ private:
     };
 
     std::string _driver_name;
-    virtio_fs_config _config;
+    fs_config _config;
 
     //maintains the virtio instance number for multiple drives
     static int _instance;
