@@ -26,18 +26,32 @@
 
 #include <osv/device.h>
 
-TRACEPOINT(trace_virtio_blk_make_request_seg_max, "request of size %d needs more segment than the max %d", size_t, u32);
-TRACEPOINT(trace_virtio_blk_make_request_readonly, "write on readonly device");
-TRACEPOINT(trace_virtio_blk_wake, "");
-TRACEPOINT(trace_virtio_blk_strategy, "bio=%p", struct bio*);
-TRACEPOINT(trace_virtio_blk_req_ok, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
-TRACEPOINT(trace_virtio_blk_req_unsupp, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
-TRACEPOINT(trace_virtio_blk_req_err, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
+//TRACEPOINT(trace_virtio_blk_make_request_seg_max, "request of size %d needs more segment than the max %d", size_t, u32);
+//TRACEPOINT(trace_virtio_blk_make_request_readonly, "write on readonly device");
+//TRACEPOINT(trace_virtio_blk_wake, "");
+//TRACEPOINT(trace_virtio_blk_strategy, "bio=%p", struct bio*);
+//TRACEPOINT(trace_virtio_blk_req_ok, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
+//TRACEPOINT(trace_virtio_blk_req_unsupp, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
+//TRACEPOINT(trace_virtio_blk_req_err, "bio=%p, sector=%lu, len=%lu, type=%x", struct bio*, u64, size_t, u32);
 
 using namespace memory;
 
 
 namespace virtio {
+
+void fuse_req_wait(struct fuse_request* req)
+{
+    WITH_LOCK(req->req_mutex) {
+        req->req_wait.wait(req->req_mutex);
+    }
+}
+
+void fuse_req_done(struct fuse_request* req)
+{
+    WITH_LOCK(req->req_mutex) {
+        req->req_wait.wake_one(req->req_mutex);
+    }
+}
 
 int fs::_instance = 0;
 
@@ -137,25 +151,6 @@ void fs::read_config()
         READ_CONFIGURATION_FIELD(blk_config,size_max,_config.size_max)
         trace_virtio_blk_read_config_size_max(_config.size_max);
     }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_SEG_MAX)) {
-        READ_CONFIGURATION_FIELD(blk_config,seg_max,_config.seg_max)
-        trace_virtio_blk_read_config_seg_max(_config.seg_max);
-    }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_GEOMETRY)) {
-        READ_CONFIGURATION_FIELD(blk_config,geometry,_config.geometry)
-        trace_virtio_blk_read_config_geometry((u32)_config.geometry.cylinders, (u32)_config.geometry.heads, (u32)_config.geometry.sectors);
-    }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_BLK_SIZE)) {
-        READ_CONFIGURATION_FIELD(blk_config,blk_size,_config.blk_size)
-        trace_virtio_blk_read_config_blk_size(_config.blk_size);
-    }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_TOPOLOGY)) {
-        READ_CONFIGURATION_FIELD(blk_config,topology,_config.topology)
-        trace_virtio_blk_read_config_topology((u32)_config.topology.physical_block_exp, (u32)_config.topology.alignment_offset,
-          (u32)_config.topology.min_io_size, (u32)_config.topology.opt_io_size);
-    }
-    if (get_guest_feature_bit(VIRTIO_BLK_F_CONFIG_WCE))
-        trace_virtio_blk_read_config_wce((u32)_config.wce);
     if (get_guest_feature_bit(VIRTIO_BLK_F_RO)) {
         set_readonly();
         trace_virtio_blk_read_config_ro();
@@ -165,34 +160,16 @@ void fs::read_config()
 void fs::req_done()
 {
     auto* queue = get_virt_queue(0);
-    fuse_request* req;
+    fs_req* req;
 
     while (1) {
-
         virtio_driver::wait_for_queue(queue, &vring::used_ring_not_empty);
         //trace_virtio_blk_wake();
 
         u32 len;
-        while((req = static_cast<fuse_request*>(queue->get_buf_elem(&len))) != nullptr) {
-            /*
-            if (req->bio) {
-                switch (req->res.status) {
-                case VIRTIO_BLK_S_OK:
-                    trace_virtio_blk_req_ok(req->bio, req->hdr.sector, req->bio->bio_bcount, req->hdr.type);
-                    biodone(req->bio, true);
-                    break;
-                case VIRTIO_BLK_S_UNSUPP:
-                    trace_virtio_blk_req_unsupp(req->bio, req->hdr.sector, req->bio->bio_bcount, req->hdr.type);
-                    biodone(req->bio, false);
-                    break;
-                default:
-                    trace_virtio_blk_req_err(req->bio, req->hdr.sector, req->bio->bio_bcount, req->hdr.type);
-                    biodone(req->bio, false);
-                    break;
-               }
-            }
-
-            delete req;*/
+        while((req = static_cast<fs_req*>(queue->get_buf_elem(&len))) != nullptr) {
+            fuse_req_done(req->fuse_req);
+            delete req;
             queue->get_buf_finalize();
         }
 
@@ -208,17 +185,11 @@ int fs::make_request(struct fuse_request* req)
 
         if (!req) return EIO;
 
-        /*
-        if (get_guest_feature_bit(VIRTIO_BLK_F_SEG_MAX)) {
-            if (bio->bio_bcount/mmu::page_size + 1 > _config.seg_max) {
-                trace_virtio_blk_make_request_seg_max(bio->bio_bcount, _config.seg_max);
-                return EIO;
-            }
-        }*/
-
         auto* queue = get_virt_queue(0);
 
+        // LOOK at fs/fuse/virtio_fs.c:virtio_fs_enqueue_req()
         queue->init_sg();
+        // INPUT
         queue->add_out_sg(&req->in_header, sizeof(struct fuse_in_header));
         //
         // Add fuse in arguments as out sg
@@ -228,6 +199,7 @@ int fs::make_request(struct fuse_request* req)
         }
         queue->add_out_sg(req->input_args, input_args_size);
 
+        // OUTPUT
         queue->add_in_sg(&req->out_header, sizeof(struct fuse_out_header));
         //
         // Add fuse out arguments as in sg
@@ -237,7 +209,8 @@ int fs::make_request(struct fuse_request* req)
         }
         queue->add_in_sg(req->output_args, output_args_size);
 
-        queue->add_buf_wait(req);
+        auto* fs_request = new fs_req(req);
+        queue->add_buf_wait(fs_request);
         queue->kick();
 
         return 0;

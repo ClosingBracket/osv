@@ -7,6 +7,9 @@
 
 #ifndef VIRTIO_BLK_DRIVER_H
 #define VIRTIO_BLK_DRIVER_H
+
+#include <osv/mutex.h>
+#include <osv/waitqueue.hh>
 #include "drivers/virtio.hh"
 #include "drivers/virtio-device.hh"
 #include "fs/virtiofs/fuse_kernel.h"
@@ -26,7 +29,7 @@ struct fuse_output_arg
 };
 
 struct fuse_request
-{
+{   //Combined fuse_req with fuse_args from fuse_i.h
     struct fuse_in_header in_header;
     struct fuse_out_header out_header;
 
@@ -38,7 +41,13 @@ struct fuse_request
 
     struct fuse_input_arg input_args[3];
     struct fuse_output_arg output_args[2];
+
+    mutex_t req_mutex;
+    waitqueue req_wait;
 };
+
+void fuse_req_wait(struct fuse_request* req);
+void fuse_req_done(struct fuse_request* req);
 
 class fs : public virtio_driver {
 public:
@@ -68,6 +77,13 @@ public:
 
     static hw_driver* probe(hw_device* dev);
 private:
+    struct fs_req {
+        fs_req(struct fuse_request* f) :fuse_req(f) {};
+        ~fs_req() {};
+
+        struct fuse_request* fuse_req;
+    };
+
     std::string _driver_name;
     virtio_fs_config _config;
 
