@@ -23,33 +23,12 @@
 #include <osv/prex.h>
 #include <osv/buf.h>
 
-#define VIRTIOFS_VERSION            1
-#define VIRTIOFS_MAGIC              0xDEADBEAD
-
-#define VIRTIOFS_INODE_SIZE ((uint64_t)sizeof(struct virtiofs_inode))
-
-#define VIRTIOFS_SUPERBLOCK_SIZE sizeof(struct virtiofs_super_block)
-#define VIRTIOFS_SUPERBLOCK_BLOCK 0
-
 //#define VIRTIOFS_DEBUG_ENABLED 1
 
 #if defined(VIRTIOFS_DEBUG_ENABLED)
 #define print(...) kprintf(__VA_ARGS__)
 #else
 #define print(...)
-#endif
-
-#define VIRTIOFS_DIAGNOSTICS_ENABLED 1
-
-#if defined(VIRTIOFS_DIAGNOSTICS_ENABLED)
-#define VIRTIOFS_STOPWATCH_START auto begin = std::chrono::high_resolution_clock::now();
-#define VIRTIOFS_STOPWATCH_END(total) auto end = std::chrono::high_resolution_clock::now(); \
-std::chrono::duration<double> sec = end - begin; \
-total += ((long)(sec.count() * 1000000));
-//TODO: Review - avoid conversions
-#else
-#define VIRTIOFS_STOPWATCH_START
-#define VIRTIOFS_STOPWATCH_END(...)
 #endif
 
 extern struct vfsops virtiofs_vfsops;

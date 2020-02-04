@@ -72,6 +72,26 @@ static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
 
 int fs::_instance = 0;
 
+struct fs_priv {
+    fs* drv;
+};
+
+static struct devops fs_devops {
+    no_open, //TODO: This possibly in future could point to a function that does FUSE_INIT
+    no_close,
+    no_read,
+    no_write,
+    no_ioctl,
+    no_devctl,
+    no_strategy,
+};
+
+struct driver fs_driver = {
+    "virtio_fs",
+    &fs_devops,
+    sizeof(struct fs_priv),
+};
+
 bool fs::ack_irq()
 {
     auto isr = _dev.read_and_ack_isr();
@@ -139,17 +159,16 @@ fs::fs(virtio_device& virtio_dev)
     // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
-    /*
-    struct blk_priv* prv;
+    struct fs_priv* prv;
     struct device *dev;
-    std::string dev_name("vblk");
+    std::string dev_name("virtiofs");
     dev_name += std::to_string(_disk_idx++);
 
-    dev = device_create(&blk_driver, dev_name.c_str(), D_BLK);
-    prv = reinterpret_cast<struct blk_priv*>(dev->private_data);
+    dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Is it really 
+    prv = reinterpret_cast<struct fs_priv*>(dev->private_data);
     prv->drv = this;
-    dev->size = prv->drv->size();
-    read_partition_table(dev);*/
+    //dev->size = prv->drv->size(); --> TODO: Add this somewhere in the mount routine
+    //read_partition_table(dev);
 
     //debugf("virtio-fs: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
 }
