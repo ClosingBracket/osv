@@ -9,6 +9,7 @@
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio-fs.hh"
+#include "fs/virtiofs/virtiofs_io.hh"
 #include <osv/interrupt.hh>
 
 #include <osv/mempool.hh>
@@ -28,13 +29,19 @@
 
 using namespace memory;
 
-namespace virtio {
-
 void fuse_req_wait(struct fuse_request* req)
 {
     WITH_LOCK(req->req_mutex) {
         req->req_wait.wait(req->req_mutex);
     }
+}
+
+namespace virtio {
+
+static int fuse_make_request(void *driver, struct fuse_request* req)
+{
+    auto fs_driver = reinterpret_cast<fs*>(driver);
+    return fs_driver->make_request(req)
 }
 
 static void fuse_req_done(struct fuse_request* req)
@@ -72,10 +79,6 @@ static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
 
 int fs::_instance = 0;
 
-struct fs_priv {
-    fs* drv;
-};
-
 static struct devops fs_devops {
     no_open, //TODO: This possibly in future could point to a function that does FUSE_INIT
     no_close,
@@ -89,7 +92,7 @@ static struct devops fs_devops {
 struct driver fs_driver = {
     "virtio_fs",
     &fs_devops,
-    sizeof(struct fs_priv),
+    sizeof(struct fuse_strategy),
 };
 
 bool fs::ack_irq()
@@ -159,14 +162,13 @@ fs::fs(virtio_device& virtio_dev)
     // Step 8
     add_dev_status(VIRTIO_CONFIG_S_DRIVER_OK);
 
-    struct fs_priv* prv;
-    struct device *dev;
     std::string dev_name("virtiofs");
     dev_name += std::to_string(_disk_idx++);
 
-    dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Is it really 
-    prv = reinterpret_cast<struct fs_priv*>(dev->private_data);
-    prv->drv = this;
+    struct device *dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Is it really 
+    struct fuse_strategy *strategy = reinterpret_cast<struct fuse_strategy*>(dev->private_data);
+    strategy->drv = this;
+    strategy->make_request = fuse_make_request;
     //dev->size = prv->drv->size(); --> TODO: Add this somewhere in the mount routine
     //read_partition_table(dev);
 

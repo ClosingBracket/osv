@@ -5,12 +5,13 @@
  * BSD license as described in the LICENSE file in the top-level directory.
  */
 
-#include "virtiofs.hh"
 #include <sys/types.h>
 #include <osv/device.h>
 #include <osv/debug.h>
 #include <iomanip>
 #include <iostream>
+#include "virtiofs.hh"
+#include "virtiofs_io.hh"
 
 static int virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data);
 static int virtiofs_sync(struct mount *mp);
@@ -32,8 +33,6 @@ static int
 virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 {
     struct device *device;
-    struct virtiofs_info *virtiofs = nullptr;
-    struct virtiofs_super_block *sb = nullptr;
     int error = -1;
 
     error = device_open(dev + 5, DO_RDWR, &device);
@@ -42,11 +41,14 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
         return error;
     }
 
-    // Save a reference to our superblock
-    mp->m_data = virtiofs;
     mp->m_dev = device;
+    auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
+    assert(fs_strategy->drv);
+    //fs_strategy->make_request(fs_strategy->drv, req);
+    // TODO: Save a reference to the virtio::fs drivers instance above
+    //mp->m_data = virtiofs;
 
-    virtiofs_set_vnode(mp->m_root->d_vnode, virtiofs->inodes);
+    //virtiofs_set_vnode(mp->m_root->d_vnode, virtiofs->inodes);
 
     print("[virtiofs] returning from mount\n");
 
@@ -59,19 +61,19 @@ static int virtiofs_sync(struct mount *mp) {
 
 static int virtiofs_statfs(struct mount *mp, struct statfs *statp)
 {
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
-    struct virtiofs_super_block *sb = virtiofs->sb;
+    //struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
+    //struct virtiofs_super_block *sb = virtiofs->sb;
 
-    statp->f_bsize = sb->block_size;
+    //statp->f_bsize = sb->block_size;
 
     // Total blocks
-    statp->f_blocks = sb->structure_info_blocks_count + sb->structure_info_first_block;
+    //statp->f_blocks = sb->structure_info_blocks_count + sb->structure_info_first_block;
     // Read only. 0 blocks free
     statp->f_bfree = 0;
     statp->f_bavail = 0;
 
     statp->f_ffree = 0;
-    statp->f_files = sb->inodes_count; //Needs to be inode count
+    //statp->f_files = sb->inodes_count; //Needs to be inode count
 
     statp->f_namelen = 0; //FIXME - unlimited ROFS_FILENAME_MAXLEN;
 
@@ -81,13 +83,13 @@ static int virtiofs_statfs(struct mount *mp, struct statfs *statp)
 static int
 virtiofs_unmount(struct mount *mp, int flags)
 {
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
-    struct virtiofs_super_block *sb = virtiofs->sb;
+    //struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
+    //struct virtiofs_super_block *sb = virtiofs->sb;
     struct device *dev = mp->m_dev;
 
     int error = device_close(dev);
-    delete sb;
-    delete virtiofs;
+    //delete sb;
+    //delete virtiofs;
 
     return error;
 }

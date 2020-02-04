@@ -12,7 +12,6 @@
 #include <osv/waitqueue.hh>
 #include "drivers/virtio.hh"
 #include "drivers/virtio-device.hh"
-#include "fs/virtiofs/fuse_kernel.h"
 
 namespace virtio {
 
@@ -21,41 +20,8 @@ enum {
    VQ_REQUEST
 };
 
-struct fuse_input_arg
-{
-    unsigned size;
-    const void *value;
-};
-
-struct fuse_output_arg
-{
-    unsigned size;
-    void *value;
-};
-
-struct fuse_request
-{   //Combined fuse_req with fuse_args from fuse_i.h
-    struct fuse_in_header in_header;
-    struct fuse_out_header out_header;
-
-    uint64_t node_id;
-    uint32_t opcode;
-
-    unsigned short num_of_input_args;
-    unsigned short num_of_output_args;
-
-    struct fuse_input_arg input_args[3];
-    struct fuse_output_arg output_args[2];
-
-    mutex_t req_mutex;
-    waitqueue req_wait;
-};
-
-void fuse_req_wait(struct fuse_request* req);
-
 class fs : public virtio_driver {
 public:
-
     struct fs_config {
         char tag[36];
         u32 num_queues;
