@@ -9,6 +9,8 @@
 #define VIRTIOFS_IO_H
 
 #include "fuse_kernel.h"
+#include <osv/mutex.h>
+#include <osv/waitqueue.hh>
 
 struct fuse_input_arg
 {
@@ -44,6 +46,6 @@ void fuse_req_wait(struct fuse_request* req);
 
 struct fuse_strategy {
     void *drv;
-    int (*make_request)(struct fuse_request*);
+    int (*make_request)(void*, struct fuse_request*);
 };
 #endif

@@ -9,7 +9,6 @@
 
 #include "drivers/virtio.hh"
 #include "drivers/virtio-fs.hh"
-#include "fs/virtiofs/virtiofs_io.hh"
 #include <osv/interrupt.hh>
 
 #include <osv/mempool.hh>
@@ -41,7 +40,7 @@ namespace virtio {
 static int fuse_make_request(void *driver, struct fuse_request* req)
 {
     auto fs_driver = reinterpret_cast<fs*>(driver);
-    return fs_driver->make_request(req)
+    return fs_driver->make_request(req);
 }
 
 static void fuse_req_done(struct fuse_request* req)

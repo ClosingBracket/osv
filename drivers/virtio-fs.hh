@@ -12,6 +12,7 @@
 #include <osv/waitqueue.hh>
 #include "drivers/virtio.hh"
 #include "drivers/virtio-device.hh"
+#include "fs/virtiofs/virtiofs_io.hh"
 
 namespace virtio {
 
