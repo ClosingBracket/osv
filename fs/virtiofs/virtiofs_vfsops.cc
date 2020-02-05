@@ -42,8 +42,6 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     }
 
     mp->m_dev = device;
-    auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
-    assert(fs_strategy->drv);
 
     auto req = new fuse_request();
     req->in_header.len = 0; //TODO
@@ -71,7 +69,11 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
     //req->args.in_numargs = 1;
 
-    //fs_strategy->make_request(fs_strategy->drv, req);
+    auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
+    assert(fs_strategy->drv);
+
+    fs_strategy->make_request(fs_strategy->drv, req);
+    fuse_req_wait(req);
     // TODO: Save a reference to the virtio::fs drivers instance above
     //mp->m_data = virtiofs;
 
