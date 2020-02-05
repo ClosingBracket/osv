@@ -44,6 +44,33 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     mp->m_dev = device;
     auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
     assert(fs_strategy->drv);
+
+    auto req = new fuse_request();
+    req->in_header.len = 0; //TODO
+    req->in_header.opcode = FUSE_INIT;
+    req->in_header.unique = 1; //TODO
+    req->in_header.nodeid = 1; //???
+    req->in_header.uid = 0;
+    req->in_header.gid = 0;
+    req->in_header.pid = 0;
+
+    auto fuse_init = new fuse_init_in();
+    fuse_init->major = FUSE_KERNEL_VERSION;
+    fuse_init->minor = FUSE_KERNEL_MINOR_VERSION;
+    fuse_init->max_readahead = PAGE_SIZE;
+    fuse_init->flags = 0;
+   /* ia->in.flags |=
+		FUSE_ASYNC_READ | FUSE_POSIX_LOCKS | FUSE_ATOMIC_O_TRUNC |
+		FUSE_EXPORT_SUPPORT | FUSE_BIG_WRITES | FUSE_DONT_MASK |
+		FUSE_SPLICE_WRITE | FUSE_SPLICE_MOVE | FUSE_SPLICE_READ |
+		FUSE_FLOCK_LOCKS | FUSE_HAS_IOCTL_DIR | FUSE_AUTO_INVAL_DATA |
+		FUSE_DO_READDIRPLUS | FUSE_READDIRPLUS_AUTO | FUSE_ASYNC_DIO |
+		FUSE_WRITEBACK_CACHE | FUSE_NO_OPEN_SUPPORT |
+		FUSE_PARALLEL_DIROPS | FUSE_HANDLE_KILLPRIV | FUSE_POSIX_ACL |
+		FUSE_ABORT_ERROR | FUSE_MAX_PAGES | FUSE_CACHE_SYMLINKS |
+		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
+    //req->args.in_numargs = 1;
+
     //fs_strategy->make_request(fs_strategy->drv, req);
     // TODO: Save a reference to the virtio::fs drivers instance above
     //mp->m_data = virtiofs;
