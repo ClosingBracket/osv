@@ -183,7 +183,9 @@ fs::~fs()
 void fs::read_config()
 {
     virtio_conf_read(0, &(_config.tag[0]), sizeof(_config.tag));
+    printf("-> virtio-fs: tag [%s]\n", _config.tag);
     virtio_conf_read(offsetof(fs_config,num_queues), &(_config.num_queues), sizeof(_config.num_queues));
+    printf("-> virtio-fs: num_queues [%d]\n", _config.num_queues);
 }
 
 void fs::req_done()

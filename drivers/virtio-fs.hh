@@ -5,8 +5,8 @@
  * BSD license as described in the LICENSE file in the top-level directory.
  */
 
-#ifndef VIRTIO_BLK_DRIVER_H
-#define VIRTIO_BLK_DRIVER_H
+#ifndef VIRTIO_FS_DRIVER_H
+#define VIRTIO_FS_DRIVER_H
 
 #include <osv/mutex.h>
 #include <osv/waitqueue.hh>
