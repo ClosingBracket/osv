@@ -1795,7 +1795,8 @@ fs_objs += rofs/rofs_vfsops.o \
 	rofs/rofs_cache.o \
 	rofs/rofs_common.o
 
-fs_objs += virtiofs/virtiofs_vfsops.o
+fs_objs += virtiofs/virtiofs_vfsops.o \
+	virtiofs/virtiofs_vnops.o
 
 fs_objs += pseudofs/pseudofs.o
 fs_objs += procfs/procfs_vnops.o

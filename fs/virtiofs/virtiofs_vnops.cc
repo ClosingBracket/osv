@@ -43,10 +43,10 @@
     if (uio->uio_offset >= (off_t)vnode->v_size) \
         return 0;
 
+/*
 static int
 virtiofs_read_blocks(struct device *device, uint64_t starting_block, uint64_t blocks_count, void *buf)
 {
-    ROFS_STOPWATCH_START
     struct bio *bio = alloc_bio();
     if (!bio)
         return ENOMEM;
@@ -68,7 +68,7 @@ virtiofs_read_blocks(struct device *device, uint64_t starting_block, uint64_t bl
     ROFS_STOPWATCH_END(virtiofs_block_read_ms)
 
     return error;
-}
+}*/
 
 int virtiofs_init(void) {
     return 0;
@@ -80,13 +80,13 @@ static int virtiofs_open(struct file *fp)
         // Do no allow opening files to write
         return (EROFS);
     }
-    print("[virtiofs] virtiofs_open called for inode [%d] \n",
-          ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->inode_no);
+    //print("[virtiofs] virtiofs_open called for inode [%d] \n",
+    //      ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->inode_no);
     return 0;
 }
 
 static int virtiofs_close(struct vnode *vp, struct file *fp) {
-    print("[virtiofs] virtiofs_close called\n");
+    //print("[virtiofs] virtiofs_close called\n");
     // Nothing to do really...
     return 0;
 }
@@ -96,6 +96,7 @@ static int virtiofs_close(struct vnode *vp, struct file *fp) {
 // under virtiofs->symlinks table
 static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
 {
+    /*
     struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
@@ -108,7 +109,8 @@ static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
     char *link_path = virtiofs->symlinks[inode->data_offset];
 
     print("[virtiofs] virtiofs_readlink returned link [%s]\n", link_path);
-    return uiomove(link_path, strlen(link_path), uio);
+    return uiomove(link_path, strlen(link_path), uio);*/
+    return 0;
 }
 
 //
@@ -116,6 +118,7 @@ static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
 // the data does not get retained for subsequent reads
 static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, int ioflag)
 {
+    /*
     struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
     struct virtiofs_super_block *sb = virtiofs->sb;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
@@ -155,13 +158,15 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
     rv = uiomove(buf + offset, read_amt, uio);
 
     free(buf);
-    return rv;
+    return rv;*/
+    return 0;
 }
 //
 // This functions reads directory information (dentries) based on information in memory
 // under virtiofs->dir_entries table
 static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent *dir)
 {
+    /*
     struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
@@ -199,7 +204,7 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
             dir->d_type = DT_REG;
     }
 
-    fp->f_offset++;
+    fp->f_offset++;*/
 
     return 0;
 }
@@ -209,6 +214,7 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
 // under virtiofs->dir_entries table
 static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 {
+    /*
     struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
     struct vnode *vp = nullptr;
@@ -244,12 +250,13 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     }
 
     print("[virtiofs] FAILED to find up %s\n", name);
-
+    */
     return ENOENT;
 }
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
 {
+    /*
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
     attr->va_mode = 0555;
@@ -263,7 +270,7 @@ static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
     }
 
     attr->va_nodeid = vnode->v_ino;
-    attr->va_size = vnode->v_size;
+    attr->va_size = vnode->v_size;*/
 
     return 0;
 }
