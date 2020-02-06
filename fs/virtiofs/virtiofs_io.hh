@@ -17,7 +17,7 @@ struct fuse_request
     struct fuse_in_header in_header;
     struct fuse_out_header out_header;
 
-    const void *input_args_data;
+    void *input_args_data;
     size_t input_args_size;
 
     void *output_args_data;

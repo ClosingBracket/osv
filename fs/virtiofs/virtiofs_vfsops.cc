@@ -43,7 +43,7 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 
     mp->m_dev = device;
 
-    auto req = new fuse_request();
+    auto *req = new (std::nothrow) fuse_request();
     req->in_header.len = 0; //TODO
     req->in_header.opcode = FUSE_INIT;
     req->in_header.unique = 1; //TODO
@@ -52,11 +52,11 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     req->in_header.gid = 0;
     req->in_header.pid = 0;
 
-    auto fuse_init = new fuse_init_in();
-    fuse_init->major = FUSE_KERNEL_VERSION;
-    fuse_init->minor = FUSE_KERNEL_MINOR_VERSION;
-    fuse_init->max_readahead = PAGE_SIZE;
-    fuse_init->flags = 0;
+    auto *in_args = new (std::nothrow) fuse_init_in();
+    in_args->major = FUSE_KERNEL_VERSION;
+    in_args->minor = FUSE_KERNEL_MINOR_VERSION;
+    in_args->max_readahead = PAGE_SIZE;
+    in_args->flags = 0;
    /* ia->in.flags |=
 		FUSE_ASYNC_READ | FUSE_POSIX_LOCKS | FUSE_ATOMIC_O_TRUNC |
 		FUSE_EXPORT_SUPPORT | FUSE_BIG_WRITES | FUSE_DONT_MASK |
@@ -68,18 +68,22 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 		FUSE_ABORT_ERROR | FUSE_MAX_PAGES | FUSE_CACHE_SYMLINKS |
 		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
 
-    req->input_args_data = fuse_init;
-    req->input_args_size = sizeof(*fuse_init);
+    req->input_args_data = in_args;
+    req->input_args_size = sizeof(*in_args);
 
-    auto fuse_init_out = new fuse_init_out();
-    req->output_args_data = fuse_init_out;
-    req->output_args_size = sizeof(*fuse_init_out);
+    auto *out_args = new (std::nothrow) fuse_init_out();
+    req->output_args_data = out_args;
+    req->output_args_size = sizeof(*out_args);
 
     auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
     assert(fs_strategy->drv);
 
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
+
+    delete out_args;
+    delete in_args;
+    delete req;
 
 
     // TODO: Save a reference to the virtio::fs drivers instance above
