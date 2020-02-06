@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <iostream>
 #include "virtiofs.hh"
-#include "virtiofs_io.hh"
+#include "virtiofs_i.hh"
 
 static int virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data);
 static int virtiofs_sync(struct mount *mp);
@@ -80,6 +80,9 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
+ 
+    printf("!! Processed FUSE_INIT \n");
+    printf("!! Major: %d, minor: %d, max_pages: %d\n", out_args->major, out_args->minor, out_args->max_pages);
 
     delete out_args;
     delete in_args;

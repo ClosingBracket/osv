@@ -22,6 +22,7 @@
 #include <osv/dentry.h>
 #include <osv/prex.h>
 #include <osv/buf.h>
+#include "fuse_kernel.h"
 
 //#define VIRTIOFS_DEBUG_ENABLED 1
 
@@ -30,6 +31,11 @@
 #else
 #define print(...)
 #endif
+
+struct virtiofs_inode {
+    uint64_t nodeid;
+    struct fuse_attr attr;
+};
 
 extern struct vfsops virtiofs_vfsops;
 extern struct vnops virtiofs_vnops;

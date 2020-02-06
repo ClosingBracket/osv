@@ -74,6 +74,43 @@ int virtiofs_init(void) {
     return 0;
 }
 
+//
+// This functions looks up directory entry based on the directory information stored in memory
+// under virtiofs->dir_entries table
+static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
+{
+    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
+    //struct vnode *vp = nullptr;
+
+    if (*name == '\0') {
+        return ENOENT;
+    }
+
+    if (!S_ISDIR(inode->attr.mode)) {
+        print("[virtiofs] ABORTED lookup up %s at inode %d because not a directory\n", name, inode->inode_no);
+        return ENOTDIR;
+    }
+
+    /*
+            if (vget(vnode->v_mount, inode_no, &vp)) { //TODO: Will it ever work? Revisit
+                print("[virtiofs] found vp in cache!\n");
+                *vpp = vp;
+                return 0;
+            }
+
+            struct virtiofs_inode *found_inode = virtiofs->inodes + (inode_no - 1); //Check if exists
+            virtiofs_set_vnode(vp, found_inode);
+
+            print("[virtiofs] found the directory entry [%s] at at inode %d -> %d!\n", name, inode->inode_no,
+                  found_inode->inode_no);
+
+            *vpp = vp;
+            return 0;*/
+
+    print("[virtiofs] FAILED to find up %s\n", name);
+    return ENOENT;
+}
+
 static int virtiofs_open(struct file *fp)
 {
     if ((file_flags(fp) & FWRITE)) {
@@ -207,51 +244,6 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
     fp->f_offset++;*/
 
     return 0;
-}
-
-//
-// This functions looks up directory entry based on the directory information stored in memory
-// under virtiofs->dir_entries table
-static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
-{
-    /*
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
-    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-    struct vnode *vp = nullptr;
-
-    if (*name == '\0') {
-        return ENOENT;
-    }
-
-    if (!S_ISDIR(inode->mode)) {
-        print("[virtiofs] ABORTED lookup up %s at inode %d because not a directory\n", name, inode->inode_no);
-        return ENOTDIR;
-    }
-
-    for (unsigned int idx = 0; idx < inode->dir_children_count; idx++) {
-        if (strcmp(name, virtiofs->dir_entries[inode->data_offset + idx].filename) == 0) {
-            int inode_no = virtiofs->dir_entries[inode->data_offset + idx].inode_no;
-
-            if (vget(vnode->v_mount, inode_no, &vp)) { //TODO: Will it ever work? Revisit
-                print("[virtiofs] found vp in cache!\n");
-                *vpp = vp;
-                return 0;
-            }
-
-            struct virtiofs_inode *found_inode = virtiofs->inodes + (inode_no - 1); //Check if exists
-            virtiofs_set_vnode(vp, found_inode);
-
-            print("[virtiofs] found the directory entry [%s] at at inode %d -> %d!\n", name, inode->inode_no,
-                  found_inode->inode_no);
-
-            *vpp = vp;
-            return 0;
-        }
-    }
-
-    print("[virtiofs] FAILED to find up %s\n", name);
-    */
-    return ENOENT;
 }
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
