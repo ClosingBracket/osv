@@ -157,6 +157,7 @@ fs::fs(virtio_device& virtio_dev)
     dev_name += std::to_string(_disk_idx++);
 
     struct device *dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Is it really 
+    printf("-> Created device with name: [%s]\n", dev_name.c_str());
     struct fuse_strategy *strategy = reinterpret_cast<struct fuse_strategy*>(dev->private_data);
     strategy->drv = this;
     strategy->make_request = fuse_make_request;

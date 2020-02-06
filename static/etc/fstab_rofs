@@ -3,3 +3,4 @@ none         /dev       devfs     defaults 0 0
 none         /proc      procfs    defaults 0 0
 none         /sys       sysfs     defaults 0 0
 none         /tmp       ramfs     defaults 0 0
+/dev/virtiofs1 /virtiofs virtiofs defaults 0 0
