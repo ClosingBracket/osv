@@ -1,0 +1,16 @@
+each of those below can be in its own memory slot, but both individual input AND output args should be lined up after each other
+---
+struct fuse_in_header
+struct fuse_init_in
+
+struct fuse_out_header
+struct fuse_init_out
+
+---
+in virtio_fs.c:
+  virtio_fs_enqueue_req(): 
+    - calls copy_args_to_argbuf which mallocs argbuf and copies input args
+    - calls sg_init_one for fuse_in_header
+    - call sg_init_fuse_args() for specific request input
+    - calls sg_init_one for fuse_out_header
+    - call sg_init_fuse_args() for specific request output

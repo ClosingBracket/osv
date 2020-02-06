@@ -67,13 +67,21 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 		FUSE_PARALLEL_DIROPS | FUSE_HANDLE_KILLPRIV | FUSE_POSIX_ACL |
 		FUSE_ABORT_ERROR | FUSE_MAX_PAGES | FUSE_CACHE_SYMLINKS |
 		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
-    //req->args.in_numargs = 1;
+
+    req->input_args_data = fuse_init;
+    req->input_args_size = sizeof(*fuse_init);
+
+    auto fuse_init_out = new fuse_init_out();
+    req->output_args_data = fuse_init_out;
+    req->output_args_size = sizeof(*fuse_init_out);
 
     auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
     assert(fs_strategy->drv);
 
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
+
+
     // TODO: Save a reference to the virtio::fs drivers instance above
     //mp->m_data = virtiofs;
 

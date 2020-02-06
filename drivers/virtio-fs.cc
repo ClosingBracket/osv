@@ -56,11 +56,7 @@ static void fuse_req_enqueue_input(vring* queue, struct fuse_request* req)
     queue->add_out_sg(&req->in_header, sizeof(struct fuse_in_header));
     //
     // Add fuse in arguments as out sg
-    size_t input_args_size = 0;
-    for (int i = 0; i < req->num_of_input_args; i++) {
-            input_args_size += req->input_args[i].size;
-    }
-    queue->add_out_sg(req->input_args, input_args_size);
+    queue->add_out_sg(req->input_args_data, req->input_args_size);
 }
 
 static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
@@ -69,11 +65,7 @@ static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
     queue->add_in_sg(&req->out_header, sizeof(struct fuse_out_header));
     //
     // Add fuse out arguments as in sg
-    size_t output_args_size = 0;
-    for (int i = 0; i < req->num_of_output_args; i++) {
-        output_args_size += req->output_args[i].size;
-    }
-    queue->add_in_sg(req->output_args, output_args_size);
+    queue->add_in_sg(req->output_args_data, req->output_args_size);
 }
 
 int fs::_instance = 0;

@@ -12,31 +12,16 @@
 #include <osv/mutex.h>
 #include <osv/waitqueue.hh>
 
-struct fuse_input_arg
-{
-    unsigned size;
-    const void *value;
-};
-
-struct fuse_output_arg
-{
-    unsigned size;
-    void *value;
-};
-
 struct fuse_request
-{   //Combined fuse_req with fuse_args from fuse_i.h
+{
     struct fuse_in_header in_header;
     struct fuse_out_header out_header;
 
-    uint64_t node_id;
-    uint32_t opcode;
+    const void *input_args_data;
+    size_t input_args_size;
 
-    unsigned short num_of_input_args;
-    unsigned short num_of_output_args;
-
-    struct fuse_input_arg input_args[3];
-    struct fuse_output_arg output_args[2];
+    void *output_args_data;
+    size_t output_args_size;
 
     mutex_t req_mutex;
     waitqueue req_wait;
