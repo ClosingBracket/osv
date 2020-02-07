@@ -152,11 +152,10 @@ static int virtiofs_open(struct file *fp)
         // Do no allow opening files to write
         return (EROFS);
     }
-    printf("[virtiofs] virtiofs_open called for inode [%d] \n",
-          ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->nodeid);
 
     auto *out_args = new (std::nothrow) fuse_open_out();
     auto *input_args = new (std::nothrow) fuse_open_in();
+    //memset(input_args, 0, sizeof(*input_args));
     input_args->flags = file_flags(fp);
 
     struct vnode *vnode = file_dentry(fp)->d_vnode;
@@ -173,6 +172,9 @@ static int virtiofs_open(struct file *fp)
     auto *file_data = new virtiofs_file_data();
     file_data->file_handle = out_args->fh;
     fp->f_data = file_data;
+
+    printf("[virtiofs] virtiofs_open called for inode [%d] and got handle: [%ld]\n",
+          ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->nodeid, file_data->file_handle);
 
     delete req;
     delete input_args;
@@ -235,36 +237,33 @@ static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
 // the data does not get retained for subsequent reads
 static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, int ioflag)
 {
-    /*
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
-    struct virtiofs_super_block *sb = virtiofs->sb;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-    struct device *device = vnode->v_mount->m_dev;
 
     VERIFY_READ_INPUT_ARGUMENTS()
 
-    int rv = 0;
-    int error = -1;
-    uint64_t block = inode->data_offset;
-    uint64_t offset = 0;
-
     // Total read amount is what they requested, or what is left
-    uint64_t read_amt = std::min<uint64_t>(inode->file_size - uio->uio_offset, uio->uio_resid);
+    uint64_t read_amt = std::min<uint64_t>(inode->attr.size - uio->uio_offset, uio->uio_resid);
+    size_t buf_size = std::min<size_t>(8192,read_amt);
+    void *buf = malloc(buf_size);
 
-    // Calculate which block we need actually need to read
-    block += uio->uio_offset / sb->block_size;
-    offset = uio->uio_offset % sb->block_size;
+    auto *input_args = new (std::nothrow) fuse_read_in();
+    auto *file_data = reinterpret_cast<virtiofs_file_data*>(fp->f_data);
+    input_args->fh = file_data->file_handle;
+    input_args->offset = uio->uio_offset; 
+    input_args->size = read_amt;
 
-    uint64_t block_count = (offset + read_amt) / sb->block_size;
-    if ((offset + read_amt) % sb->block_size > 0)
-        block_count++;
+    printf("[virtiofs] virtiofs_read [%d], inode: %d, at %d of %d bytes with handle: %ld\n",
+          sched::thread::current()->id(), inode->nodeid, uio->uio_offset, read_amt, file_data->file_handle);
+ 
+    auto *req = create_fuse_request(FUSE_READ, inode->nodeid, input_args, sizeof(*input_args), buf, buf_size);
 
-    void *buf = malloc(BSIZE * block_count);
+    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    assert(fs_strategy->drv);
 
-    print("[virtiofs] virtiofs_read [%d], inode: %d, [%d -> %d] at %d of %d bytes\n",
-          sched::thread::current()->id(), inode->inode_no, block, block_count, uio->uio_offset, read_amt);
+    fs_strategy->make_request(fs_strategy->drv, req);
+    fuse_req_wait(req);
 
-    error = virtiofs_read_blocks(device, block, block_count, buf);
+    auto error = -req->out_header.error;
 
     if (error) {
         kprintf("[virtiofs_read] Error reading data\n");
@@ -272,11 +271,11 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
         return error;
     }
 
-    rv = uiomove(buf + offset, read_amt, uio);
+    auto rv = uiomove(buf, read_amt, uio);
 
     free(buf);
-    return rv;*/
-    return 0;
+    free(req);
+    return rv;
 }
 //
 // This functions reads directory information (dentries) based on information in memory
@@ -328,21 +327,21 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
 {
-    /*
+    printf("[virtiofs] virtiofs_getattr called\n");
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
     attr->va_mode = 0555;
 
-    if (S_ISDIR(inode->mode)) {
+    if (S_ISDIR(inode->attr.mode)) {
         attr->va_type = VDIR;
-    } else if (S_ISREG(inode->mode)) {
+    } else if (S_ISREG(inode->attr.mode)) {
         attr->va_type = VREG;
-    } else if (S_ISLNK(inode->mode)) {
+    } else if (S_ISLNK(inode->attr.mode)) {
         attr->va_type = VLNK;
     }
 
-    attr->va_nodeid = vnode->v_ino;
-    attr->va_size = vnode->v_size;*/
+    //attr->va_nodeid = vnode->v_ino;
+    attr->va_size = inode->attr.size;
 
     return 0;
 }
