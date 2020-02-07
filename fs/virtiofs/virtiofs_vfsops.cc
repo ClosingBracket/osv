@@ -53,6 +53,28 @@ fuse_request *create_fuse_request(uint32_t opcode, uint64_t nodeid,
     return req;
 }
 
+void virtiofs_set_vnode(struct vnode *vnode, struct virtiofs_inode *inode)
+{
+    if (vnode == nullptr || inode == nullptr) {
+        return;
+    }
+
+    vnode->v_data = inode;
+    vnode->v_ino = inode->nodeid;
+
+    // Set type
+    if (S_ISDIR(inode->attr.mode)) {
+        vnode->v_type = VDIR;
+    } else if (S_ISREG(inode->attr.mode)) {
+        vnode->v_type = VREG;
+    } else if (S_ISLNK(inode->attr.mode)) {
+        vnode->v_type = VLNK;
+    }
+
+    vnode->v_mode = 0555;
+    vnode->v_size = inode->attr.size;
+}
+
 static int
 virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 {
@@ -86,7 +108,7 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     auto *out_args = new (std::nothrow) fuse_init_out();
     auto *req = create_fuse_request(FUSE_INIT, FUSE_ROOT_ID, in_args, sizeof(*in_args), out_args, sizeof(*out_args));
 
-    auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
+    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
     assert(fs_strategy->drv);
 
     fs_strategy->make_request(fs_strategy->drv, req);
@@ -100,10 +122,14 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     delete in_args;
     delete req;
 
-    // TODO: Save a reference to the virtio::fs drivers instance above
-    //mp->m_data = virtiofs;
+    auto *root_node = new virtiofs_inode();
+    root_node->nodeid = FUSE_ROOT_ID;
+    root_node->attr.mode = S_IFDIR;
 
-    //virtiofs_set_vnode(mp->m_root->d_vnode, virtiofs->inodes);
+    virtiofs_set_vnode(mp->m_root->d_vnode, root_node);
+
+    mp->m_data = fs_strategy;
+    mp->m_dev = device;
 
     print("[virtiofs] returning from mount\n");
 

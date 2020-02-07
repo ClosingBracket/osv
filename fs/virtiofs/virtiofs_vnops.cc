@@ -25,6 +25,7 @@
 #include <osv/sched.hh>
 
 #include "virtiofs.hh"
+#include "virtiofs_i.hh"
 
 #define VERIFY_READ_INPUT_ARGUMENTS() \
     /* Cant read directories */\
@@ -90,6 +91,21 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
         print("[virtiofs] ABORTED lookup up %s at inode %d because not a directory\n", name, inode->inode_no);
         return ENOTDIR;
     }
+
+    auto *out_args = new (std::nothrow) fuse_entry_out();
+    auto input = new char[strlen(name) + 1];
+    strcpy(input, name);
+    auto *req = create_fuse_request(FUSE_LOOKUP, inode->nodeid, input, strlen(name) + 1, out_args, sizeof(*out_args));
+
+    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    assert(fs_strategy->drv);
+
+    fs_strategy->make_request(fs_strategy->drv, req);
+    fuse_req_wait(req);
+
+    delete req;
+    delete input;
+    delete out_args;
 
     /*
             if (vget(vnode->v_mount, inode_no, &vp)) { //TODO: Will it ever work? Revisit

@@ -97,7 +97,6 @@ bool fs::ack_irq()
     } else {
         return false;
     }
-
 }
 
 fs::fs(virtio_device& virtio_dev)
