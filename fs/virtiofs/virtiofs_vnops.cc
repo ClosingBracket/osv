@@ -183,8 +183,29 @@ static int virtiofs_open(struct file *fp)
 
 static int virtiofs_close(struct vnode *vp, struct file *fp) {
     printf("[virtiofs] virtiofs_close called\n");
-    // Nothing to do really...
-    return 0;
+
+    auto *input_args = new (std::nothrow) fuse_release_in();
+    auto *file_data = reinterpret_cast<virtiofs_file_data*>(fp->f_data);
+    input_args->fh = file_data->file_handle;
+
+    struct virtiofs_inode *inode = (struct virtiofs_inode *) vp->v_data;
+    auto *req = create_fuse_request(FUSE_RELEASE, inode->nodeid, input_args, sizeof(*input_args), nullptr, 0);
+
+    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vp->v_mount->m_data);
+    assert(fs_strategy->drv);
+
+    fs_strategy->make_request(fs_strategy->drv, req);
+    fuse_req_wait(req);
+
+    auto error = -req->out_header.error;
+
+    delete req;
+    delete input_args;
+    delete file_data;
+
+    fp->f_data = nullptr;
+
+    return error;
 }
 
 //
