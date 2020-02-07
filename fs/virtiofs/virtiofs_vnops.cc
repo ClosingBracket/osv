@@ -81,7 +81,7 @@ int virtiofs_init(void) {
 static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 {
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-    //struct vnode *vp = nullptr;
+    struct vnode *vp = nullptr;
 
     if (*name == '\0') {
         return ENOENT;
@@ -103,10 +103,29 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
 
+    int error = -req->out_header.error;
+
+    if (!error) {
+        if (vget(vnode->v_mount, out_args->nodeid, &vp)) { //TODO: Will it ever work? Revisit
+            printf("[virtiofs] rofs_lookup found vp in cache!\n");
+            *vpp = vp;
+            return 0;
+        }
+
+        auto *inode = new virtiofs_inode();
+        inode->nodeid = out_args->nodeid;
+        printf("[virtiofs] rofs_lookup found inode: %d for %s!\n", inode->nodeid, name);
+        memcpy(&inode->attr, &out_args->attr, sizeof(out_args->attr));
+
+        virtiofs_set_vnode(vp, inode);
+        *vpp = vp;
+    }
+
     delete req;
     delete input;
     delete out_args;
 
+    return error;
     /*
             if (vget(vnode->v_mount, inode_no, &vp)) { //TODO: Will it ever work? Revisit
                 print("[virtiofs] found vp in cache!\n");
@@ -123,8 +142,8 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
             *vpp = vp;
             return 0;*/
 
-    print("[virtiofs] FAILED to find up %s\n", name);
-    return ENOENT;
+    //print("[virtiofs] FAILED to find up %s\n", name);
+    //return ENOENT;
 }
 
 static int virtiofs_open(struct file *fp)

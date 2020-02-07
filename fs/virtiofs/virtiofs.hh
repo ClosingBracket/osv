@@ -37,6 +37,8 @@ struct virtiofs_inode {
     struct fuse_attr attr;
 };
 
+void virtiofs_set_vnode(struct vnode *vnode, struct virtiofs_inode *inode);
+
 extern struct vfsops virtiofs_vfsops;
 extern struct vnops virtiofs_vnops;
 
