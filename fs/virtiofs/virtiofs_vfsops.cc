@@ -29,6 +29,30 @@ struct vfsops virtiofs_vfsops = {
     &virtiofs_vnops	    /* vnops */
 };
 
+std::atomic<uint64_t> fuse_unique_id(1);
+
+fuse_request *create_fuse_request(uint32_t opcode, uint64_t nodeid,
+        void *input_args_data, size_t input_args_size, void *output_args_data, size_t output_args_size)
+{
+    auto *req = new (std::nothrow) fuse_request();
+
+    req->in_header.len = 0; //TODO
+    req->in_header.opcode = opcode;
+    req->in_header.unique = fuse_unique_id.fetch_add(1, std::memory_order_relaxed);
+    req->in_header.nodeid = nodeid;
+    req->in_header.uid = 0;
+    req->in_header.gid = 0;
+    req->in_header.pid = 0;
+
+    req->input_args_data = input_args_data;
+    req->input_args_size = input_args_size;
+
+    req->output_args_data = output_args_data;
+    req->output_args_size = output_args_size;
+
+    return req;
+}
+
 static int
 virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 {
@@ -42,15 +66,6 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     }
 
     mp->m_dev = device;
-
-    auto *req = new (std::nothrow) fuse_request();
-    req->in_header.len = 0; //TODO
-    req->in_header.opcode = FUSE_INIT;
-    req->in_header.unique = 1; //TODO
-    req->in_header.nodeid = 1; //???
-    req->in_header.uid = 0;
-    req->in_header.gid = 0;
-    req->in_header.pid = 0;
 
     auto *in_args = new (std::nothrow) fuse_init_in();
     in_args->major = FUSE_KERNEL_VERSION;
@@ -68,12 +83,8 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 		FUSE_ABORT_ERROR | FUSE_MAX_PAGES | FUSE_CACHE_SYMLINKS |
 		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
 
-    req->input_args_data = in_args;
-    req->input_args_size = sizeof(*in_args);
-
     auto *out_args = new (std::nothrow) fuse_init_out();
-    req->output_args_data = out_args;
-    req->output_args_size = sizeof(*out_args);
+    auto *req = create_fuse_request(FUSE_INIT, FUSE_ROOT_ID, in_args, sizeof(*in_args), out_args, sizeof(*out_args));
 
     auto fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
     assert(fs_strategy->drv);
@@ -82,12 +93,12 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     fuse_req_wait(req);
  
     printf("!! Processed FUSE_INIT \n");
-    printf("!! Major: %d, minor: %d, max_pages: %d\n", out_args->major, out_args->minor, out_args->max_pages);
+    printf("!! Major: %d, minor: %d, max_pages: %d, error: %d\n",
+        out_args->major, out_args->minor, out_args->max_pages, req->out_header.error);
 
     delete out_args;
     delete in_args;
     delete req;
-
 
     // TODO: Save a reference to the virtio::fs drivers instance above
     //mp->m_data = virtiofs;
