@@ -152,13 +152,37 @@ static int virtiofs_open(struct file *fp)
         // Do no allow opening files to write
         return (EROFS);
     }
-    //print("[virtiofs] virtiofs_open called for inode [%d] \n",
-    //      ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->inode_no);
-    return 0;
+    printf("[virtiofs] virtiofs_open called for inode [%d] \n",
+          ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->nodeid);
+
+    auto *out_args = new (std::nothrow) fuse_open_out();
+    auto *input_args = new (std::nothrow) fuse_open_in();
+    input_args->flags = file_flags(fp);
+
+    struct vnode *vnode = file_dentry(fp)->d_vnode;
+    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
+    auto *req = create_fuse_request(FUSE_OPEN, inode->nodeid, input_args, sizeof(*input_args), out_args, sizeof(*out_args));
+
+    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    assert(fs_strategy->drv);
+
+    fs_strategy->make_request(fs_strategy->drv, req);
+    fuse_req_wait(req);
+
+    auto error = -req->out_header.error;
+    auto *file_data = new virtiofs_file_data();
+    file_data->file_handle = out_args->fh;
+    fp->f_data = file_data;
+
+    delete req;
+    delete input_args;
+    delete out_args;
+
+    return error;
 }
 
 static int virtiofs_close(struct vnode *vp, struct file *fp) {
-    //print("[virtiofs] virtiofs_close called\n");
+    printf("[virtiofs] virtiofs_close called\n");
     // Nothing to do really...
     return 0;
 }
