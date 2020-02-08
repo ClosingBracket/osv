@@ -107,14 +107,14 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 
     if (!error) {
         if (vget(vnode->v_mount, out_args->nodeid, &vp)) { //TODO: Will it ever work? Revisit
-            printf("[virtiofs] rofs_lookup found vp in cache!\n");
+            printf("[virtiofs] virtiofs_lookup found vp in cache!\n");
             *vpp = vp;
             return 0;
         }
 
         auto *inode = new virtiofs_inode();
         inode->nodeid = out_args->nodeid;
-        printf("[virtiofs] rofs_lookup found inode: %d for %s!\n", inode->nodeid, name);
+        printf("[virtiofs] virtiofs_lookup found inode: %d for %s!\n", inode->nodeid, name);
         memcpy(&inode->attr, &out_args->attr, sizeof(out_args->attr));
 
         virtiofs_set_vnode(vp, inode);
@@ -156,7 +156,7 @@ static int virtiofs_open(struct file *fp)
     auto *out_args = new (std::nothrow) fuse_open_out();
     auto *input_args = new (std::nothrow) fuse_open_in();
     //memset(input_args, 0, sizeof(*input_args));
-    input_args->flags = file_flags(fp);
+    input_args->flags = 0;//file_flags(fp) | O_RDONLY;
 
     struct vnode *vnode = file_dentry(fp)->d_vnode;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
@@ -243,19 +243,22 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
 
     // Total read amount is what they requested, or what is left
     uint64_t read_amt = std::min<uint64_t>(inode->attr.size - uio->uio_offset, uio->uio_resid);
-    size_t buf_size = std::min<size_t>(8192,read_amt);
-    void *buf = malloc(buf_size);
+    //size_t buf_size = 2 * 4096;
+    //void *buf = malloc(buf_size);
+    void *buf = malloc(read_amt);
 
     auto *input_args = new (std::nothrow) fuse_read_in();
     auto *file_data = reinterpret_cast<virtiofs_file_data*>(fp->f_data);
     input_args->fh = file_data->file_handle;
     input_args->offset = uio->uio_offset; 
     input_args->size = read_amt;
+    input_args->flags = ioflag;
+    input_args->lock_owner = 0;
 
     printf("[virtiofs] virtiofs_read [%d], inode: %d, at %d of %d bytes with handle: %ld\n",
           sched::thread::current()->id(), inode->nodeid, uio->uio_offset, read_amt, file_data->file_handle);
  
-    auto *req = create_fuse_request(FUSE_READ, inode->nodeid, input_args, sizeof(*input_args), buf, buf_size);
+    auto *req = create_fuse_request(FUSE_READ, inode->nodeid, input_args, sizeof(*input_args), buf, read_amt);
 
     auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
     assert(fs_strategy->drv);
@@ -327,7 +330,7 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
 {
-    printf("[virtiofs] virtiofs_getattr called\n");
+    //printf("[virtiofs] virtiofs_getattr called\n"); -> Check why called so often
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
     attr->va_mode = 0555;
@@ -340,7 +343,7 @@ static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
         attr->va_type = VLNK;
     }
 
-    //attr->va_nodeid = vnode->v_ino;
+    //attr->va_nodeid = vnode->v_ino; TODO
     attr->va_size = inode->attr.size;
 
     return 0;
