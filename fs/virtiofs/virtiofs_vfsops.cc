@@ -31,7 +31,7 @@ struct vfsops virtiofs_vfsops = {
 
 std::atomic<uint64_t> fuse_unique_id(1);
 
-int send_and_receive_request(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
+int fuse_req_send_and_receive_reply(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
         void *input_args_data, size_t input_args_size, void *output_args_data, size_t output_args_size)
 {
     auto *req = new (std::nothrow) fuse_request();
@@ -104,7 +104,7 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data) {
     auto *out_args = new(std::nothrow) fuse_init_out();
 
     auto *strategy = reinterpret_cast<fuse_strategy *>(device->private_data);
-    error = send_and_receive_request(strategy, FUSE_INIT, FUSE_ROOT_ID,
+    error = fuse_req_send_and_receive_reply(strategy, FUSE_INIT, FUSE_ROOT_ID,
             in_args, sizeof(*in_args), out_args, sizeof(*out_args));
 
     if (!error) {

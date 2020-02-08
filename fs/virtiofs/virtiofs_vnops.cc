@@ -67,7 +67,7 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     strcpy(input, name);
 
     auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    int error = send_and_receive_request(strategy, FUSE_LOOKUP, inode->nodeid,
+    int error = fuse_req_send_and_receive_reply(strategy, FUSE_LOOKUP, inode->nodeid,
             input, strlen(name) + 1, out_args, sizeof(*out_args));
 
     if (!error) {
@@ -110,7 +110,7 @@ static int virtiofs_open(struct file *fp)
     input_args->flags = O_RDONLY;
 
     auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    int error = send_and_receive_request(strategy, FUSE_OPEN, inode->nodeid,
+    int error = fuse_req_send_and_receive_reply(strategy, FUSE_OPEN, inode->nodeid,
             input_args, sizeof(*input_args), out_args, sizeof(*out_args));
 
     if (!error) {
@@ -136,7 +136,7 @@ static int virtiofs_close(struct vnode *vnode, struct file *fp)
     input_args->fh = file_data->file_handle;
 
     auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    auto error = send_and_receive_request(strategy, FUSE_RELEASE, inode->nodeid,
+    auto error = fuse_req_send_and_receive_reply(strategy, FUSE_RELEASE, inode->nodeid,
             input_args, sizeof(*input_args), nullptr, 0);
 
     if (!error) {
@@ -159,8 +159,8 @@ static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
     auto *link_path = new (std::nothrow) char[PATH_MAX];
 
     auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    int error = send_and_receive_request(strategy, FUSE_READLINK, inode->nodeid,
-                                         nullptr, 0, link_path, PATH_MAX);
+    int error = fuse_req_send_and_receive_reply(strategy, FUSE_READLINK, inode->nodeid,
+            nullptr, 0, link_path, PATH_MAX);
 
     int ret = 0;
     if (!error) {
@@ -176,9 +176,8 @@ static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
     return ret;
 }
 
-//
-// This function reads as much data as requested per uio in single read from the disk but
-// the data does not get retained for subsequent reads
+//TODO: Optimize it to reduce number of exits to host (each fuse_req_send_and_receive_reply())
+// by reading eagerly "ahead/around" just like ROFS does and caching it
 static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, int ioflag)
 {
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
@@ -197,11 +196,10 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
     input_args->flags = ioflag;
     input_args->lock_owner = 0;
 
-    virtiofs_debug("inode %d, reading %d bytes at offset %d\n",
-          inode->nodeid, read_amt, uio->uio_offset);
+    virtiofs_debug("inode %d, reading %d bytes at offset %d\n", inode->nodeid, read_amt, uio->uio_offset);
 
     auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    auto error = send_and_receive_request(strategy, FUSE_READ, inode->nodeid,
+    auto error = fuse_req_send_and_receive_reply(strategy, FUSE_READ, inode->nodeid,
             input_args, sizeof(*input_args), buf, read_amt);
 
     int ret = 0;
@@ -226,10 +224,9 @@ static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent 
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
 {
-    //virtiofs_debug("getattr called\n"); -> Check why called so often
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
-    attr->va_mode = 0555;
+    attr->va_mode = 0555; //Is it really correct?
 
     if (S_ISDIR(inode->attr.mode)) {
         attr->va_type = VDIR;
@@ -239,7 +236,7 @@ static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
         attr->va_type = VLNK;
     }
 
-    //attr->va_nodeid = vnode->v_ino; TODO
+    attr->va_nodeid = vnode->v_ino;
     attr->va_size = inode->attr.size;
 
     return 0;
@@ -282,7 +279,7 @@ struct vnops virtiofs_vnops = {
     virtiofs_inactive,  /* inactive */
     virtiofs_truncate,  /* truncate - returns error when called*/
     virtiofs_link,      /* link - returns error when called*/
-    virtiofs_arc,       /* arc */ //TODO: Implement to allow memory re-use when mapping files
+    virtiofs_arc,       /* arc */ //TODO: Implement to allow memory re-use when mapping files, investigate using virtio-fs DAX
     virtiofs_fallocate, /* fallocate - returns error when called*/
     virtiofs_readlink,  /* read link */
     virtiofs_symlink    /* symbolic link - returns error when called*/

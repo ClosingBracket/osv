@@ -32,7 +32,7 @@ struct fuse_strategy {
     int (*make_request)(void*, struct fuse_request*);
 };
 
-int send_and_receive_request(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
+int fuse_req_send_and_receive_reply(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
         void *input_args_data, size_t input_args_size,
         void *output_args_data, size_t output_args_size);
 
