@@ -154,8 +154,26 @@ static int virtiofs_close(struct vnode *vnode, struct file *fp)
 
 static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
 {
-    //TODO Implement
-    return EPERM;
+    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
+
+    auto *link_path = new (std::nothrow) char[PATH_MAX];
+
+    auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    int error = send_and_receive_request(strategy, FUSE_READLINK, inode->nodeid,
+                                         nullptr, 0, link_path, PATH_MAX);
+
+    int ret = 0;
+    if (!error) {
+        virtiofs_debug("inode %d, read symlink [%s]\n", inode->nodeid, link_path);
+        ret = uiomove(link_path, strlen(link_path), uio);
+    } else {
+        kprintf("[virtiofs] Error reading data\n");
+        ret = error;
+    }
+
+    delete link_path;
+
+    return ret;
 }
 
 //
