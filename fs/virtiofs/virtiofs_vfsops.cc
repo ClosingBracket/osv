@@ -31,7 +31,7 @@ struct vfsops virtiofs_vfsops = {
 
 std::atomic<uint64_t> fuse_unique_id(1);
 
-fuse_request *create_fuse_request(uint32_t opcode, uint64_t nodeid,
+int send_and_receive_request(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
         void *input_args_data, size_t input_args_size, void *output_args_data, size_t output_args_size)
 {
     auto *req = new (std::nothrow) fuse_request();
@@ -50,7 +50,14 @@ fuse_request *create_fuse_request(uint32_t opcode, uint64_t nodeid,
     req->output_args_data = output_args_data;
     req->output_args_size = output_args_size;
 
-    return req;
+    assert(strategy->drv);
+    strategy->make_request(strategy->drv, req);
+    fuse_req_wait(req);
+
+    int error = -req->out_header.error;
+    delete req;
+
+    return error;
 }
 
 void virtiofs_set_vnode(struct vnode *vnode, struct virtiofs_inode *inode)
@@ -76,8 +83,7 @@ void virtiofs_set_vnode(struct vnode *vnode, struct virtiofs_inode *inode)
 }
 
 static int
-virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
-{
+virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data) {
     struct device *device;
     int error = -1;
 
@@ -89,44 +95,38 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 
     mp->m_dev = device;
 
-    auto *in_args = new (std::nothrow) fuse_init_in();
+    auto *in_args = new(std::nothrow) fuse_init_in();
     in_args->major = FUSE_KERNEL_VERSION;
     in_args->minor = FUSE_KERNEL_MINOR_VERSION;
     in_args->max_readahead = PAGE_SIZE;
     in_args->flags = 0; //TODO Investigate which flags to set
 
-    auto *out_args = new (std::nothrow) fuse_init_out();
-    auto *req = create_fuse_request(FUSE_INIT, FUSE_ROOT_ID, in_args, sizeof(*in_args), out_args, sizeof(*out_args));
+    auto *out_args = new(std::nothrow) fuse_init_out();
 
-    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(device->private_data);
-    assert(fs_strategy->drv);
+    auto *strategy = reinterpret_cast<fuse_strategy *>(device->private_data);
+    error = send_and_receive_request(strategy, FUSE_INIT, FUSE_ROOT_ID,
+            in_args, sizeof(*in_args), out_args, sizeof(*out_args));
 
-    fs_strategy->make_request(fs_strategy->drv, req);
-    fuse_req_wait(req);
+    if (!error) {
+        virtiofs_debug("Initialized fuse filesystem with version major: %d, minor: %d\n",
+                       out_args->major, out_args->minor);
 
-    error = -req->out_header.error;
-    if (error) {
+        auto *root_node = new virtiofs_inode();
+        root_node->nodeid = FUSE_ROOT_ID;
+        root_node->attr.mode = S_IFDIR;
+
+        virtiofs_set_vnode(mp->m_root->d_vnode, root_node);
+
+        mp->m_data = strategy;
+        mp->m_dev = device;
+    } else {
         kprintf("[virtiofs] Failed to initialized fuse filesystem!\n");
-        return error;
     }
-
-    virtiofs_debug("Initialized fuse filesystem with version major: %d, minor: %d\n",
-            out_args->major, out_args->minor, out_args->max_pages, req->out_header.error);
 
     delete out_args;
     delete in_args;
-    delete req;
 
-    auto *root_node = new virtiofs_inode();
-    root_node->nodeid = FUSE_ROOT_ID;
-    root_node->attr.mode = S_IFDIR;
-
-    virtiofs_set_vnode(mp->m_root->d_vnode, root_node);
-
-    mp->m_data = fs_strategy;
-    mp->m_dev = device;
-
-    return 0;
+    return error;
 }
 
 static int virtiofs_sync(struct mount *mp) {

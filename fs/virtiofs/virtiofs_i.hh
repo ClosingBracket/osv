@@ -27,14 +27,15 @@ struct fuse_request
     waitqueue req_wait;
 };
 
-fuse_request *create_fuse_request(uint32_t opcode, uint64_t nodeid,
-                                  void *input_args_data, size_t input_args_size,
-                                  void *output_args_data, size_t output_args_size);
-
-void fuse_req_wait(struct fuse_request* req);
-
 struct fuse_strategy {
     void *drv;
     int (*make_request)(void*, struct fuse_request*);
 };
+
+int send_and_receive_request(fuse_strategy* strategy, uint32_t opcode, uint64_t nodeid,
+        void *input_args_data, size_t input_args_size,
+        void *output_args_data, size_t output_args_size);
+
+void fuse_req_wait(struct fuse_request* req);
+
 #endif

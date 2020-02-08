@@ -48,9 +48,6 @@ int virtiofs_init(void) {
     return 0;
 }
 
-//
-// This functions looks up directory entry based on the directory information stored in memory
-// under virtiofs->dir_entries table
 static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 {
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
@@ -68,15 +65,10 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     auto *out_args = new (std::nothrow) fuse_entry_out();
     auto input = new char[strlen(name) + 1];
     strcpy(input, name);
-    auto *req = create_fuse_request(FUSE_LOOKUP, inode->nodeid, input, strlen(name) + 1, out_args, sizeof(*out_args));
 
-    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    assert(fs_strategy->drv);
-
-    fs_strategy->make_request(fs_strategy->drv, req);
-    fuse_req_wait(req);
-
-    int error = -req->out_header.error;
+    auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    int error = send_and_receive_request(strategy, FUSE_LOOKUP, inode->nodeid,
+            input, strlen(name) + 1, out_args, sizeof(*out_args));
 
     if (!error) {
         if (vget(vnode->v_mount, out_args->nodeid, &vp)) { //TODO: Will it ever work? Revisit
@@ -92,9 +84,11 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 
         virtiofs_set_vnode(vp, new_inode);
         *vpp = vp;
+    } else {
+        kprintf("[virtiofs] inode:%d, lookup failed to find %s\n", inode->nodeid, name);
+        //TODO Implement proper error handling by sending FUSE_FORGET
     }
 
-    delete req;
     delete input;
     delete out_args;
 
@@ -108,59 +102,52 @@ static int virtiofs_open(struct file *fp)
         return (EROFS);
     }
 
-    auto *out_args = new (std::nothrow) fuse_open_out();
-    auto *input_args = new (std::nothrow) fuse_open_in();
-    //memset(input_args, 0, sizeof(*input_args));
-    input_args->flags = 0;//file_flags(fp) | O_RDONLY;
-
     struct vnode *vnode = file_dentry(fp)->d_vnode;
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-    auto *req = create_fuse_request(FUSE_OPEN, inode->nodeid, input_args, sizeof(*input_args), out_args, sizeof(*out_args));
 
-    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    assert(fs_strategy->drv);
+    auto *out_args = new (std::nothrow) fuse_open_out();
+    auto *input_args = new (std::nothrow) fuse_open_in();
+    input_args->flags = O_RDONLY;
 
-    fs_strategy->make_request(fs_strategy->drv, req);
-    fuse_req_wait(req);
+    auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    int error = send_and_receive_request(strategy, FUSE_OPEN, inode->nodeid,
+            input_args, sizeof(*input_args), out_args, sizeof(*out_args));
 
-    auto error = -req->out_header.error;
-    auto *file_data = new virtiofs_file_data();
-    file_data->file_handle = out_args->fh;
-    fp->f_data = file_data;
+    if (!error) {
+        virtiofs_debug("inode %d, opened\n", inode->nodeid);
 
-    virtiofs_debug("inode %d, opened\n", inode->nodeid);
+        auto *file_data = new virtiofs_file_data();
+        file_data->file_handle = out_args->fh;
+        fp->f_data = file_data;
+    }
 
-    delete req;
     delete input_args;
     delete out_args;
 
     return error;
 }
 
-static int virtiofs_close(struct vnode *vp, struct file *fp) {
+static int virtiofs_close(struct vnode *vnode, struct file *fp)
+{
+    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
     auto *input_args = new (std::nothrow) fuse_release_in();
     auto *file_data = reinterpret_cast<virtiofs_file_data*>(fp->f_data);
     input_args->fh = file_data->file_handle;
 
-    struct virtiofs_inode *inode = (struct virtiofs_inode *) vp->v_data;
-    auto *req = create_fuse_request(FUSE_RELEASE, inode->nodeid, input_args, sizeof(*input_args), nullptr, 0);
+    auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    auto error = send_and_receive_request(strategy, FUSE_RELEASE, inode->nodeid,
+            input_args, sizeof(*input_args), nullptr, 0);
 
-    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vp->v_mount->m_data);
-    assert(fs_strategy->drv);
+    if (!error) {
+        fp->f_data = nullptr;
+        delete file_data;
+        virtiofs_debug("inode %d, closed\n", inode->nodeid);
+    }
 
-    fs_strategy->make_request(fs_strategy->drv, req);
-    fuse_req_wait(req);
+    //TODO: Investigate if we should send FUSE_FORGET once all handles to the file closed on our side
 
-    virtiofs_debug("inode %d, closed\n", inode->nodeid);
-
-    auto error = -req->out_header.error;
-
-    delete req;
     delete input_args;
-    delete file_data;
-
-    fp->f_data = nullptr;
 
     return error;
 }
@@ -194,28 +181,23 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
 
     virtiofs_debug("inode %d, reading %d bytes at offset %d\n",
           inode->nodeid, read_amt, uio->uio_offset);
- 
-    auto *req = create_fuse_request(FUSE_READ, inode->nodeid, input_args, sizeof(*input_args), buf, read_amt);
 
-    auto *fs_strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
-    assert(fs_strategy->drv);
+    auto *strategy = reinterpret_cast<fuse_strategy*>(vnode->v_mount->m_data);
+    auto error = send_and_receive_request(strategy, FUSE_READ, inode->nodeid,
+            input_args, sizeof(*input_args), buf, read_amt);
 
-    fs_strategy->make_request(fs_strategy->drv, req);
-    fuse_req_wait(req);
-
-    auto error = -req->out_header.error;
-
-    if (error) {
+    int ret = 0;
+    if (!error) {
+        ret = uiomove(buf, read_amt, uio);
+    } else {
         kprintf("[virtiofs] Error reading data\n");
-        free(buf);
-        return error;
+        ret = error;
     }
 
-    auto rv = uiomove(buf, read_amt, uio);
-
     free(buf);
-    free(req);
-    return rv;
+    free(input_args);
+
+    return ret;
 }
 //
 static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent *dir)
