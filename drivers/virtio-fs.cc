@@ -75,7 +75,7 @@ static void fuse_req_enqueue_output(vring* queue, struct fuse_request* req)
 int fs::_instance = 0;
 
 static struct devops fs_devops {
-    no_open, //TODO: This possibly in future could point to a function that does FUSE_INIT
+    no_open,
     no_close,
     no_read,
     no_write,
@@ -104,7 +104,7 @@ bool fs::ack_irq()
 }
 
 fs::fs(virtio_device& virtio_dev)
-    : virtio_driver(virtio_dev), _ro(false)
+    : virtio_driver(virtio_dev)
 {
     _driver_name = "virtio-fs";
     _id = _instance++;
@@ -115,7 +115,7 @@ fs::fs(virtio_device& virtio_dev)
     read_config();
 
     if (_config.num_queues < 1) {
-        printf("--> Expected at least one request queue -> baling out!\n");
+        virtio_i("Expected at least one request queue -> baling out!\n");
         return;
     }
 
@@ -159,15 +159,12 @@ fs::fs(virtio_device& virtio_dev)
     std::string dev_name("virtiofs");
     dev_name += std::to_string(_disk_idx++);
 
-    struct device *dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Is it really 
-    printf("-> Created device with name: [%s]\n", dev_name.c_str());
+    struct device *dev = device_create(&fs_driver, dev_name.c_str(), D_BLK); //TODO Should it be really D_BLK?
     struct fuse_strategy *strategy = reinterpret_cast<struct fuse_strategy*>(dev->private_data);
     strategy->drv = this;
     strategy->make_request = fuse_make_request;
-    //dev->size = prv->drv->size(); --> TODO: Add this somewhere in the mount routine
-    //read_partition_table(dev);
 
-    //debugf("virtio-fs: Add blk device instances %d as %s, devsize=%lld\n", _id, dev_name.c_str(), dev->size);
+    debugf("virtio-fs: Add device instance %d as [%s]\n", _id, dev_name.c_str());
 }
 
 fs::~fs()
@@ -179,9 +176,8 @@ fs::~fs()
 void fs::read_config()
 {
     virtio_conf_read(0, &(_config.tag[0]), sizeof(_config.tag));
-    printf("-> virtio-fs: tag [%s]\n", _config.tag);
     virtio_conf_read(offsetof(fs_config,num_queues), &(_config.num_queues), sizeof(_config.num_queues));
-    printf("-> virtio-fs: num_queues [%d]\n", _config.num_queues);
+    debugf("virtio-fs: Detected device with tag: [%s] and num_queues: %d\n", _config.tag, _config.num_queues);
 }
 
 void fs::req_done()
@@ -191,7 +187,6 @@ void fs::req_done()
 
     while (1) {
         virtio_driver::wait_for_queue(queue, &vring::used_ring_not_empty);
-        //trace_virtio_blk_wake();
 
         u32 len;
         while((req = static_cast<fs_req*>(queue->get_buf_elem(&len))) != nullptr) {
@@ -214,7 +209,6 @@ int fs::make_request(struct fuse_request* req)
 
         auto* queue = get_virt_queue(VQ_REQUEST);
 
-        // LOOK at fs/fuse/virtio_fs.c:virtio_fs_enqueue_req()
         queue->init_sg();
 
         fuse_req_enqueue_input(queue, req);
@@ -226,20 +220,6 @@ int fs::make_request(struct fuse_request* req)
 
         return 0;
     }
-}
-
-u32 fs::get_driver_features()
-{
-    return virtio_driver::get_driver_features();
-    /*
-    auto base = virtio_driver::get_driver_features();
-    return (base | ( 1 << VIRTIO_BLK_F_SIZE_MAX)
-                 | ( 1 << VIRTIO_BLK_F_SEG_MAX)
-                 | ( 1 << VIRTIO_BLK_F_GEOMETRY)
-                 | ( 1 << VIRTIO_BLK_F_RO)
-                 | ( 1 << VIRTIO_BLK_F_BLK_SIZE)
-                 | ( 1 << VIRTIO_BLK_F_CONFIG_WCE)
-                 | ( 1 << VIRTIO_BLK_F_WCE));*/
 }
 
 hw_driver* fs::probe(hw_device* dev)

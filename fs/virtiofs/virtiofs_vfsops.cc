@@ -93,17 +93,7 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     in_args->major = FUSE_KERNEL_VERSION;
     in_args->minor = FUSE_KERNEL_MINOR_VERSION;
     in_args->max_readahead = PAGE_SIZE;
-    in_args->flags = 0;
-   /* ia->in.flags |=
-		FUSE_ASYNC_READ | FUSE_POSIX_LOCKS | FUSE_ATOMIC_O_TRUNC |
-		FUSE_EXPORT_SUPPORT | FUSE_BIG_WRITES | FUSE_DONT_MASK |
-		FUSE_SPLICE_WRITE | FUSE_SPLICE_MOVE | FUSE_SPLICE_READ |
-		FUSE_FLOCK_LOCKS | FUSE_HAS_IOCTL_DIR | FUSE_AUTO_INVAL_DATA |
-		FUSE_DO_READDIRPLUS | FUSE_READDIRPLUS_AUTO | FUSE_ASYNC_DIO |
-		FUSE_WRITEBACK_CACHE | FUSE_NO_OPEN_SUPPORT |
-		FUSE_PARALLEL_DIROPS | FUSE_HANDLE_KILLPRIV | FUSE_POSIX_ACL |
-		FUSE_ABORT_ERROR | FUSE_MAX_PAGES | FUSE_CACHE_SYMLINKS |
-		FUSE_NO_OPENDIR_SUPPORT | FUSE_EXPLICIT_INVAL_DATA;*/
+    in_args->flags = 0; //TODO Investigate which flags to set
 
     auto *out_args = new (std::nothrow) fuse_init_out();
     auto *req = create_fuse_request(FUSE_INIT, FUSE_ROOT_ID, in_args, sizeof(*in_args), out_args, sizeof(*out_args));
@@ -113,10 +103,15 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
 
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
- 
-    printf("!! Processed FUSE_INIT \n");
-    printf("!! Major: %d, minor: %d, max_pages: %d, error: %d\n",
-        out_args->major, out_args->minor, out_args->max_pages, req->out_header.error);
+
+    error = -req->out_header.error;
+    if (error) {
+        kprintf("[virtiofs] Failed to initialized fuse filesystem!\n");
+        return error;
+    }
+
+    virtiofs_debug("Initialized fuse filesystem with version major: %d, minor: %d\n",
+            out_args->major, out_args->minor, out_args->max_pages, req->out_header.error);
 
     delete out_args;
     delete in_args;
@@ -131,8 +126,6 @@ virtiofs_mount(struct mount *mp, const char *dev, int flags, const void *data)
     mp->m_data = fs_strategy;
     mp->m_dev = device;
 
-    print("[virtiofs] returning from mount\n");
-
     return 0;
 }
 
@@ -142,8 +135,8 @@ static int virtiofs_sync(struct mount *mp) {
 
 static int virtiofs_statfs(struct mount *mp, struct statfs *statp)
 {
+    //TODO
     //struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
-    //struct virtiofs_super_block *sb = virtiofs->sb;
 
     //statp->f_bsize = sb->block_size;
 
@@ -156,7 +149,7 @@ static int virtiofs_statfs(struct mount *mp, struct statfs *statp)
     statp->f_ffree = 0;
     //statp->f_files = sb->inodes_count; //Needs to be inode count
 
-    statp->f_namelen = 0; //FIXME - unlimited ROFS_FILENAME_MAXLEN;
+    statp->f_namelen = 0; //FIXME
 
     return 0;
 }
@@ -164,13 +157,6 @@ static int virtiofs_statfs(struct mount *mp, struct statfs *statp)
 static int
 virtiofs_unmount(struct mount *mp, int flags)
 {
-    //struct virtiofs_info *virtiofs = (struct virtiofs_info *) mp->m_data;
-    //struct virtiofs_super_block *sb = virtiofs->sb;
     struct device *dev = mp->m_dev;
-
-    int error = device_close(dev);
-    //delete sb;
-    //delete virtiofs;
-
-    return error;
+    return device_close(dev);
 }

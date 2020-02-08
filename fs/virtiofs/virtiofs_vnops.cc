@@ -44,33 +44,6 @@
     if (uio->uio_offset >= (off_t)vnode->v_size) \
         return 0;
 
-/*
-static int
-virtiofs_read_blocks(struct device *device, uint64_t starting_block, uint64_t blocks_count, void *buf)
-{
-    struct bio *bio = alloc_bio();
-    if (!bio)
-        return ENOMEM;
-
-    bio->bio_cmd = BIO_READ;
-    bio->bio_dev = device;
-    bio->bio_data = buf;
-    bio->bio_offset = starting_block << 9;
-    bio->bio_bcount = blocks_count * BSIZE;
-
-    bio->bio_dev->driver->devops->strategy(bio);
-    int error = bio_wait(bio);
-
-    destroy_bio(bio);
-
-#if defined(ROFS_DIAGNOSTICS_ENABLED)
-    virtiofs_block_read_count += blocks_count;
-#endif
-    ROFS_STOPWATCH_END(virtiofs_block_read_ms)
-
-    return error;
-}*/
-
 int virtiofs_init(void) {
     return 0;
 }
@@ -88,7 +61,7 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     }
 
     if (!S_ISDIR(inode->attr.mode)) {
-        print("[virtiofs] ABORTED lookup up %s at inode %d because not a directory\n", name, inode->inode_no);
+        kprintf("[virtiofs] inode:%d, ABORTED lookup of %s because not a directory\n", inode->nodeid, name);
         return ENOTDIR;
     }
 
@@ -107,17 +80,17 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
 
     if (!error) {
         if (vget(vnode->v_mount, out_args->nodeid, &vp)) { //TODO: Will it ever work? Revisit
-            printf("[virtiofs] virtiofs_lookup found vp in cache!\n");
+            virtiofs_debug("lookup found vp in cache!\n");
             *vpp = vp;
             return 0;
         }
 
-        auto *inode = new virtiofs_inode();
-        inode->nodeid = out_args->nodeid;
-        printf("[virtiofs] virtiofs_lookup found inode: %d for %s!\n", inode->nodeid, name);
-        memcpy(&inode->attr, &out_args->attr, sizeof(out_args->attr));
+        auto *new_inode = new virtiofs_inode();
+        new_inode->nodeid = out_args->nodeid;
+        virtiofs_debug("inode %d, lookup found inode %d for %s!\n", inode->nodeid, new_inode->nodeid, name);
+        memcpy(&new_inode->attr, &out_args->attr, sizeof(out_args->attr));
 
-        virtiofs_set_vnode(vp, inode);
+        virtiofs_set_vnode(vp, new_inode);
         *vpp = vp;
     }
 
@@ -126,24 +99,6 @@ static int virtiofs_lookup(struct vnode *vnode, char *name, struct vnode **vpp)
     delete out_args;
 
     return error;
-    /*
-            if (vget(vnode->v_mount, inode_no, &vp)) { //TODO: Will it ever work? Revisit
-                print("[virtiofs] found vp in cache!\n");
-                *vpp = vp;
-                return 0;
-            }
-
-            struct virtiofs_inode *found_inode = virtiofs->inodes + (inode_no - 1); //Check if exists
-            virtiofs_set_vnode(vp, found_inode);
-
-            print("[virtiofs] found the directory entry [%s] at at inode %d -> %d!\n", name, inode->inode_no,
-                  found_inode->inode_no);
-
-            *vpp = vp;
-            return 0;*/
-
-    //print("[virtiofs] FAILED to find up %s\n", name);
-    //return ENOENT;
 }
 
 static int virtiofs_open(struct file *fp)
@@ -173,8 +128,7 @@ static int virtiofs_open(struct file *fp)
     file_data->file_handle = out_args->fh;
     fp->f_data = file_data;
 
-    printf("[virtiofs] virtiofs_open called for inode [%d] and got handle: [%ld]\n",
-          ((struct virtiofs_inode *) fp->f_dentry.get()->d_vnode->v_data)->nodeid, file_data->file_handle);
+    virtiofs_debug("inode %d, opened\n", inode->nodeid);
 
     delete req;
     delete input_args;
@@ -184,7 +138,6 @@ static int virtiofs_open(struct file *fp)
 }
 
 static int virtiofs_close(struct vnode *vp, struct file *fp) {
-    printf("[virtiofs] virtiofs_close called\n");
 
     auto *input_args = new (std::nothrow) fuse_release_in();
     auto *file_data = reinterpret_cast<virtiofs_file_data*>(fp->f_data);
@@ -199,6 +152,8 @@ static int virtiofs_close(struct vnode *vp, struct file *fp) {
     fs_strategy->make_request(fs_strategy->drv, req);
     fuse_req_wait(req);
 
+    virtiofs_debug("inode %d, closed\n", inode->nodeid);
+
     auto error = -req->out_header.error;
 
     delete req;
@@ -210,26 +165,10 @@ static int virtiofs_close(struct vnode *vp, struct file *fp) {
     return error;
 }
 
-//
-// This function reads symbolic link information from directory structure in memory
-// under virtiofs->symlinks table
 static int virtiofs_readlink(struct vnode *vnode, struct uio *uio)
 {
-    /*
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
-    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-
-    if (!S_ISLNK(inode->mode)) {
-        return EINVAL; //This node is not a symbolic link
-    }
-
-    assert(inode->data_offset >= 0 && inode->data_offset < virtiofs->sb->symlinks_count);
-
-    char *link_path = virtiofs->symlinks[inode->data_offset];
-
-    print("[virtiofs] virtiofs_readlink returned link [%s]\n", link_path);
-    return uiomove(link_path, strlen(link_path), uio);*/
-    return 0;
+    //TODO Implement
+    return EPERM;
 }
 
 //
@@ -243,8 +182,6 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
 
     // Total read amount is what they requested, or what is left
     uint64_t read_amt = std::min<uint64_t>(inode->attr.size - uio->uio_offset, uio->uio_resid);
-    //size_t buf_size = 2 * 4096;
-    //void *buf = malloc(buf_size);
     void *buf = malloc(read_amt);
 
     auto *input_args = new (std::nothrow) fuse_read_in();
@@ -255,8 +192,8 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
     input_args->flags = ioflag;
     input_args->lock_owner = 0;
 
-    printf("[virtiofs] virtiofs_read [%d], inode: %d, at %d of %d bytes with handle: %ld\n",
-          sched::thread::current()->id(), inode->nodeid, uio->uio_offset, read_amt, file_data->file_handle);
+    virtiofs_debug("inode %d, reading %d bytes at offset %d\n",
+          inode->nodeid, read_amt, uio->uio_offset);
  
     auto *req = create_fuse_request(FUSE_READ, inode->nodeid, input_args, sizeof(*input_args), buf, read_amt);
 
@@ -269,7 +206,7 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
     auto error = -req->out_header.error;
 
     if (error) {
-        kprintf("[virtiofs_read] Error reading data\n");
+        kprintf("[virtiofs] Error reading data\n");
         free(buf);
         return error;
     }
@@ -281,56 +218,15 @@ static int virtiofs_read(struct vnode *vnode, struct file *fp, struct uio *uio, 
     return rv;
 }
 //
-// This functions reads directory information (dentries) based on information in memory
-// under virtiofs->dir_entries table
 static int virtiofs_readdir(struct vnode *vnode, struct file *fp, struct dirent *dir)
 {
-    /*
-    struct virtiofs_info *virtiofs = (struct virtiofs_info *) vnode->v_mount->m_data;
-    struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
-
-    uint64_t index = 0;
-
-    if (!S_ISDIR(inode->mode)) {
-        return ENOTDIR;
-    }
-
-    if (fp->f_offset == 0) {
-        dir->d_type = DT_DIR;
-        strlcpy((char *) &dir->d_name, ".", sizeof(dir->d_name));
-    } else if (fp->f_offset == 1) {
-        dir->d_type = DT_DIR;
-        strlcpy((char *) &dir->d_name, "..", sizeof(dir->d_name));
-    } else {
-        index = fp->f_offset - 2;
-        if (index >= inode->dir_children_count) {
-            return ENOENT;
-        }
-
-        dir->d_fileno = fp->f_offset;
-
-        // Set the name
-        struct virtiofs_dir_entry *directory_entry = virtiofs->dir_entries + (inode->data_offset + index);
-        strlcpy((char *) &dir->d_name, directory_entry->filename, sizeof(dir->d_name));
-        dir->d_ino = directory_entry->inode_no;
-
-        struct virtiofs_inode *directory_entry_inode = virtiofs->inodes + (dir->d_ino - 1);
-        if (S_ISDIR(directory_entry_inode->mode))
-            dir->d_type = DT_DIR;
-        else if (S_ISLNK(directory_entry_inode->mode))
-            dir->d_type = DT_LNK;
-        else
-            dir->d_type = DT_REG;
-    }
-
-    fp->f_offset++;*/
-
-    return 0;
+    //TODO Implement
+    return EPERM;
 }
 
 static int virtiofs_getattr(struct vnode *vnode, struct vattr *attr)
 {
-    //printf("[virtiofs] virtiofs_getattr called\n"); -> Check why called so often
+    //virtiofs_debug("getattr called\n"); -> Check why called so often
     struct virtiofs_inode *inode = (struct virtiofs_inode *) vnode->v_data;
 
     attr->va_mode = 0555;

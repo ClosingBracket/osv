@@ -34,15 +34,10 @@ public:
     virtual std::string get_name() const { return _driver_name; }
     void read_config();
 
-    virtual u32 get_driver_features();
-
     int make_request(struct fuse_request*);
 
     void req_done();
     int64_t size();
-
-    void set_readonly() {_ro = true;}
-    bool is_readonly() {return _ro;}
 
     bool ack_irq();
 
@@ -61,7 +56,6 @@ private:
     //maintains the virtio instance number for multiple drives
     static int _instance;
     int _id;
-    bool _ro;
     // This mutex protects parallel make_request invocations
     mutex _lock;
 };
