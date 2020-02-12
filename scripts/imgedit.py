@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys, struct
 import subprocess
@@ -148,7 +148,7 @@ elif cmd == 'getargs':
     img = args[0]
     with nbd_file(img) as f:
         f.seek(args_offset)
-        print(read_cstr(f))
+        print((read_cstr(f)))
 elif cmd == 'setsize':
     img = args[0]
     size = int(args[1])
