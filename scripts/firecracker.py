@@ -152,14 +152,14 @@ def print_time(msg):
 def setup_tap_interface(mode, tap_interface_name, tap_ip=None, physical_nic=None, bridge_name=None):
     # Setup tun tap interface if does not exist
     # sudo ip link delete fc_tap0 - this deletes the tap device
-    tuntap_interfaces = subprocess.check_output(['ip', 'tuntap'])
+    tuntap_interfaces = subprocess.check_output(['ip', 'tuntap']).decode('utf-8')
     if tuntap_interfaces.find(tap_interface_name) < 0:
         print("The tap interface %s not found -> needs to set it up!" % tap_interface_name)
         dirname = os.path.dirname(os.path.abspath(__file__))
         setup_networking_script = os.path.join(dirname, 'setup_fc_networking.sh')
         # Check if the bridge exists if user specified it
         if mode == 'bridged' and bridge_name:
-            bridges = subprocess.check_output(['brctl', 'show'])
+            bridges = subprocess.check_output(['brctl', 'show']).decode('utf-8')
             if bridges.find(bridge_name) < 0:
                 print("The bridge %s does not exist per brctl. Please create one!" % bridge_name)
                 exit(-1)
@@ -233,7 +233,7 @@ def start_firecracker(firecracker_path, socket_path):
 def start_firecracker_with_no_api(firecracker_path, firecracker_config_json):
     #  Start firecracker process and pass configuration JSON as a file
     api_file = tempfile.NamedTemporaryFile(delete=False)
-    api_file.write(firecracker_config_json)
+    api_file.write(bytes(firecracker_config_json, 'utf-8'))
     stty_save()
     return subprocess.Popen([firecracker_path, "--no-api", "--config-file", api_file.name],
                            stdout=sys.stdout, stderr=subprocess.STDOUT), api_file.name

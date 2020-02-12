@@ -242,12 +242,8 @@ class SlidingUnpacker:
 
         return tuple(values)
 
-    def __nonzero__(self):
-        return self.offset < len(self.buffer)
-
-    # Python3
     def __bool__(self):
-        return self.__nonzero__()
+        return self.offset < len(self.buffer)
 
 class WritingPacker:
     def __init__(self, writer):
@@ -279,7 +275,7 @@ class WritingPacker:
         try:
             self.writer(struct.pack('%ds' % count, arg))
         except:
-            print(type(arg))
+            print((type(arg)))
             print(arg)
             raise
         self.offset += 2 + count
@@ -405,7 +401,7 @@ class TraceDumpReader(TraceDumpReaderBase) :
 
             backtrace = None
             if flags & 1:
-                backtrace = filter(None, unpacker.unpack('Q' * self.backtrace_len))
+                backtrace = [_f for _f in unpacker.unpack('Q' * self.backtrace_len) if _f]
 
             data = unpacker.unpack(tp.signature)
             unpacker.align_up(8)
@@ -414,7 +410,7 @@ class TraceDumpReader(TraceDumpReaderBase) :
             yield last_trace
 
     def traces(self):
-        iters = map(lambda data: self.oneTrace(data), self.trace_buffers)
+        iters = [self.oneTrace(data) for data in self.trace_buffers]
         return heapq.merge(*iters)
 
 
@@ -523,7 +519,7 @@ def read(buffer_view):
 
     while unpacker:
         tp_key, thread_ptr, thread_name, time, cpu = unpacker.unpack('QQ16sQI')
-        thread_name = thread_name.rstrip('\0')
+        thread_name = thread_name.rstrip(b'\0')
         tp = tracepoints[tp_key]
 
         backtrace = []
@@ -551,7 +547,7 @@ def write(traces, writer):
                     trace.time, trace.cpu)
 
         if trace.backtrace:
-            for frame in filter(None, trace.backtrace):
+            for frame in [_f for _f in trace.backtrace if _f]:
                 packer.pack('Q', frame)
         packer.pack('Q', 0)
 

@@ -77,7 +77,7 @@ def main():
         if hostname.startswith("->"):
             link = hostname[2:]
             out.write(link.encode())
-            out.write('\0')
+            out.write(b'\0')
         else:
             out.write(open(hostname, 'rb').read())
 

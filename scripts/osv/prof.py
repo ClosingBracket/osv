@@ -51,7 +51,7 @@ time_units = [
 ]
 
 def parse_time_as_nanos(text, default_unit='ns'):
-    for level, name in sorted(time_units, key=lambda (level, name): -len(name)):
+    for level, name in sorted(time_units, key=lambda level_name: -len(level_name[1])):
         if text.endswith(name):
             return float(text.rstrip(name)) * level
     for level, name in time_units:
@@ -60,7 +60,7 @@ def parse_time_as_nanos(text, default_unit='ns'):
     raise Exception('Unknown unit: ' + default_unit)
 
 def format_time(time, format="%.2f %s"):
-    for level, name in sorted(time_units, key=lambda (level, name): -level):
+    for level, name in sorted(time_units, key=lambda level_name1: -level_name1[0]):
         if time >= level:
             return format % (float(time) / level, name)
     return str(time)
@@ -119,7 +119,7 @@ def strip_garbage(backtrace):
 
 def get_hit_profile(traces, filter=None):
     for trace in traces:
-        if trace.backtrace and (not filter or filter(trace)):
+        if trace.backtrace and (not filter or list(filter(trace))):
             yield ProfSample(trace.time, trace.cpu, trace.thread, trace.backtrace)
 
 
@@ -239,7 +239,7 @@ class timed_trace_producer(object):
             return trace.TimedTrace(entry_trace, duration)
 
     def finish(self):
-        for sample in self.open_samples.itervalues():
+        for sample in self.open_samples.values():
             duration = self.last_time - sample.time
             yield trace.TimedTrace(sample, duration)
 
@@ -260,7 +260,7 @@ def get_timed_traces(traces, time_range=None):
 def get_duration_profile(traces, filter=None):
     for timed in get_timed_traces(traces):
         t = timed.trace
-        if (not filter or filter(t)) and t.backtrace:
+        if (not filter or list(filter(t))) and t.backtrace:
             yield ProfSample(t.time, t.cpu, t.thread, t.backtrace, resident_time=timed.duration)
 
 def get_idle_profile(traces):
@@ -275,7 +275,7 @@ def get_idle_profile(traces):
 
     def trim_samples(cpu, end_time):
         if cpu.idle:
-            for w in cpu.waits.values():
+            for w in list(cpu.waits.values()):
                 begin = max(w.time, cpu.idle.time)
                 yield ProfSample(begin, w.cpu, w.thread, w.backtrace, resident_time=end_time - begin)
 
@@ -295,7 +295,7 @@ def get_idle_profile(traces):
 
         last = t
 
-    for cpu in cpus.values():
+    for cpu in list(cpus.values()):
         for s in trim_samples(cpu, t.time):
             yield s
 
@@ -402,7 +402,7 @@ def print_profile(samples, symbol_resolver, caller_oriented=False,
     if not order:
         order = lambda node: (-node.resident_time, -node.hit_count)
 
-    for group, tree_root in sorted(groups.iteritems(), key=lambda (thread, node): order(node)):
+    for group, tree_root in sorted(iter(groups.items()), key=lambda thread_node: order(thread_node[1])):
         collapse_similar(tree_root)
 
         if max_levels:

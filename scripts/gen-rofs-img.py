@@ -93,9 +93,7 @@ class DirectoryEntry(object):
         pos = fp.tell()
         fp.write(c_ulonglong(self.inode_no))
         fp.write(c_ushort(len(self.filename)))
-        for c in self.filename:
-            fp.write(c_char(c))
-
+        fp.write(bytes(self.filename,'utf-8'))
         return fp.tell() - pos
 
 class SymbolicLink(object):
@@ -105,9 +103,7 @@ class SymbolicLink(object):
     def write(self,fp):
         pos = fp.tell()
         fp.write(c_ushort(len(self.path)))
-        for c in self.path:
-            fp.write(c_char(c))
-
+        fp.write(bytes(self.path,'utf-8'))
         return fp.tell() - pos
 
 directory_entries = []
@@ -151,7 +147,7 @@ def next_inode():
     return inode
 
 def pad(fp, size):
-    fp.write('\0' * size)
+    fp.write(b'\0' * size)
     return size
 
 def write_initial_superblock(fp):
