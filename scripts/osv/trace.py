@@ -65,7 +65,12 @@ class TimeRange(object):
         return self.end - self.begin
 
     def intersection(self, other):
-        begin = max(self.begin, other.begin)
+        if not self.begin:
+            begin = other.begin
+        elif not other.begin:
+            begin = self.begin
+        else:
+            begin = max(self.begin, other.begin)
 
         if self.end is None:
             end = other.end
@@ -143,11 +148,11 @@ class Trace:
 class TimedTrace:
     def __init__(self, trace, duration=None):
         self.trace = trace
-        self.duration = duration
+        self.duration_ = duration
 
     @property
     def duration(self):
-        return self.duration
+        return self.duration_
 
     @property
     def time(self):

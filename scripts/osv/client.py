@@ -2,7 +2,7 @@ import os
 try:
     from urllib.parse import urlparse
 except ImportError:
-    from urlparse import urlparse
+    from urllib.parse import urlparse
 
 _osv_base = '.'
 _default_cert_base = os.path.join(_osv_base, 'modules', 'certs', 'build')

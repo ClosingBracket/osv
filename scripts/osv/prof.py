@@ -210,7 +210,10 @@ class timed_trace_producer(object):
         if not sample.cpu in self.earliest_trace_per_cpu:
             self.earliest_trace_per_cpu[sample.cpu] = sample
 
-        self.last_time = max(self.last_time, sample.time)
+        if not self.last_time:
+            self.last_time = sample.time
+        else:
+            self.last_time = max(self.last_time, sample.time)
 
         matcher = self.matcher_by_name.get(sample.name, None)
         if not matcher:
