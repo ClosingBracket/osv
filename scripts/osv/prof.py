@@ -263,7 +263,7 @@ def get_timed_traces(traces, time_range=None):
 def get_duration_profile(traces, filter=None):
     for timed in get_timed_traces(traces):
         t = timed.trace
-        if (not filter or list(filter(t))) and t.backtrace:
+        if (not filter or filter(t)) and t.backtrace:
             yield ProfSample(t.time, t.cpu, t.thread, t.backtrace, resident_time=timed.duration)
 
 def get_idle_profile(traces):
