@@ -792,12 +792,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    #if getattr(args, 'paginate', False):
-    #    less_process = subprocess.Popen(['less', '-FX'], stdin=subprocess.PIPE)
-    #    sys.stdout = less_process.stdin
-    #else:
-    #    less_process = None
-    less_process = None
+    if getattr(args, 'paginate', False):
+        less_process = subprocess.Popen(['less', '-FX'], stdin=subprocess.PIPE, text=True)
+        sys.stdout = less_process.stdin
+    else:
+        less_process = None
 
     try:
         args.func(args)
