@@ -238,7 +238,10 @@ class SlidingUnpacker:
                 size = struct.calcsize(fmt)
                 val, = struct.unpack_from(fmt, self.buffer[self.offset:self.offset+size])
                 self.offset += size
-                values.append(val)
+                if fmt.startswith('50p'):
+                   values.append(val.decode('utf-8'))
+                else:
+                   values.append(val)
 
         return tuple(values)
 
@@ -519,7 +522,7 @@ def read(buffer_view):
 
     while unpacker:
         tp_key, thread_ptr, thread_name, time, cpu = unpacker.unpack('QQ16sQI')
-        thread_name = thread_name.rstrip(b'\0')
+        thread_name = thread_name.rstrip(b'\0').decode('utf-8')
         tp = tracepoints[tp_key]
 
         backtrace = []

@@ -440,7 +440,10 @@ def print_summary(args, printer=sys.stdout.write):
                 else:
                     min_time = min(min_time, t.time)
 
-                max_time = max(max_time, t.time)
+                if not max_time:
+                    max_time = t.time
+                else:
+                    max_time = max(max_time, t.time)
 
             if args.timed:
                 timed = timed_producer(t)
@@ -789,11 +792,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if getattr(args, 'paginate', False):
-        less_process = subprocess.Popen(['less', '-FX'], stdin=subprocess.PIPE)
-        sys.stdout = less_process.stdin
-    else:
-        less_process = None
+    #if getattr(args, 'paginate', False):
+    #    less_process = subprocess.Popen(['less', '-FX'], stdin=subprocess.PIPE)
+    #    sys.stdout = less_process.stdin
+    #else:
+    #    less_process = None
+    less_process = None
 
     try:
         args.func(args)
