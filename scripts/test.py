@@ -155,12 +155,12 @@ def run_tests():
             "/tst-nfs.so --server 192.168.122.1 --share %s" %
             export_dir) ]
 
-        line = proc.stdout.readline()
+        line = proc.stdout.readline().decode()
         while line:
              print(line)
              if "/tmp" in line:
                 break
-             line = proc.stdout.readline()
+             line = proc.stdout.readline().decode()
              
 
         run(tests_to_run)

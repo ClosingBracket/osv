@@ -277,7 +277,7 @@ def extract(args):
             stderr=subprocess.STDOUT)
         _stdout, _ = proc.communicate()
         if proc.returncode or not os.path.exists(args.tracefile):
-            print(_stdout)
+            print(_stdout.decode())
             sys.exit(1)
     else:
         print(("error: %s not found" % (elf_path)))
@@ -344,7 +344,7 @@ def format_packet_sample(sample):
     pcap = dpkt.pcap.Writer(proc.stdin)
     write_sample_to_pcap(sample, pcap)
     pcap.close()
-    assert(proc.stdout.readline() == "reading from file -, link-type EN10MB (Ethernet)\n")
+    assert(proc.stdout.readline().decode() == "reading from file -, link-type EN10MB (Ethernet)\n")
     packet_line = proc.stdout.readline().rstrip()
     proc.wait()
     return packet_line
