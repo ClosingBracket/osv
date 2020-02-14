@@ -274,7 +274,10 @@ class WritingPacker:
             if fmt == '*':
                 self.pack_blob(arg)
             else:
-                self.writer(struct.pack(fmt, arg))
+                if fmt == '50p':
+                    self.writer(struct.pack(fmt, arg.encode('utf-8')))
+                else:
+                    self.writer(struct.pack(fmt, arg))
                 self.offset += struct.calcsize(fmt)
 
     def pack_blob(self, arg):
