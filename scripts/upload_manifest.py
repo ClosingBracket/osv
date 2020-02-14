@@ -47,8 +47,7 @@ def upload(osv, manifest, depends, port):
     def cpio_field(number, length):
         return ("%.*x" % (length, number)).encode()
     def cpio_header(filename, mode, filesize):
-        if sys.version_info >= (3, 0, 0):
-            filename = filename.encode("utf-8")
+        filename = filename.encode("utf-8")
         return (b"070701"                         # magic
                 + cpio_field(0, 8)                # inode
                 + cpio_field(mode, 8)             # mode
