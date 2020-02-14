@@ -31,14 +31,15 @@ def chs(x):
     return c, h, s
 
 def read_chars_up_to_null(file):
-    while True:
+    keep_reading = True
+    while keep_reading:
         try:
-            c = file.read(1)
+            c = file.read(1).decode()
             if c == '\0':
-                raise StopIteration
+                keep_reading = False
             yield c
         except ValueError:
-            raise StopIteration
+            keep_reading = False
 
 def read_cstr(file):
     return ''.join(read_chars_up_to_null(file))
@@ -148,7 +149,7 @@ elif cmd == 'getargs':
     img = args[0]
     with nbd_file(img) as f:
         f.seek(args_offset)
-        print((read_cstr(f)))
+        print(read_cstr(f))
 elif cmd == 'setsize':
     img = args[0]
     size = int(args[1])
