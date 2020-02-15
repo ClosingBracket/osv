@@ -207,6 +207,9 @@ class timed_trace_producer(object):
         self.last_time = None
 
     def __call__(self, sample):
+        if not sample.time:
+            return
+
         if not sample.cpu in self.earliest_trace_per_cpu:
             self.earliest_trace_per_cpu[sample.cpu] = sample
 
