@@ -119,7 +119,7 @@ def strip_garbage(backtrace):
 
 def get_hit_profile(traces, filter=None):
     for trace in traces:
-        if trace.backtrace and (not filter or list(filter(trace))):
+        if trace.backtrace and (not filter or filter(trace)):
             yield ProfSample(trace.time, trace.cpu, trace.thread, trace.backtrace)
 
 
