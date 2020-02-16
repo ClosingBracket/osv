@@ -307,7 +307,7 @@ class TraceDumpReaderBase :
         self.endian = '<'
         self.file = open(filename, 'rb')
         try:
-            tag = self.file.read(4)
+            tag = self.file.read(4).decode()
             if tag == "OSVT":
                 endian = '>'
             elif tag != "TVSO":
@@ -356,7 +356,7 @@ class TraceDumpReaderBase :
 
     def readString(self):
         len = self.read('H')
-        return self.file.read(len)
+        return self.file.read(len).decode()
 
 class TraceDumpReader(TraceDumpReaderBase) :
     def __init__(self, filename):
@@ -387,7 +387,7 @@ class TraceDumpReader(TraceDumpReaderBase) :
             sig = ""
             for j in range(0, n_args):
                 arg_name = self.readString()
-                arg_sig = self.file.read(1)
+                arg_sig = self.file.read(1).decode()
                 if arg_sig == 'p':
                     arg_sig = '50p'
                 sig += arg_sig
