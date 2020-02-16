@@ -1173,6 +1173,7 @@ def all_traces():
         max_trace = ulong(trace_buffer['_size'])
 
         if not trace_log_base:
+            print('!!! Could not find any trace data! Make sure "--trace" option matches some tracepoints.')
             raise StopIteration
 
         trace_log = inf.read_memory(trace_log_base, max_trace)
