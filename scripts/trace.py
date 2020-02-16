@@ -647,7 +647,7 @@ def download_dump(args):
         for chunk in r.iter_content(8192):
             out_file.write(chunk)
             current += len(chunk)
-            sys.stdout.write("[{0:8d} / {1:8d} k] {3} {2:.2f}%\r".format(current/1024, size/1024, 100.0*current/size, ('='*32*(current/size)) + '>'))
+            sys.stdout.write("[{0:8d} / {1:8d} k] {3} {2:.2f}%\r".format(current//1024, size//1024, 100.0*current//size, ('='*32*(current//size)) + '>'))
             if current >= size:
                 sys.stdout.write("\n")
             sys.stdout.flush()
