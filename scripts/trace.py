@@ -333,8 +333,10 @@ def write_sample_to_pcap(sample, pcap_writer):
         }
 
         pkt = dpkt.ethernet.Ethernet()
-        pkt.data = sample.data[1]
         pkt.type = eth_types[proto]
+        pkt.src = b''
+        pkt.dst = b''
+        pkt.data = sample.data[1]
         pcap_writer.writepkt(pkt, ts=ts)
 
 def format_packet_sample(sample):
