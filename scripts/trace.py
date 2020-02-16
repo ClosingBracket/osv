@@ -364,7 +364,7 @@ def pcap_dump(args, target=None):
     needs_dpkt()
 
     if not target:
-        target = sys.stdout
+        target = sys.stdout.buffer
 
     pcap_file = dpkt.pcap.Writer(target)
     try:
