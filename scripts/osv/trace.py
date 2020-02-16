@@ -188,6 +188,8 @@ def do_split_format(format_str):
 
 _split_cache = {}
 def split_format(format_str):
+    if not format_str:
+        return []
     result = _split_cache.get(format_str, None)
     if not result:
         result = list(do_split_format(format_str))
@@ -195,7 +197,7 @@ def split_format(format_str):
     return result
 
 formatters = {
-    '*': lambda bytes: '{' + ' '.join('%02x' % ord(b) for b in bytes) + '}'
+    '*': lambda bytes: '{' + ' '.join('%02x' % b for b in bytes) + '}'
 }
 
 def get_alignment_of(fmt):
