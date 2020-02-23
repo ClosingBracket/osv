@@ -209,8 +209,8 @@ local-includes =
 INCLUDES = $(local-includes) -Iarch/$(arch) -I. -Iinclude  -Iarch/common
 INCLUDES += -isystem include/glibc-compat
 
-aarch64_gccbase = downloaded/aarch64/gcc
-aarch64_boostbase = downloaded/aarch64/boost
+aarch64_gccbase = downloaded_packages/aarch64/gcc
+aarch64_boostbase = downloaded_packages/aarch64/boost
 
 ifeq ($(arch),aarch64)
   gcc-inc-base := $(dir $(shell find $(aarch64_gccbase)/ -name vector | grep -v -e debug/vector$$ -e profile/vector$$))

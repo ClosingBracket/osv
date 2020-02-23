@@ -3,7 +3,7 @@
 # set up a development environment for OSv.  Run as root.
 
 import sys, argparse
-import subprocess
+import subprocess, os
 
 standard_ec2_packages = ['python-pip', 'wget']
 standard_ec2_post_install = ['pip install awscli &&'
@@ -63,6 +63,24 @@ class Fedora(object):
     ec2_packages = standard_ec2_packages
     test_packages = ['openssl-devel']
     ec2_post_install = standard_ec2_post_install
+
+    def aarch64_download(self, version):
+        gcc_packages = ['gcc',
+                        'glibc',
+                        'glibc-devel',
+                        'libgcc',
+                        'libstdc++',
+                        'libstdc++-devel',
+                        'libstdc++-static']
+        boost_packages = ['boost-devel',
+                          'boost-static',
+                          'boost-system']
+        osv_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+        script_path = '%s/scripts/download_rpm_package.sh' % osv_root
+        destination = '%s/downloaded_packages/aarch' % osv_root
+        install_commands = ['%s %s %s %s/gcc' % (script_path, package, version, destination) for package in gcc_packages]
+        install_commands += ['%s %s %s %s/boost' % (script_path, package, version, destination) for package in boost_packages]
+        return ' && '.join(install_commands)
 
     class Fedora_25(object):
         packages = ['java-1.8.0-openjdk', 'python2-requests', 'openssl-devel', 'lua-5.3.*', 'lua-devel-5.3.*']
@@ -361,6 +379,10 @@ for distro in distros:
                 if cmdargs.test:
                     pkg += distro.test_packages + dver.test_packages
                 subprocess.check_call(distro.install + ' ' + str.join(' ', pkg), shell=True)
+                if 'aarch64_download' in dir(distro):
+                    print('Downloading aarch64 packages to cross-compile arm version ...')
+                    subprocess.check_call(distro.aarch64_download(dver.version), shell=True)
+                    print('Downloaded all aarch64 packages!')
                 if cmdargs.ec2:
                     if distro.ec2_post_install:
                         subprocess.check_call(distro.ec2_post_install, shell=True)
