@@ -78,9 +78,24 @@ class Fedora(object):
         osv_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
         script_path = '%s/scripts/download_rpm_package.sh' % osv_root
         destination = '%s/downloaded_packages/aarch64' % osv_root
-        install_commands = ['%s %s %s %s/gcc' % (script_path, package, version, destination) for package in gcc_packages]
-        install_commands += ['%s %s %s %s/boost' % (script_path, package, version, destination) for package in boost_packages]
-        install_commands = ['rm -rf %s/gcc/install' % destination, 'rm -rf %s/boost/install' % destination] + install_commands
+        ##
+        # The setup.py is typically run as root to allow yum properly install packages
+        # This however would cause all files downloaded to downloaded_packages/aarch64 directory
+        # get created and owned by the root user which in most cases is not desirable
+        # To prevent that let us compare current process user id with the owner id of osv root
+        # directory and if different run all download command with the same user as the one owning
+        # the root directory
+        current_user_id = os.getuid()
+        osv_root_owner_id = os.stat(osv_root).st_uid
+        if current_user_id != osv_root_owner_id and current_user_id == 0:
+            command_prefix = "sudo -u '#%d'" % osv_root_owner_id # Most likely setup.py is run by root so let us use sudo
+        else:
+            command_prefix = ''
+
+        install_commands = ['%s %s %s %s %s/gcc' % (command_prefix, script_path, package, version, destination) for package in gcc_packages]
+        install_commands += ['%s %s %s %s %s/boost' % (command_prefix, script_path, package, version, destination) for package in boost_packages]
+        install_commands = ['%s rm -rf %s/gcc/install' % (command_prefix, destination),
+                            '%s rm -rf %s/boost/install' % (command_prefix, destination)] + install_commands
         return ' && '.join(install_commands)
 
     class Fedora_25(object):
