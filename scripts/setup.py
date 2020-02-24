@@ -77,9 +77,10 @@ class Fedora(object):
                           'boost-system']
         osv_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
         script_path = '%s/scripts/download_rpm_package.sh' % osv_root
-        destination = '%s/downloaded_packages/aarch' % osv_root
+        destination = '%s/downloaded_packages/aarch64' % osv_root
         install_commands = ['%s %s %s %s/gcc' % (script_path, package, version, destination) for package in gcc_packages]
         install_commands += ['%s %s %s %s/boost' % (script_path, package, version, destination) for package in boost_packages]
+        install_commands = ['rm -rf %s/gcc/install' % destination, 'rm -rf %s/boost/install' % destination] + install_commands
         return ' && '.join(install_commands)
 
     class Fedora_25(object):
@@ -380,7 +381,7 @@ for distro in distros:
                     pkg += distro.test_packages + dver.test_packages
                 subprocess.check_call(distro.install + ' ' + str.join(' ', pkg), shell=True)
                 if 'aarch64_download' in dir(distro):
-                    print('Downloading aarch64 packages to cross-compile arm version ...')
+                    print('Downloading aarch64 packages to cross-compile ARM version ...')
                     subprocess.check_call(distro.aarch64_download(dver.version), shell=True)
                     print('Downloaded all aarch64 packages!')
                 if cmdargs.ec2:

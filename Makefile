@@ -209,11 +209,11 @@ local-includes =
 INCLUDES = $(local-includes) -Iarch/$(arch) -I. -Iinclude  -Iarch/common
 INCLUDES += -isystem include/glibc-compat
 
-aarch64_gccbase = downloaded_packages/aarch64/gcc
-aarch64_boostbase = downloaded_packages/aarch64/boost
+aarch64_gccbase = downloaded_packages/aarch64/gcc/install
+aarch64_boostbase = downloaded_packages/aarch64/boost/install
 
 ifeq ($(arch),aarch64)
-  gcc-inc-base := $(dir $(shell find $(aarch64_gccbase)/ -name vector | grep -v -e debug/vector$$ -e profile/vector$$))
+  gcc-inc-base := $(dir $(shell find $(aarch64_gccbase)/ -name vector | grep -v -e debug/vector$$ -e profile/vector$$ -e experimental/vector$$))
   gcc-inc-base3 := $(dir $(shell dirname `find $(aarch64_gccbase)/ -name c++config.h | grep -v /32/`))
   INCLUDES += -isystem $(gcc-inc-base)
   INCLUDES += -isystem $(gcc-inc-base3)

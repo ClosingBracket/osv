@@ -30,4 +30,5 @@ fi
 
 mkdir -p ${out_dir}/upstream
 wget -c -O ${out_dir}/upstream/${file_name} ${full_url}
-rpm2cpio ${out_dir}/upstream/${file_name} | (cd ${out_dir} && cpio -id)
+mkdir -p ${out_dir}/install
+rpm2cpio ${out_dir}/upstream/${file_name} | (cd ${out_dir}/install && cpio -id)
