@@ -1,0 +1,1 @@
+qemu-system-aarch64 -s -nographic -machine virt -machine gic-version=2 -kernel ./build/release.aarch64/loader.img -cpu cortex-a57 -m 1024M -append "--verbose --nomount --maxnic=0 /tools/uush.so" -smp 1
