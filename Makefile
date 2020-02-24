@@ -229,7 +229,7 @@ INCLUDES += -isystem $(libfdt_base)
 endif
 
 INCLUDES += $(boost-includes)
-ifeq ($(arch),x86_64)
+ifeq ($(arch),x64)
 # Starting in Gcc 6, the standard C++ header files (which we do not change)
 # must precede in the include path the C header files (which we replace).
 # This is explained in https://gcc.gnu.org/bugzilla/show_bug.cgi?id=70722.
@@ -1787,7 +1787,7 @@ objects += $(addprefix fs/, $(fs_objs))
 objects += $(addprefix libc/, $(libc))
 objects += $(addprefix musl/src/, $(musl))
 
-ifeq ($(arch),x86_64)
+ifeq ($(arch),x64)
     libstdc++.a := $(shell $(CXX) -print-file-name=libstdc++.a)
     ifeq ($(filter /%,$(libstdc++.a)),)
         $(error Error: libstdc++.a needs to be installed.)
@@ -1802,7 +1802,7 @@ else
     libsupc++.a := $(shell find $(aarch64_gccbase)/ -name libsupc++.a)
 endif
 
-ifeq ($(arch),x86_64)
+ifeq ($(arch),x64)
     libgcc.a := $(shell $(CC) -print-libgcc-file-name)
     ifeq ($(filter /%,$(libgcc.a)),)
         $(error Error: libgcc.a needs to be installed.)
@@ -1817,7 +1817,7 @@ else
     libgcc_eh.a := $(shell find $(aarch64_gccbase)/ -name libgcc_eh.a |  grep -v /32/)
 endif
 
-ifeq ($(arch),x86_64)
+ifeq ($(arch),x64)
     # link with -mt if present, else the base version (and hope it is multithreaded)
     boost-mt := -mt
     boost-lib-dir := $(dir $(shell $(CC) --print-file-name libboost_system$(boost-mt).a))
