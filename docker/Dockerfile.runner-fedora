@@ -17,6 +17,7 @@ python3 \
 file \
 which \
 curl \
+wget \
 qemu-system-x86 \
 qemu-img
 

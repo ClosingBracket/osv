@@ -21,6 +21,7 @@ RUN apt-get update -y && apt-get install -y \
 git \
 python3 \
 curl \
+wget \
 qemu-system-x86 \
 qemu-utils
 
