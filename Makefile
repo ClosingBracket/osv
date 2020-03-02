@@ -209,8 +209,17 @@ local-includes =
 INCLUDES = $(local-includes) -Iarch/$(arch) -I. -Iinclude  -Iarch/common
 INCLUDES += -isystem include/glibc-compat
 
-aarch64_gccbase = downloaded_packages/aarch64/gcc/install
-aarch64_boostbase = downloaded_packages/aarch64/boost/install
+aarch64_gccbase = build/downloaded_packages/aarch64/gcc/install
+aarch64_boostbase = build/downloaded_packages/aarch64/boost/install
+
+ifeq ($(arch),aarch64)
+ifeq (,$(wildcard $(aarch64_gccbase)))
+    $(error Missing $(aarch64_gccbase) directory. Please run "./scripts/download_fedora_aarch64_packages.py")
+endif
+ifeq (,$(wildcard $(aarch64_boostbase)))
+    $(error Missing $(aarch64_boostbase) directory. Please run "./scripts/download_fedora_aarch64_packages.py")
+endif
+endif
 
 ifeq ($(arch),aarch64)
   gcc-inc-base := $(dir $(shell find $(aarch64_gccbase)/ -name vector | grep -v -e debug/vector$$ -e profile/vector$$ -e experimental/vector$$))
