@@ -25,7 +25,7 @@ def aarch64_download(version):
     return ' && '.join(install_commands)
 
 (name, version) = linux_distribution()
-if name.lower != 'fedora':
+if name.lower() != 'fedora':
     print("The distribution %s is not supported for cross-compiling aarch64 version of OSv" % name)
     sys.exit(1)
 
