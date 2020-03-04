@@ -6,7 +6,7 @@ branches:
   only:
   - cirp
 before_install:
-  - cd docker && docker build -t osv/builder -f ./Dockerfile.builder-ubuntu .
+  - pushd docker && docker build -t osv/builder -f ./Dockerfile.builder-ubuntu . && popd
   - docker run -it --privileged -d --name build osv/builder
 stages:
   - build
@@ -20,17 +20,17 @@ jobs:
       script:
         - docker exec build ./scripts/build image=tests
         - export ARTIFACTS_DIR="$(mktemp -d)"
-        - docker cp build:/git-repos/osv/build/release.x64/usr.img "$ARTIFACTS_DIR"
-        - .travis/cirp/cleanup1.sh
-        - .travis/cirp/store.sh "$ARTIFACTS_DIR"
-        - .travis/cirp/cleanup2.sh
+        - docker cp build:/git-repos/osv/build/release.x64/loader.img "$ARTIFACTS_DIR"
+        - ./.travis/cirp/cleanup1.sh
+        - ./.travis/cirp/store.sh "$ARTIFACTS_DIR"
+        - ./.travis/cirp/cleanup2.sh
     - stage: publish
       script:
         - export ARTIFACTS_DIR="$(mktemp -d)"
-        - .travis/cirp/collect.sh "$ARTIFACTS_DIR"
-        - .travis/cirp/cleanup4.sh
-        - .travis/cirp/publish.sh "$ARTIFACTS_DIR"
-        - .travis/cirp/cleanup5.sh
+        - ./.travis/cirp/collect.sh "$ARTIFACTS_DIR"
+        - ./.travis/cirp/cleanup4.sh
+        - ./.travis/cirp/publish.sh "$ARTIFACTS_DIR"
+        - ./.travis/cirp/cleanup5.sh
       cache:
         directories:
           - /opt/cirp

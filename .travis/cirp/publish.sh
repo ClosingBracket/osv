@@ -20,8 +20,8 @@ ARTIFACTS_DIR="$1"
 
 ci-release-publisher publish --latest-release \
                              --latest-release-prerelease \
+                             --latest-release-check-event-type push \
                              --numbered-release \
                              --numbered-release-keep-count 3 \
                              --numbered-release-prerelease \
-                             --tag-release \
                              "$ARTIFACTS_DIR"
