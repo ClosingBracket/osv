@@ -2,6 +2,9 @@ sudo: required
 language: c
 services:
   - docker
+branches:
+  only:
+  - cirp
 before_install:
   - cd docker && docker build -t osv/builder -f ./Dockerfile.builder-ubuntu .
   - docker run -it --privileged -d --name build osv/builder
