@@ -8,8 +8,9 @@ import argparse
 
 #pip install PyGithub
 
-OSV_REPO_NAME = 'cloudius-systems/osv'
-OSV_NIGHTLY_RELEASES_REPO_NAME = 'osvunikernel/osv-nightly-releases'
+OSV_SOURCE_REPO_NAME = 'cloudius-systems/osv'
+OSV_NIGHTLY_RELEASES_REPO_OWNER = 'osvunikernel'
+OSV_NIGHTLY_RELEASES_REPO_NAME = 'osv-nightly-releases'
 
 # Various GitHub helpers
 def client(github_token):
@@ -26,7 +27,7 @@ def get_repo(args):
 
 def get_osv_repo():
     gh = client(api_token)
-    return gh.get_repo(OSV_REPO_NAME)
+    return gh.get_repo(OSV_SOURCE_REPO_NAME)
 
 def get_commit(repo, sha):
     try:
@@ -138,18 +139,30 @@ def delete_artifacts(args):
             print('Failed to find any artifacts matching [%s]' % args.name)
 
 def download_artifacts(args):
+    def download_artifact(download_url, name, directory):
+        import subprocess, sys
+        print('... Downloading the artifact [%s] from %s.' % (name, download_url))
+        ret = subprocess.call(['wget', '-nv', download_url, '-O', directory + '/' + name])
+        if ret != 0:
+            print('Failed to download %s!' % download_url)
+
+    import os
+    if args.directory and not os.path.exists(args.directory):
+        print('Destination directory "%s" does not exist!' % args.directory)
+        return
+
     release = get_release(args)
     if release:
         found_assets = 0
         for asset in release.get_assets():
-            import re
-            if re.match(args.name, asset.name):
-                found_assets = found_assets + 1
-                import subprocess
-                ret = subprocess.call(['wget', '-nv', asset.browser_download_url, '-O', asset.name])
-                if ret != 0:
-                    print('Failed to download %s!' % download_url)
-        if found_assets == 0:
+            if args.name:
+                import re
+                if re.match(args.name, asset.name):
+                    found_assets = found_assets + 1
+                    download_artifact(asset.browser_download_url, asset.name, args.directory)
+            else:
+                download_artifact(asset.browser_download_url, asset.name, args.directory)
+        if args.name and found_assets == 0:
             print('Failed to find any artifacts matching [%s]' % args.name)
 
 api_token = os.environ.get('GH_API_TOKEN')
@@ -160,40 +173,35 @@ if __name__ == "__main__":
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description="github util")
-    subparsers = parser.add_subparsers(help="Command")
+    parser.add_argument('-o', '--owner', action="store", default=OSV_NIGHTLY_RELEASES_REPO_OWNER)
+    parser.add_argument('-r', '--repo', action="store", default=OSV_NIGHTLY_RELEASES_REPO_NAME)
+
+    subparsers = parser.add_subparsers(dest='cmd', help='Command')
+    subparsers.required = True
 
     cmd_list_releases = subparsers.add_parser("list-releases", help="list releases")
-    cmd_list_releases.add_argument("--owner", action="store", required=True)
-    cmd_list_releases.add_argument("--repo", action="store", required=True)
-    cmd_list_releases.add_argument("--message", action="store_true")
+    cmd_list_releases.add_argument('-m', "--message", action="store_true")
     cmd_list_releases.set_defaults(func=list_releases)
 
     cmd_list_artifacts = subparsers.add_parser("list-artifacts", help="list release artifacts")
-    cmd_list_artifacts.add_argument("--owner", action="store", required=True)
-    cmd_list_artifacts.add_argument("--repo", action="store", required=True)
-    cmd_list_artifacts.add_argument("--release", action="store", required=True)
+    cmd_list_artifacts.add_argument('-r', '--release', action="store", default='ci-cirp-latest')
     cmd_list_artifacts.set_defaults(func=list_artifacts)
 
     cmd_upload_artifacts = subparsers.add_parser("upload-artifacts", help="upload release artifact/s")
-    cmd_upload_artifacts.add_argument("--owner", action="store", required=True)
-    cmd_upload_artifacts.add_argument("--repo", action="store", required=True)
-    cmd_upload_artifacts.add_argument("--release", action="store", required=True)
-    cmd_upload_artifacts.add_argument("--path", action="store", required=True)
+    cmd_upload_artifacts.add_argument('-r', '--release', action="store", default='ci-cirp-latest')
+    cmd_upload_artifacts.add_argument("path", action="store")
     cmd_upload_artifacts.set_defaults(func=upload_artifacts)
 
-    cmd_delete_artifacts = subparsers.add_parser("delete-artifact", help="delete release artifact")
-    cmd_delete_artifacts.add_argument("--owner", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--repo", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--release", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--name", action="store", required=True)
+    cmd_delete_artifacts = subparsers.add_parser("delete-artifacts", help="delete release artifact")
+    cmd_delete_artifacts.add_argument('-r', '--release', action="store", default='ci-cirp-latest')
+    cmd_delete_artifacts.add_argument("name", action="store")
     cmd_delete_artifacts.set_defaults(func=delete_artifacts)
 
-    cmd_delete_artifacts = subparsers.add_parser("download-artifacts", help="delete release artifact")
-    cmd_delete_artifacts.add_argument("--owner", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--repo", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--release", action="store", required=True)
-    cmd_delete_artifacts.add_argument("--name", action="store", required=True)
-    cmd_delete_artifacts.set_defaults(func=download_artifacts)
+    cmd_download_artifacts = subparsers.add_parser("download-artifacts", help="download release artifact")
+    cmd_download_artifacts.add_argument('-r', '--release', action="store", default='ci-cirp-latest')
+    cmd_download_artifacts.add_argument('-n', '--name', action="store")
+    cmd_download_artifacts.add_argument('-d', '--directory', action="store", default='.', help='Destination directory')
+    cmd_download_artifacts.set_defaults(func=download_artifacts)
 
     args = parser.parse_args()
     args.func(args)
