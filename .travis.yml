@@ -26,7 +26,8 @@ jobs:
         - docker cp build:/root/.capstan/repository/osv-loader/osv-loader.qemu "$ARTIFACTS_DIR"
         - gzip "$ARTIFACTS_DIR"/osv-loader.qemu
         - docker cp build:/root/.capstan/repository/osv-loader/index.yaml "$ARTIFACTS_DIR"
-        - docker cp build:/root/.capstan/packages/osv.bootstrap.* "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/packages/osv.bootstrap.mpm "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/packages/osv.bootstrap.yaml "$ARTIFACTS_DIR"
         - docker cp build:/git-repos/osv/modules/tests/usr.manifest "$ARTIFACTS_DIR"/unit_tests.manifest
         - ./.travis/cirp/cleanup1.sh
         - ./.travis/cirp/store.sh "$ARTIFACTS_DIR"
