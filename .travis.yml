@@ -23,10 +23,11 @@ jobs:
         - docker exec build ./scripts/osv-version.sh > /tmp/osv-version
         - export ARTIFACTS_DIR="$(mktemp -d)"
         - cp /tmp/osv-version "$ARTIFACTS_DIR"
-        - docker cp build:~/.capstan/repository/osv-loader/osv-loader.qemu "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/repository/osv-loader/osv-loader.qemu "$ARTIFACTS_DIR"
         - gzip "$ARTIFACTS_DIR"/osv-loader.qemu
-        - docker cp build:~/.capstan/repository/osv-loader/index.yaml "$ARTIFACTS_DIR"
-        - docker cp build:~/.capstan/packages/osv.bootstrap.* "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/repository/osv-loader/index.yaml "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/packages/osv.bootstrap.* "$ARTIFACTS_DIR"
+        - docker cp build:/git-repos/osv/modules/tests/usr.manifest "$ARTIFACTS_DIR"/unit_tests.manifest
         - ./.travis/cirp/cleanup1.sh
         - ./.travis/cirp/store.sh "$ARTIFACTS_DIR"
         - ./.travis/cirp/cleanup2.sh
