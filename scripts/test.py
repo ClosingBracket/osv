@@ -23,7 +23,7 @@ blacklist= [
 ]
 
 qemu_blacklist= [
-    "tcp_close_without_reading_on_firecracker"
+    "tcp_close_without_reading_on_fc"
 ]
 
 firecracker_blacklist= [
@@ -201,6 +201,7 @@ if __name__ == "__main__":
     parser.add_argument("--name", action="store", help="run all tests whose names match given regular expression")
     parser.add_argument("--run_options", action="store", help="pass extra options to run.py")
     parser.add_argument("-m", "--manifest", action="store", default="modules/tests/usr.manifest", help="test manifest")
+    parser.add_argument("-b", "--blacklist", action="append", help="test to be blacklisted", default=[])
     cmdargs = parser.parse_args()
     set_verbose_output(cmdargs.verbose)
     if cmdargs.run_options != None:
@@ -211,4 +212,5 @@ if __name__ == "__main__":
         blacklist.extend(firecracker_blacklist)
     else:
         blacklist.extend(qemu_blacklist)
+    blacklist.extend(cmdargs.blacklist)
     main()
