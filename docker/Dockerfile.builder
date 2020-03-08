@@ -1,6 +1,6 @@
 #
 # Copyright (C) 2017 XLAB, Ltd.
-# Copyright (C) 2018 Waldemar Kozaczuk
+# Copyright (C) 2018-2020 Waldemar Kozaczuk
 #
 # This work is open source software, licensed under the terms of the
 # BSD license as described in the LICENSE file in the top-level directory.
@@ -25,7 +25,7 @@ RUN git clone --depth 50 https://github.com/${GIT_ORG_OR_USER}/osv.git
 WORKDIR /git-repos/osv
 RUN git submodule update --init --recursive
 
-# - update all required packages in cases they have changed
+# - update all required packages in case they have changed
 RUN scripts/setup.py
 
 CMD /bin/bash
@@ -33,14 +33,17 @@ CMD /bin/bash
 #
 # NOTES
 #
-# Build the container example:
-# docker build -t osv/builder-fedora -f Dockerfile.builder-fedora .
+# Build the container based on default Fedora 29 base image:
+# docker build -t osv/builder-fedora-29 -f Dockerfile.builder .
+#
+# Build the container based of specific Ubuntu version
+# docker build -t osv/builder-ubuntu-19.10 -f Dockerfile.builder --build-arg DIST="ubuntu-19.10" .
 #
 # Build the container based of specific Fedora version and git repo owner (if forked) example:
-# docker build -t osv/builder-fedora -f Dockerfile.builder-fedora --build-arg DIST_VERSION=31 --build-arg GIT_ORG_OR_USER=a_user .
+# docker build -t osv/builder-fedora-31 -f Dockerfile.builder --build-arg DIST="fedora-31" --build-arg GIT_ORG_OR_USER=a_user .
 #
 # Run the container FIRST time example:
-# docker run -it --privileged osv/builder-fedora
+# docker run -it --privileged osv/builder-fedora-29
 # 
 # To restart:
 # docker restart ID (from docker ps -a) && docker attach ID
