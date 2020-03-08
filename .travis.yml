@@ -6,7 +6,7 @@ branches:
   only:
   - cirp
 before_install:
-  - pushd docker && docker build -t osv/builder -f ./Dockerfile.builder-ubuntu . && popd
+  - pushd docker && docker build -t osv/builder -f ./Dockerfile.builder --build-arg DIST="ubuntu-19.10" . && popd
   - docker run -it --privileged -d --name build osv/builder
 stages:
   - build
@@ -19,7 +19,7 @@ jobs:
     - stage: build
       script:
         - docker exec build ./scripts/build-capstan-mpm-packages kernel
-        - docker exec build ./scripts/build image=tests
+        - docker exec build ./scripts/build-capstan-mpm-packages unit_tests
         - docker exec build ./scripts/osv-version.sh > /tmp/osv-version
         - export ARTIFACTS_DIR="$(mktemp -d)"
         - cp /tmp/osv-version "$ARTIFACTS_DIR"
@@ -28,6 +28,8 @@ jobs:
         - docker cp build:/root/.capstan/repository/osv-loader/index.yaml "$ARTIFACTS_DIR"
         - docker cp build:/root/.capstan/packages/osv.bootstrap.mpm "$ARTIFACTS_DIR"
         - docker cp build:/root/.capstan/packages/osv.bootstrap.yaml "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/packages/osv.unit-tests.mpm "$ARTIFACTS_DIR"
+        - docker cp build:/root/.capstan/packages/osv.unit-tests.yaml "$ARTIFACTS_DIR"
         - docker cp build:/git-repos/osv/modules/tests/usr.manifest "$ARTIFACTS_DIR"/unit_tests.manifest
         - ./.travis/cirp/cleanup1.sh
         - ./.travis/cirp/store.sh "$ARTIFACTS_DIR"
