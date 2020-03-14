@@ -25,9 +25,11 @@ using namespace httpserver::json::trace_json;
 static std::unordered_map<tracepoint_base*,
     std::unique_ptr<tracepoint_counter>> counters;
 
+#if !defined(READONLY)
 extern "C" void httpserver_plugin_register_routes(httpserver::routes* routes) {
     httpserver::api::trace::init(*routes);
 }
+#endif
 
 /**
  * Initialize the routes object with specific routes mapping
@@ -59,6 +61,7 @@ void httpserver::api::trace::init(routes & routes)
         }
         return res;
     });
+#if !defined(READONLY)
     trace_json::setTraceEventStatus.set_handler([](const_req req) {
         std::vector<jstrace_event_info> res;
         const auto enabled = str2bool(req.get_query_param("enabled"));
@@ -68,11 +71,13 @@ void httpserver::api::trace::init(routes & routes)
         }
         return res;
     });
+#endif
     trace_json::getSingleTraceEventStatus.set_handler([](const_req req) {
         const auto eventid = req.param.at("eventid").substr(1);
         const auto e = ::trace::get_event_info(eventid);
         return jstrace_event_info(e);
     });
+#if !defined(READONLY)
     trace_json::setSingleTraceEventStatus.set_handler([](const_req req) {
         const auto eventid = req.param.at("eventid").substr(1);
         const auto enabled = str2bool(req.get_query_param("enabled"));
@@ -98,6 +103,7 @@ void httpserver::api::trace::init(routes & routes)
         prof::start_sampler(config);
         return "Sampler started successfully";
     });
+#endif
 
     class create_trace_dump_file {
     public:
@@ -145,6 +151,7 @@ void httpserver::api::trace::init(routes & routes)
 
     trace_json::getTraceBuffers.set_handler(new create_trace_dump());
 
+#if !defined(READONLY)
     trace_json::setCountEvent.set_handler([](const_req req) {
         const auto eventid = req.param.at("eventid").substr(1);
         const auto enabled = str2bool(req.get_query_param("enabled"));
@@ -165,6 +172,7 @@ void httpserver::api::trace::init(routes & routes)
         }
         return "";
     });
+#endif
     trace_json::getCounts.set_handler([](const_req req) {
         httpserver::json::TraceCounts ret;
         ret.time_ms = std::chrono::duration_cast<std::chrono::milliseconds>
@@ -177,9 +185,11 @@ void httpserver::api::trace::init(routes & routes)
         }
         return ret;
     });
+#if !defined(READONLY)
     trace_json::deleteCounts.set_handler([](const_req req) {
         counters.clear();
         return "";
     });
+#endif
 
 }

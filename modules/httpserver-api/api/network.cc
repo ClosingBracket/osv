@@ -43,9 +43,11 @@ static Interface get_interface(const string& name, ifnet* ifp, long time)
     return f;
 }
 
+#if !defined(READONLY)
 extern "C" void httpserver_plugin_register_routes(httpserver::routes* routes) {
     httpserver::api::network::init(*routes);
 }
+#endif
 
 /**
  * Initialize the routes object with specific routes mapping

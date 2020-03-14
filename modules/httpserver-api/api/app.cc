@@ -23,6 +23,7 @@ using namespace std;
 using namespace json;
 using namespace app_json;
 
+#if !defined(READONLY)
 static std::string exec_app(const std::string& cmnd_line, bool new_program) {
     bool ok;
     auto new_commands = osv::parse_command_line(cmnd_line, ok);
@@ -48,20 +49,25 @@ static std::string exec_app(const std::string& cmnd_line, bool new_program) {
     }
     return app_ids;
 }
+#endif
 
+#if !defined(READONLY)
 extern "C" void httpserver_plugin_register_routes(httpserver::routes* routes) {
     httpserver::api::app::init(*routes);
 }
+#endif
 
 void init(routes& routes)
 {
     app_json_init_path("app API");
 
+#if !defined(READONLY)
     run_app.set_handler([](const_req req) {
         string command = req.get_query_param("command");
         bool new_program = str2bool(req.get_query_param("new_program"));
         return exec_app(command, new_program);
     });
+#endif
 
     finished_app.set_handler([](const_req req) {
         std::string tid_str = req.get_query_param("tid");
