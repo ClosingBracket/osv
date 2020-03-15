@@ -240,7 +240,7 @@ private:
     routes& _routes;
 };
 
-#if !defined(READONLY)
+#if !defined(MONITORING)
 extern "C" void httpserver_plugin_register_routes(httpserver::routes* routes) {
     httpserver::api::api::init(*routes);
 }
@@ -251,7 +251,7 @@ void init(routes& routes)
     api_json_init_path("Advanced API options");
 
     api_batch.set_handler(new api_param_handler(routes));
-#if !defined(READONLY)
+#if !defined(MONITORING)
     stop_api.set_handler([](const_req req){
         global_server::stop();
         return "";

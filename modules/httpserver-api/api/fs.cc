@@ -33,7 +33,7 @@ static void fill_dfstat(DFStat& dfstat, const osv::mount_desc& mount, const stru
     dfstat.blocksize = st.f_frsize;
 }
 
-#if !defined(READONLY)
+#if !defined(MONITORING)
 extern "C" void httpserver_plugin_register_routes(httpserver::routes* routes) {
     httpserver::api::fs::init(*routes);
 }

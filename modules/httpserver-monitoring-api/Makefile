@@ -6,7 +6,7 @@ INCLUDES += -I. -I../httpserver-api -I $(SRC)/libc/internal
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 autodepend = -MD -MT $@ -MP
-CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DREADONLY
+CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING
 src = $(shell readlink -f ../..)
 
 ifndef ARCH
@@ -27,7 +27,7 @@ TARGET = httpserver-api
 JSON_FILES := $(wildcard api-doc/listings/*.json)
 JSON_CC_FILES := $(subst .json,.json.cc,$(subst api-doc/listings/,autogen/,$(JSON_FILES)))
 CPP_FILES := $(addprefix json/,$(notdir $(wildcard ../httpserver-api/json/*.cc))) \
-	$(addprefix api/,$(notdir $(wildcard ../httpserver-api/api/*.cc))) \
+	api/fs.cc api/os.cc api/network.cc api/hardware.cc api/env.cc api/file.cc api/api.cc \
 	common.cc main.cc plain_server.cc server.cc connection.cc matcher.cc \
 	reply.cc connection_manager.cc mime_types.cc request_handler.cc \
 	transformers.cc global_server.cc request_parser.cc handlers.cc \
@@ -46,11 +46,10 @@ DEPS := $(OBJ_FILES:.o=.d)
 module: all
 
 all: lib$(TARGET).so
-	$(call very-quiet, $(SRC)/scripts/manifest_from_host.sh lib$(TARGET).so >> usr.manifest)
+	$(call very-quiet, $(SRC)/scripts/manifest_from_host.sh lib$(TARGET).so > usr.manifest)
 
 lib$(TARGET).so: $(OBJ_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
-	$(call very-quiet, ldd $@ | grep boost | sed 's/ *[^ ] *\(.*\) => \(.*\) .*/\/usr\/lib\/\1: \2/' > _usr_$(TARGET).manifest)
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
@@ -60,26 +59,8 @@ autogen/%.cc: api-doc/listings/% ../httpserver-api/json2code.py
 	$(call very-quiet, mkdir -p autogen)
 	$(call quiet,../httpserver-api/json2code.py -outdir autogen -f $< -ns json, GEN $@)
 
-init_obj = \
-	$(call very-quiet, mkdir -p obj/stub) \
-	$(call very-quiet, mkdir -p obj/json) \
-	$(call very-quiet, mkdir -p obj/api) \
-	$(call very-quiet, mkdir -p obj/autogen)
-
-obj/autogen/%.o: autogen/%.cc
-	$(call init_obj)
-	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
-
-obj/api/%.o: ../httpserver-api/api/%.cc
-	$(call init_obj)
-	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
-
-obj/json/%.o: json/%.cc
-	$(call init_obj)
-	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
-
 $(OBJ_FILES): obj/%.o: ../httpserver-api/%.cc
-	$(call init_obj)
+	$(call very-quiet, mkdir -p obj/stub obj/json obj/api obj/autogen)
 	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
 
 clean:
