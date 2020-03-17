@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import sys
 import argparse
 import os
@@ -17,6 +17,8 @@ parser.add_argument('--run_script', help='path to the run image script', default
 parser.add_argument('--cmd', help='the command to execute')
 parser.add_argument('--use_sudo', help='Use sudo with -n option instead of port forwarding', action='store_true')
 parser.add_argument('--jsondir', help='location of the json files', default=os.path.join(module_base, 'api-doc/listings/'))
+parser.add_argument('--test_image', help='the path to the test image')
+parser.add_argument('--hypervisor', action="store", default="qemu", help="choose hypervisor to run: qemu, firecracker")
 client.Client.add_arguments(parser)
 
 class test_httpserver(basetest.Basetest):
@@ -30,10 +32,10 @@ class test_httpserver(basetest.Basetest):
 
 if __name__ == '__main__':
     basetest.Basetest.set_config(parser)
-    basetest.Basetest.config.check_jvm = True
+    basetest.Basetest.config.check_jvm = False
     basetest.Basetest.start_image()
     del sys.argv[1:]
-    api_tests = unittest.TestLoader().discover(os.path.join(module_base, 'tests', 'readonly-api'), pattern='*.py')
+    api_tests = unittest.TestLoader().discover(os.path.join(module_base, 'tests', 'monitoring-api'), pattern='*.py')
     test_suite = unittest.TestSuite((api_tests))
     unittest.TextTestRunner(verbosity=2).run(test_suite)
     basetest.Basetest.hard_shutdown()

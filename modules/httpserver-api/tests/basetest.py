@@ -161,10 +161,10 @@ class Basetest(unittest.TestCase):
 
     @classmethod
     def hard_shutdown(cls):
-	child_pid = subprocess.call(['pgrep', "-P", str(cls.os_process.pid)])
+        child_pid = subprocess.call(['pgrep', "-P", str(cls.os_process.pid)])
         subprocess.call(['kill', '-9', str(child_pid)])
-	cls.os_process.kill()
-	cls.os_process.wait()
+        cls.os_process.kill()
+        cls.os_process.wait()
 
     @classmethod
     def start_image(cls):

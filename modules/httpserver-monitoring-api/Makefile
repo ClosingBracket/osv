@@ -36,7 +36,7 @@ CPP_FILES := $(addprefix json/,$(notdir $(wildcard ../httpserver-api/json/*.cc))
 	path_holder.cc routes.cc $(JSON_CC_FILES)
 OBJ_FILES := $(addprefix obj/,$(CPP_FILES:.cc=.o))
 
-DYN_LIBS = -lpthread -ldl $(boost-libs)
+DYN_LIBS = -lpthread -ldl -L../libtools -ltools $(boost-libs)
 
 LIBS = $(DYN_LIBS) $(STATIC_LIBS)
 
@@ -74,8 +74,7 @@ clean:
 
 check:
 	# Test plain readonly HTTP
-	make image=httpserver-readonly-api.fg,jetty && \
-	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-readonly-api.py
+	PYTHONPATH=$(src)/scripts $(src)/modules/httpserver-api/tests/testhttpserver-monitoring-api.py
 
 .PHONY: check
 

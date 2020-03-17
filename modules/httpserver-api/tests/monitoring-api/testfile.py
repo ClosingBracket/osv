@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import os
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import basetest
 import subprocess
 
@@ -45,8 +45,8 @@ class testfile(basetest.Basetest):
 
     def test_put_file_cmd(self):
         path = "/file"
-        self.assertHttpError(path + "/etc/hosts?op=COPY&destination="+urllib.quote("/etc/hosts1"), 404, method='PUT')
-        self.assertHttpError(path + "/etc/hosts1?op=RENAME&destination="+urllib.quote("/etc/hosts2"), 404, method='PUT')
+        self.assertHttpError(path + "/etc/hosts?op=COPY&destination="+urllib.parse.quote("/etc/hosts1"), 404, method='PUT')
+        self.assertHttpError(path + "/etc/hosts1?op=RENAME&destination="+urllib.parse.quote("/etc/hosts2"), 404, method='PUT')
         self.assertHttpError(path + "/etc/hosts2?op=DELETE", 404, method='DELETE')
 
     @classmethod

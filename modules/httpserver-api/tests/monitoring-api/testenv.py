@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 import basetest
 
 class testenv(basetest.Basetest):
@@ -6,7 +6,7 @@ class testenv(basetest.Basetest):
         param = "test-param"
         get_path = self.path_by_nick(self.env_api, "list_env") + param
         set_path = get_path + "?val=TEST"
-	self.assertHttpError(set_path, 404, method='POST')
+        self.assertHttpError(set_path, 404, method='POST')
 
         lst = self.curl(self.path_by_nick(self.env_api, "list_env"))
         if not "OSV_CPUS=4" in lst:
