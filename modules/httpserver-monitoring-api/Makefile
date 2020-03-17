@@ -74,7 +74,9 @@ clean:
 
 check:
 	# Test plain readonly HTTP
-	PYTHONPATH=$(src)/scripts $(src)/modules/httpserver-api/tests/testhttpserver-monitoring-api.py
+	cd $(src) && \
+	make image=httpserver-monitoring-api.fg && \
+	PYTHONPATH=$(src)/scripts modules/httpserver-api/tests/testhttpserver-monitoring-api.py
 
 .PHONY: check
 
