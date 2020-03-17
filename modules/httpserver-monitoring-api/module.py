@@ -10,7 +10,7 @@ _module = '${OSV_BASE}/modules/httpserver-monitoring-api'
 _exe = '/libhttpserver-api.so'
 
 usr_files = FileMap()
-usr_files.add(os.path.join(_module, 'libhttpserver-api.so')).to(_exe)
+usr_files.link(_exe).to('/usr/lib/libhttpserver-api.so')
 usr_files.add(os.path.join(_module, 'api-doc')).to('/usr/mgmt/api')
 
 # httpserver will run regardless of an explicit command line
