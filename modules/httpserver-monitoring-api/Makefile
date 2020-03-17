@@ -6,8 +6,9 @@ INCLUDES += -I. -I../httpserver-api -I $(SRC)/libc/internal
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 autodepend = -MD -MT $@ -MP
-CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -flto 
-LDFLAGS = -flto
+CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden
+#CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -flto 
+#LDFLAGS = -flto
 src = $(shell readlink -f ../..)
 
 ifndef ARCH
