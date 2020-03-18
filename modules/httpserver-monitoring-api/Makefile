@@ -7,6 +7,7 @@ INCLUDES += -I. -I../httpserver-api -I $(SRC)/libc/internal
 #  -Wall turns on most, but not all, compiler warnings
 autodepend = -MD -MT $@ -MP
 CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden
+TRACE_CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -fvisibility=hidden
 #CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -flto 
 #LDFLAGS = -flto
 src = $(shell readlink -f ../..)
@@ -36,6 +37,8 @@ CPP_FILES := $(addprefix json/,$(notdir $(wildcard ../httpserver-api/json/*.cc))
 	path_holder.cc routes.cc $(JSON_CC_FILES)
 OBJ_FILES := $(addprefix obj/,$(CPP_FILES:.cc=.o))
 
+TRACE_API_OBJ_FILES := obj/api/trace.o obj/autogen/trace.json.o
+
 DYN_LIBS = -lpthread -ldl -L../libtools -ltools $(boost-libs)
 
 LIBS = $(DYN_LIBS) $(STATIC_LIBS)
@@ -43,15 +46,18 @@ LIBS = $(DYN_LIBS) $(STATIC_LIBS)
 quiet = $(if $V, $1, @echo " $2"; $1)
 very-quiet = $(if $V, $1, @$1)
 
-DEPS := $(OBJ_FILES:.o=.d)
+DEPS := $(OBJ_FILES:.o=.d) $(TRACE_API_OBJ_FILES:.o=.d)
 
 module: all
 
-all: lib$(TARGET).so
+all: lib$(TARGET).so libhttpserver-api_trace.so
 	$(call very-quiet, $(SRC)/scripts/manifest_from_host.sh lib$(TARGET).so > usr.manifest)
 
 lib$(TARGET).so: $(OBJ_FILES)
 	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
+
+libhttpserver-api_trace.so: $(TRACE_API_OBJ_FILES)
+	$(call quiet, $(CXX) $(TRACE_CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)
@@ -61,8 +67,20 @@ autogen/%.cc: api-doc/listings/% ../httpserver-api/json2code.py
 	$(call very-quiet, mkdir -p autogen)
 	$(call quiet,../httpserver-api/json2code.py -outdir autogen -f $< -ns json, GEN $@)
 
+autogen/trace.json.cc: ../httpserver-api/api-doc/listings/trace.json ../httpserver-api/json2code.py
+	$(call very-quiet, mkdir -p autogen)
+	$(call quiet,../httpserver-api/json2code.py -outdir autogen -f $< -ns json, GEN $@)
+
 $(OBJ_FILES): obj/%.o: ../httpserver-api/%.cc
 	$(call very-quiet, mkdir -p obj/stub obj/json obj/api obj/autogen)
+	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+obj/api/trace.o: ../httpserver-api/api/trace.cc
+	$(call very-quiet, mkdir -p obj/api)
+	$(call quiet, $(CXX) $(TRACE_CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
+
+obj/autogen/trace.json.o: autogen/trace.json.cc
+	$(call very-quiet, mkdir -p obj/autogen)
 	$(call quiet, $(CXX) $(CXXFLAGS) -c -MMD  -o $@ $<, CXX $@)
 
 clean:
