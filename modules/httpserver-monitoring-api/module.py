@@ -12,13 +12,13 @@ _exe = '/libhttpserver-api.so'
 usr_files = FileMap()
 usr_files.link(_exe).to('/usr/lib/libhttpserver-api.so')
 usr_files.add(os.path.join(_module, 'api-doc')).to('/usr/mgmt/api')
-usr_files.add(_module + '/libhttpserver-api_trace.so').to('/usr/mgmt/plugins/libhttpserver-api_trace.so')
+#usr_files.add(_module + '/libhttpserver-api_trace.so').to('/usr/mgmt/plugins/libhttpserver-api_trace.so')
 
 api.require('libtools')
 
 # httpserver will run regardless of an explicit command line
 # passed with "run.py -e".
-daemon = api.run_on_init(_exe + ' &!')
+daemon = api.run_on_init(_exe + ' --access-allow=true &!')
 
 fg = api.run(_exe)
 
