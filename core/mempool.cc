@@ -839,6 +839,7 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true, bool
 
     if (size >= huge_page_size && !contiguous) {
         // Map memory if requested memory greater than 2MB and does not need to be contiguous
+        //TODO: For now pre-populate the memory, in future consider turning it off
         void* obj = mmu::map_anon(nullptr, size, mmu::mmap_populate, mmu::perm_read | mmu::perm_write);
         page_range* ret_header = reinterpret_cast<page_range*>(obj);
         ret_header->size = size;
@@ -1083,13 +1084,12 @@ static inline bool is_addr_memory_mmapped(void* addr)
 static void free_large(void* obj)
 {
     obj = align_down(obj - 1, page_size);
+    auto range = static_cast<page_range *>(obj);
     if (is_addr_memory_mmapped(obj)) {
-        debug_early_u64("___free_large: munmap, obj = ", (ulong)obj);
-        page_range *range = static_cast<page_range *>(obj);
         mmu::munmap(obj, range->size);
     }
     else {
-        free_page_range(static_cast<page_range *>(obj));
+        free_page_range(range);
     }
 }
 
