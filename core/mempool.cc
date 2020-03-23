@@ -702,10 +702,13 @@ page_range* page_range_allocator::alloc(size_t size)
         for (auto&& pr : _free[exact_order - 1]) {
             if (pr.size >= size) {
                 range = &pr;
+                remove_list(exact_order - 1, *range);
                 break;
             }
         }
-        return nullptr;
+        if (!range) {
+            return nullptr;
+        }
     } else if (order == max_order) {
         range = &*_free_huge.rbegin();
         if (range->size < size) {
@@ -820,7 +823,9 @@ void page_range_allocator::for_each(unsigned min_order, Func f)
     }
 }
 
-static void* malloc_large(size_t size, size_t alignment, bool block = true)
+static size_t huge_page_size = 0x200000;
+
+static void* malloc_large(size_t size, size_t alignment, bool block = true, bool contiguous = true)
 {
     auto requested_size = size;
     size_t offset;
@@ -831,6 +836,15 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true)
     }
     size += offset;
     size = align_up(size, page_size);
+
+    if (size >= huge_page_size && !contiguous) {
+        // Map memory if requested memory greater than 2MB and does not need to be contiguous
+        void* obj = mmu::map_anon(nullptr, size, mmu::mmap_populate, mmu::perm_read | mmu::perm_write);
+        page_range* ret_header = reinterpret_cast<page_range*>(obj);
+        ret_header->size = size;
+        trace_memory_malloc_large(obj + offset, requested_size, size, alignment);
+        return obj + offset;
+    }
 
     while (true) {
         WITH_LOCK(free_page_ranges_lock) {
@@ -1061,10 +1075,22 @@ static void free_page_range(void *addr, size_t size)
     free_page_range(static_cast<page_range*>(addr));
 }
 
+static inline bool is_addr_memory_mmapped(void* addr)
+{
+    return (ulong)addr >= 0x200000000000 && (ulong)addr < 0x800000000000;
+}
+
 static void free_large(void* obj)
 {
     obj = align_down(obj - 1, page_size);
-    free_page_range(static_cast<page_range*>(obj));
+    if (is_addr_memory_mmapped(obj)) {
+        debug_early_u64("___free_large: munmap, obj = ", (ulong)obj);
+        page_range *range = static_cast<page_range *>(obj);
+        mmu::munmap(obj, range->size);
+    }
+    else {
+        free_page_range(static_cast<page_range *>(obj));
+    }
 }
 
 static unsigned large_object_size(void *obj)
@@ -1689,7 +1715,7 @@ static inline void* std_malloc(size_t size, size_t alignment)
                                        memory::alloc_page());
         trace_memory_malloc_page(ret, size, mmu::page_size, alignment);
     } else {
-        ret = memory::malloc_large(size, alignment);
+        ret = memory::malloc_large(size, alignment, true, false);
     }
     memory::tracker_remember(ret, size);
     return ret;
@@ -1760,6 +1786,11 @@ void free(void* object)
         return;
     }
     memory::tracker_forget(object);
+    if (memory::is_addr_memory_mmapped(object)) {
+        memory::free_large(object);
+        return;
+    }
+
     switch (mmu::get_mem_area(object)) {
     case mmu::mem_area::page:
         object = mmu::translate_mem_area(mmu::mem_area::page,
@@ -1969,7 +2000,7 @@ void* alloc_phys_contiguous_aligned(size_t size, size_t align, bool block)
     assert(is_power_of_two(align));
     // make use of the standard large allocator returning properly aligned
     // physically contiguous memory:
-    auto ret = malloc_large(size, align, block);
+    auto ret = malloc_large(size, align, block, true);
     assert (!(reinterpret_cast<uintptr_t>(ret) & (align - 1)));
     return ret;
 }
