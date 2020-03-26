@@ -1096,9 +1096,11 @@ static void free_large(void* obj)
 
 static unsigned large_object_size(void *obj)
 {
+    auto original_obj = obj;
     obj = align_down(obj - 1, page_size);
+    size_t offset = reinterpret_cast<uint64_t>(original_obj) - reinterpret_cast<uint64_t>(obj);
     auto header = static_cast<page_range*>(obj);
-    return header->size;
+    return header->size - offset;
 }
 
 namespace page_pool {
@@ -1739,9 +1741,11 @@ void* calloc(size_t nmemb, size_t size)
 static size_t object_size(void *object)
 {
     if (!mmu::is_linear_mapped(object, 0)) {
+        auto original_object = object;
         object = align_down(object - 1, mmu::page_size);
+        size_t offset = reinterpret_cast<uint64_t>(original_object) - reinterpret_cast<uint64_t>(object);
         size_t* ret_header = static_cast<size_t*>(object);
-        return *ret_header;
+        return *ret_header - offset;
     }
 
     switch (mmu::get_mem_area(object)) {
