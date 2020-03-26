@@ -546,7 +546,7 @@ public:
     page_range_allocator() : _deferred_free(nullptr) { }
 
     template<bool UseBitmap = true>
-    page_range* alloc(size_t size);
+    page_range* alloc(size_t size, bool contiguous = true);
     page_range* alloc_aligned(size_t size, size_t offset, size_t alignment,
                               bool fill = false);
     void free(page_range* pr);
@@ -678,7 +678,7 @@ void page_range_allocator::bitmap_allocator<T>::deallocate(T* p, size_t n)
 }
 
 template<bool UseBitmap>
-page_range* page_range_allocator::alloc(size_t size)
+page_range* page_range_allocator::alloc(size_t size, bool contiguous)
 {
     auto exact_order = ilog2_roundup(size / page_size);
     if (exact_order > max_order) {
@@ -692,13 +692,12 @@ page_range* page_range_allocator::alloc(size_t size)
 
     page_range* range = nullptr;
     if (!bitset) {
-        if (!exact_order || _free[exact_order - 1].empty()) {
+        if (!contiguous || !exact_order || _free[exact_order - 1].empty()) {
             return nullptr;
         }
-        // TODO: This linear search makes worst case complexity of the allocator
-        // O(n). It would be better to fall back to non-contiguous allocation
-        // and make worst case complexity depend on the size of requested memory
-        // block and the logarithm of the number of free huge page ranges.
+        // This linear search makes worst case complexity of the allocator
+        // O(n). Unfortunately we do not have choice for contiguous allocation
+        // so let us hope there is large enough range.
         for (auto&& pr : _free[exact_order - 1]) {
             if (pr.size >= size) {
                 range = &pr;
@@ -823,7 +822,16 @@ void page_range_allocator::for_each(unsigned min_order, Func f)
     }
 }
 
-static void* malloc_large(size_t size, size_t alignment, bool block = true)
+static void* mapped_malloc_large(size_t size, size_t offset)
+{
+    //TODO: For now pre-populate the memory, in future consider doing lazy population
+    void* obj = mmu::map_anon(nullptr, size, mmu::mmap_populate, mmu::perm_read | mmu::perm_write);
+    size_t* ret_header = static_cast<size_t*>(obj);
+    *ret_header = size;
+    return obj + offset;
+}
+
+static void* malloc_large(size_t size, size_t alignment, bool block = true, bool contiguous = true)
 {
     auto requested_size = size;
     size_t offset;
@@ -835,6 +843,14 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true)
     size += offset;
     size = align_up(size, page_size);
 
+    // Use mmap if requested memory greater than "huge page" size
+    // and does not need to be contiguous
+    if (size >= mmu::huge_page_size && !contiguous) {
+        void* obj = mapped_malloc_large(size, offset);
+        trace_memory_malloc_large(obj, requested_size, size, alignment);
+        return obj;
+    }
+
     while (true) {
         WITH_LOCK(free_page_ranges_lock) {
             reclaimer_thread.wait_for_minimum_memory();
@@ -842,7 +858,7 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true)
             if (alignment > page_size) {
                 ret_header = free_page_ranges.alloc_aligned(size, page_size, alignment);
             } else {
-                ret_header = free_page_ranges.alloc(size);
+                ret_header = free_page_ranges.alloc(size, contiguous);
             }
             if (ret_header) {
                 on_alloc(size);
@@ -850,6 +866,10 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true)
                 obj += offset;
                 trace_memory_malloc_large(obj, requested_size, size, alignment);
                 return obj;
+            } else if (!contiguous) {
+                // If we failed to get contiguous memory allocation and
+                // the caller does not require one let us use map-based allocation
+                break;
             }
             if (block)
                 reclaimer_thread.wait_for_memory(size);
@@ -857,6 +877,10 @@ static void* malloc_large(size_t size, size_t alignment, bool block = true)
                 return nullptr;
         }
     }
+
+    void* obj = mapped_malloc_large(size, offset);
+    trace_memory_malloc_large(obj, requested_size, size, alignment);
+    return obj;
 }
 
 void shrinker::deactivate_shrinker()
@@ -1692,7 +1716,7 @@ static inline void* std_malloc(size_t size, size_t alignment)
                                        memory::alloc_page());
         trace_memory_malloc_page(ret, size, mmu::page_size, alignment);
     } else {
-        ret = memory::malloc_large(size, alignment);
+        ret = memory::malloc_large(size, alignment, true, false);
     }
     memory::tracker_remember(ret, size);
     return ret;
@@ -1714,6 +1738,12 @@ void* calloc(size_t nmemb, size_t size)
 
 static size_t object_size(void *object)
 {
+    if (!mmu::is_linear_mapped(object, 0)) {
+        object = align_down(object - 1, mmu::page_size);
+        size_t* ret_header = static_cast<size_t*>(object);
+        return *ret_header;
+    }
+
     switch (mmu::get_mem_area(object)) {
     case mmu::mem_area::main:
         return memory::large_object_size(object);
@@ -1763,6 +1793,14 @@ void free(void* object)
         return;
     }
     memory::tracker_forget(object);
+
+    if (!mmu::is_linear_mapped(object, 0)) {
+        object = align_down(object - 1, mmu::page_size);
+        size_t* ret_header = static_cast<size_t*>(object);
+        mmu::munmap(object, *ret_header);
+        return;
+    }
+
     switch (mmu::get_mem_area(object)) {
     case mmu::mem_area::page:
         object = mmu::translate_mem_area(mmu::mem_area::page,
@@ -1972,7 +2010,7 @@ void* alloc_phys_contiguous_aligned(size_t size, size_t align, bool block)
     assert(is_power_of_two(align));
     // make use of the standard large allocator returning properly aligned
     // physically contiguous memory:
-    auto ret = malloc_large(size, align, block);
+    auto ret = malloc_large(size, align, block, true);
     assert (!(reinterpret_cast<uintptr_t>(ret) & (align - 1)));
     return ret;
 }
