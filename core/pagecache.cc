@@ -338,6 +338,14 @@ void remove_read_mapping(cached_page_arc* cp, mmu::hw_ptep<0> ptep)
     }
 }
 
+void remove_read_mapping(cached_page* cp, mmu::hw_ptep<0> ptep)
+{
+    if (cp->unmap(ptep) == 0) {
+        rofs_read_cache.erase(cp->key());
+        delete cp;
+    }
+}
+
 void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
     SCOPE_LOCK(arc_lock);
@@ -527,8 +535,8 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         }
     }
 
-    WITH_LOCK(arc_lock) {
-        cached_page_arc* rcp = find_in_cache(read_cache, key);
+    WITH_LOCK(rofs_lock) {
+        cached_page* rcp = find_in_cache(rofs_read_cache, key);
         if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
             // page is in ARC
             remove_read_mapping(rcp, ptep);

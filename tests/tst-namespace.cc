@@ -25,7 +25,9 @@ void run_variables_isolation_tests()
     std::this_thread::sleep_for(std::chrono::seconds(1));
     std::thread second = std::thread(test_variables_isolation);
     first.join();
+    printf("_______________ End 1 - OLO\n");
     second.join();
+    printf("_______________ End 2 - OLO\n");
 }
 
 void test_namespaces_environment_isolation()
@@ -39,8 +41,10 @@ void test_namespaces_environment_isolation()
 
 int main(int argc, char **argv)
 {
+    printf("_______________ OLO\n");
     run_variables_isolation_tests();
 
+    printf("_______________ ALA\n");
     test_namespaces_environment_isolation();
 
     run_merging_environment_test(true);
