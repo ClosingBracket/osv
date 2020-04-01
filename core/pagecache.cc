@@ -323,6 +323,11 @@ void add_read_mapping(cached_page_arc *cp, mmu::hw_ptep<0> ptep)
     cp->map(ptep);
 }
 
+void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
+{
+    cp->map(ptep);
+}
+
 TRACEPOINT(trace_remove_mapping, "buf=%p, addr=%p, ptep=%p", void*, void*, void*);
 void remove_read_mapping(cached_page_arc* cp, mmu::hw_ptep<0> ptep)
 {
@@ -465,8 +470,8 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
         int ret;
         // read fault and page is not in write cache yet, return one from ARC, mark it cow
         do {
-            WITH_LOCK(arc_lock) {
-                cached_page_arc* cp = find_in_cache(read_cache, key);
+            WITH_LOCK(rofs_lock) {
+                cached_page* cp = find_in_cache(rofs_read_cache, key);
                 if (cp) {
                     add_read_mapping(cp, ptep);
                     return mmu::write_pte(cp->addr(), ptep, mmu::pte_mark_cow(pte, true));

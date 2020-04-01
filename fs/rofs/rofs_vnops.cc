@@ -303,7 +303,9 @@ static int rofs_map_cached_page(struct vnode *vnode, struct file* fp, struct uio
     int ret = rofs::cache_get_page_address(inode, device, sb, uio->uio_offset, &page_address);
 
     if (!ret) {
+        printf("--> Got page of %s:%ld at %p\n", fp->f_dentry->d_path, uio->uio_offset, page_address);
         pagecache::map_rofs_page((pagecache::hashkey*)uio->uio_iov->iov_base, page_address);
+        uio->uio_resid = 0;
     }
 
     return ret;
