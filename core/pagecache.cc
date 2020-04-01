@@ -297,9 +297,11 @@ static bool operator==(const cached_page_arc::arc_map::value_type& l, const cach
 
 std::unordered_multimap<arc_buf_t*, cached_page_arc*> cached_page_arc::arc_cache_map;
 static std::unordered_map<hashkey, cached_page_arc*> read_cache;
+static std::unordered_map<hashkey, cached_page*> rofs_read_cache;
 static std::unordered_map<hashkey, cached_page_write*> write_cache;
 static std::deque<cached_page_write*> write_lru;
 static mutex arc_lock; // protects against parallel access to the read cache
+static mutex rofs_lock; // protects against parallel access to the read cache
 static mutex write_lock; // protect against parallel access to the write cache
 
 template<typename T>
@@ -381,6 +383,13 @@ void map_arc_buf(hashkey *key, arc_buf_t* ab, void *page)
     cached_page_arc* pc = new cached_page_arc(*key, page, ab);
     read_cache.emplace(*key, pc);
     arc_share_buf(ab);
+}
+
+void map_rofs_page(hashkey *key, void *page)
+{
+    SCOPE_LOCK(rofs_lock);
+    cached_page* pc = new cached_page(*key, page);
+    rofs_read_cache.emplace(*key, pc);
 }
 
 static int create_read_cached_page(vfs_file* fp, hashkey& key)
