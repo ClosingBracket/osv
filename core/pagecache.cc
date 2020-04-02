@@ -467,7 +467,7 @@ static void insert(cached_page_write* cp) {
     }
 }
 
-#define IS_ZFS(fsid) (fsid.__val[1] == ZFS_ID || fsid.__val[1] > 10)
+#define IS_ZFS(fsid) (fsid.__val[1] == ZFS_ID)
 
 bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pte, bool write, bool shared)
 {
@@ -478,7 +478,7 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     cached_page_write* wcp = find_in_cache(write_cache, key);
 
     bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
-    //printf("--> get: fsid: %d, is ZFS: %d\n", fp->f_dentry->d_vnode->v_mount->m_fsid.__val[1], zfs);
+    printf("--> get: fsid: %d, is ZFS: %d\n", fp->f_dentry->d_vnode->v_mount->m_fsid.__val[1], zfs);
 
     if (write) {
         if (!wcp) {

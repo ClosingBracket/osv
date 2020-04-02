@@ -1005,11 +1005,13 @@ zfs_domount(vfs_t *vfsp, const char *osname)
 	 * The 8-bit fs type must be put in the low bits of fsid[1]
 	 * because that's where other Solaris filesystems put it.
 	 */
-	fsid_guid = dmu_objset_fsid_guid(zfsvfs->z_os);
-	ASSERT((fsid_guid & ~((1ULL<<56)-1)) == 0);
-	vfsp->vfs_fsid.__val[0] = fsid_guid;
+	//DISABLE the logic below to make sure that vfs_fsid
+	//is static and stays the same as it is set in config
+	//fsid_guid = dmu_objset_fsid_guid(zfsvfs->z_os);
+	//ASSERT((fsid_guid & ~((1ULL<<56)-1)) == 0);
+	//vfsp->vfs_fsid.__val[0] = fsid_guid;
 	/* fsid type not included */
-	vfsp->vfs_fsid.__val[1] = fsid_guid >> 32;
+	//vfsp->vfs_fsid.__val[1] = fsid_guid >> 32;
 
 	/*
 	 * Set features for file system.
