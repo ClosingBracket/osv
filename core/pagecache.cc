@@ -161,7 +161,7 @@ protected:
 public:
     cached_page(hashkey key, void* page) : _key(key), _page(page) {
     }
-    ~cached_page() {
+    virtual ~cached_page() {
     }
 
     void map(mmu::hw_ptep<0> ptep) {
@@ -198,7 +198,7 @@ public:
         _vp = fp->f_dentry->d_vnode;
         vref(_vp);
     }
-    ~cached_page_write() {
+    virtual ~cached_page_write() {
         if (_page) {
             if (_dirty) {
                 writeback();
@@ -238,7 +238,7 @@ public:
 
 class cached_page_arc;
 
-unsigned drop_read_cached_page(cached_page_arc* cp, bool flush = true);
+static unsigned drop_arc_read_cached_page(cached_page_arc* cp, bool flush = true);
 
 class cached_page_arc : public cached_page {
 public:
@@ -267,7 +267,8 @@ private:
 
 public:
     cached_page_arc(hashkey key, void* page, arc_buf_t* ab) : cached_page(key, page), _ab(ref(ab, this)) {}
-    ~cached_page_arc() {
+    virtual ~cached_page_arc() {
+        //printf("!Destroying ...\n");
         if (!_removed && unref(_ab, this)) {
             arc_unshare_buf(_ab);
         }
@@ -282,7 +283,7 @@ public:
         std::for_each(it.first, it.second, [&count](arc_map::value_type& p) {
                 auto cp = p.second;
                 cp->_removed = true;
-                count += drop_read_cached_page(cp, false);
+                count += drop_arc_read_cached_page(cp, false);
         });
         arc_cache_map.erase(ab);
         if (count) {
@@ -346,19 +347,27 @@ static void remove_arc_read_mapping(cached_page_arc* cp, mmu::hw_ptep<0> ptep)
 
 void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
-    SCOPE_LOCK(arc_lock);
-    cached_page_arc* cp = find_in_cache(read_cache, key);
+    SCOPE_LOCK(rofs_lock);
+    cached_page* cp = find_in_cache(rofs_read_cache, key);
     if (cp) {
-        remove_read_mapping(read_cache, cp, ptep);
+        remove_read_mapping(rofs_read_cache, cp, ptep);
     }
 }
 
-TRACEPOINT(trace_drop_read_cached_page, "buf=%p, addr=%p", void*, void*);
-unsigned drop_read_cached_page(cached_page_arc* cp, bool flush)
+void remove_arc_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
-    trace_drop_read_cached_page(cp->arcbuf(), cp->addr());
+    SCOPE_LOCK(arc_lock);
+    cached_page_arc* cp = find_in_cache(read_cache, key);
+    if (cp) {
+        remove_arc_read_mapping(cp, ptep);
+    }
+}
+
+template<typename T>
+static unsigned drop_read_cached_page(std::unordered_map<hashkey, T>& cache, cached_page* cp, bool flush)
+{
     int flushed = cp->flush();
-    read_cache.erase(cp->key());
+    cache.erase(cp->key());
 
     if (flush && flushed > 1) { // if there was only one pte it is the one we are faulting on; no need to flush.
         mmu::flush_tlb_all();
@@ -369,12 +378,28 @@ unsigned drop_read_cached_page(cached_page_arc* cp, bool flush)
     return flushed;
 }
 
-void drop_read_cached_page(hashkey& key)
+static unsigned drop_arc_read_cached_page(cached_page_arc* cp, bool flush)
+{
+    return drop_read_cached_page(read_cache, cp, flush);
+}
+
+static void drop_read_cached_page(hashkey& key)
+{
+    SCOPE_LOCK(rofs_lock);
+    cached_page* cp = find_in_cache(rofs_read_cache, key);
+    if (cp) {
+        drop_read_cached_page(rofs_read_cache, cp, true);
+    }
+}
+
+TRACEPOINT(trace_drop_read_cached_page, "buf=%p, addr=%p", void*, void*);
+static void drop_arc_read_cached_page(hashkey& key)
 {
     SCOPE_LOCK(arc_lock);
     cached_page_arc* cp = find_in_cache(read_cache, key);
     if (cp) {
-        drop_read_cached_page(cp, true);
+        trace_drop_read_cached_page(cp->arcbuf(), cp->addr());
+        drop_read_cached_page(read_cache, cp, true);
     }
 }
 
@@ -442,7 +467,7 @@ static void insert(cached_page_write* cp) {
     }
 }
 
-#define IS_ZFS(fsid) (fsid.__val[1] == ZFS_ID)
+#define IS_ZFS(fsid) (fsid.__val[1] == ZFS_ID || fsid.__val[1] > 10)
 
 bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pte, bool write, bool shared)
 {
@@ -453,7 +478,7 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     cached_page_write* wcp = find_in_cache(write_cache, key);
 
     bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
-    printf("--> fsid: %d, is_zfs: %d\n", fp->f_dentry->d_vnode->v_mount->m_fsid.__val[1], zfs);
+    //printf("--> get: fsid: %d, is ZFS: %d\n", fp->f_dentry->d_vnode->v_mount->m_fsid.__val[1], zfs);
 
     if (write) {
         if (!wcp) {
@@ -462,16 +487,20 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 // write fault into shared mapping, there page is not in write cache yet, add it.
                 wcp = newcp.release();
                 insert(wcp);
-                // page is moved from ARC to write cache
-                // drop ARC page if exists, removing all mappings
-                drop_read_cached_page(key);
+                // page is moved from read cache to write cache
+                // drop read page if exists, removing all mappings
+                if (zfs) {
+                    drop_arc_read_cached_page(key);
+                } else {
+                    drop_read_cached_page(key);
+                }
             } else {
                 // remove mapping to ARC page if exists
-                //if (zfs) {
-                //    remove_arc_read_mapping(key, ptep);
-                //} else {
-                //    remove_read_mapping(rofs_read_cache, key, ptep);
-                //}
+                if (zfs) {
+                    remove_arc_read_mapping(key, ptep);
+                } else {
+                    remove_read_mapping(key, ptep);
+                }
                 // cow of private page from ARC
                 return mmu::write_pte(newcp->release(), ptep, pte);
             }
@@ -553,13 +582,11 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         }
     }
 
-    bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
-
-    if (zfs) {
+    if (IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid)) {
         WITH_LOCK(arc_lock) {
             cached_page_arc* rcp = find_in_cache(read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
-                // page is in ARC
+                // page is in ARC read cache
                 remove_arc_read_mapping(rcp, ptep);
                 return false;
             }
@@ -568,7 +595,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         WITH_LOCK(rofs_lock) {
             cached_page* rcp = find_in_cache(rofs_read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
-                // page is in ARC
+                // page is in regular read cache
                 remove_read_mapping(rofs_read_cache, rcp, ptep);
                 return false;
             }

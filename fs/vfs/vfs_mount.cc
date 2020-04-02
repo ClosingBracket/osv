@@ -110,6 +110,8 @@ sys_mount(const char *dev, const char *dir, const char *fsname, int flags, const
     if (!(fs = fs_getfs(fsname)))
         return ENODEV;  /* No such file system */
 
+    printf("--> Mounted: %s with ID: %d\n", fs->vs_name, fs->m_fsid.__val[1]);
+
     /* Open device. nullptr can be specified as a device. */
     // Allow device_open() to fail, in which case dev is interpreted
     // by the file system mount routine (e.g zfs pools)
