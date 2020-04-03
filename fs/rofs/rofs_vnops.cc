@@ -292,13 +292,9 @@ static int rofs_map_cached_page(struct vnode *vnode, struct file* fp, struct uio
         return 0;
     if (uio->uio_resid != mmu::page_size)
         return EINVAL;
+    if (uio->uio_offset % mmu::page_size)
+        return EINVAL;
 
-    //TODO: Check if offset is page aligned
-
-    //TODO: Read page from disk or pull it from ROFS cache
-    // AND create kind of cached_page_arc and put it in the cache
-    // just like pagecache::map_arc_buf() does and puts into read_cache
-    // (No need to put in arc_cache_map)
     void *page_address;
     int ret = rofs::cache_get_page_address(inode, device, sb, uio->uio_offset, &page_address);
 
@@ -355,4 +351,5 @@ struct vnops rofs_vnops = {
 
 extern "C" void rofs_disable_cache() {
     rofs_vnops.vop_read = rofs_read_without_cache;
+    rofs_vnops.vop_cache = (vnop_cache_t)vop_nullop;
 }

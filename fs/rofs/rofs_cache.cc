@@ -10,6 +10,7 @@
 #include <list>
 #include <unordered_map>
 #include <include/osv/uio.h>
+#include <include/osv/contiguous_alloc.hh>
 #include <osv/debug.h>
 #include <osv/sched.hh>
 #include <sys/mman.h>
@@ -57,22 +58,19 @@ public:
         this->starting_block = _starting_block;
         this->block_count = _block_count;
         this->data_ready = false;   // Data has to be loaded from disk
-        // Ideally it would be nice to protect this memory from writing to but unfortunately
-        // mmap/mprotect cannot be used as it results in assert violation
-        // in mmu.cc:virt_to_phys() -> possibly because drivers need to operate on non-mmaped memory (why?)
-        //this->data = malloc(_cache->sb->block_size * _block_count);
-        //this->data = mmap(NULL, cache->sb->block_size * _block_count, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_SHARED | MAP_POPULATE, -1, 0);
-        // Because the cache may be used to directly back mmap-access we need page-aligned block of memory
-        //TODO: Replace 4096 with system constant
-        this->data = aligned_alloc(4096, _cache->sb->block_size * _block_count);
-        assert(this->data > 0);
+        //Round-up allocation size up to whole pages
+        auto pages_to_allocate = _block_count / 8; // 4K pages is made of 8 512-byte blocks
+        if (_block_count % 8) {
+            pages_to_allocate++;
+        }
+        this->data = memory::alloc_phys_contiguous_aligned(pages_to_allocate * mmu::page_size, mmu::page_size);
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
         rofs_block_allocated += block_count;
 #endif
     }
 
     ~file_cache_segment() {
-        free(this->data);
+        memory::free_phys_contiguous_aligned(this->data);
     }
 
     uint64_t length() {
@@ -205,8 +203,8 @@ plan_cache_transactions(struct file_cache *cache, struct uio *uio) {
             bytes_to_read -= transaction.bytes_to_read;
             transactions.push_back(transaction);
         }
-            //
-            // Miss -> read from disk
+        //
+        // Miss -> read from disk
         else {
             print("[rofs] [%d] -> rofs_cache_get_segment_operations i-node: %d, cache segment %d MISS at file offset %d\n",
                   sched::thread::current()->id(), cache->inode->inode_no, cache_segment_index, file_offset);
@@ -295,11 +293,10 @@ cache_get_page_address(struct rofs_inode *inode, struct device *device, struct r
 
     struct uio _uio;
     _uio.uio_offset = offset;
-    _uio.uio_resid = 4096;
+    _uio.uio_resid = mmu::page_size;
     //
-    // Prepare list of cache transactions (copy from memory
+    // Prepare a cache transaction (copy from memory
     // or read from disk into cache memory and then copy into memory)
-    // --> THERE SHOULD BE ONLY one TRANSACTION
     auto segment_transactions = plan_cache_transactions(cache, &_uio);
     print("[rofs] [%d] rofs_get_page_address called for i-node [%d] at %d with %d ops\n",
           sched::thread::current()->id(), inode->inode_no, offset, segment_transactions.size());
