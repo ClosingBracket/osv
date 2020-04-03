@@ -147,6 +147,7 @@ sys_mount(const char *dev, const char *dir, const char *fsname, int flags, const
     mp->m_flags = flags;
     mp->m_dev = device;
     mp->m_data = nullptr;
+    mp->m_fsid = fs->m_fsid;
     strlcpy(mp->m_path, dir, sizeof(mp->m_path));
     strlcpy(mp->m_special, dev, sizeof(mp->m_special));
 
