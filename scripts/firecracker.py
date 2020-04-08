@@ -268,7 +268,7 @@ def main(options):
     # Prepare arguments we are going to pass when creating VM instance
     kernel_path = options.kernel
     if not kernel_path:
-        kernel_path = os.path.join(dirname, '../build/release/loader-stripped.elf')
+        kernel_path = os.path.join(dirname, '../build/release/kernel.elf')
 
     qemu_disk_path = options.image
     if not qemu_disk_path:
