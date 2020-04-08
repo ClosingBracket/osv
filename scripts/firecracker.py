@@ -217,6 +217,8 @@ def disk_path(qcow_disk_path):
         if ret != 0:
             print('Failed to convert %s to a raw format %s!' % (qcow_disk_path, raw_disk_path))
             exit(-1)
+    else:
+        print('--> Disk path: %s' % raw_disk_path)
     return raw_disk_path
 
 
@@ -270,7 +272,7 @@ def main(options):
 
     qemu_disk_path = options.image
     if not qemu_disk_path:
-        qemu_disk_path = os.path.join(dirname, '../build/release/usr.img')
+        qemu_disk_path = os.path.join(dirname, '../build/release/disk.img')
     raw_disk_path = disk_path(qemu_disk_path)
 
     cmdline = options.execute
