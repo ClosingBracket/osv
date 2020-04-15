@@ -13,9 +13,17 @@ def check_with_curl(url, expected_http_line):
 
 def run(command, hypervisor_name, host_port, guest_port, http_path, expected_http_line=None,
         image_path=None, line=None, concurrency=50, count=1000, pre_script=None,
-        no_keep_alive=False, error_line_to_ignore_on_kill = ""):
+        no_keep_alive=False, error_line_to_ignore_on_kill = "", kernel_path=None, test_client='ab'):
 
     py_args = []
+
+    if kernel_path != None:
+       print('Using kernel at %s' % kernel_path)
+       if hypervisor_name == 'firecracker':
+          py_args += ['-k', kernel_path]
+       else:
+          py_args += ['-k', '--kernel-path', kernel_path]
+
     if image_path != None:
         py_args = ['--image', image_path]
 
@@ -27,36 +35,42 @@ def run(command, hypervisor_name, host_port, guest_port, http_path, expected_htt
     sleep(0.05)
 
     if pre_script != None:
-       print(pre_script)
-       subprocess.check_output([pre_script])
+        print(pre_script)
+        subprocess.check_output([pre_script])
 
     if hypervisor_name == 'firecracker':
-       app_url = "http://172.16.0.2:%s%s" % (guest_port, http_path)
+        app_url = "http://172.16.0.2:%s%s" % (guest_port, http_path)
     else:
-       app_url = "http://localhost:%s%s" % (host_port, http_path)
+        app_url = "http://localhost:%s%s" % (host_port, http_path)
 
     if expected_http_line != None:
         check_with_curl(app_url, expected_http_line)
 
-    if no_keep_alive:
-        output = subprocess.check_output(["ab", "-l", "-c", str(concurrency), "-n", str(count), app_url]).decode('utf-8').split('\n')
+    if test_client == 'wrk':
+        output = subprocess.check_output(["wrk", "--latency", "-t%d" % 4, "-c", "%d" % 128, "-d%ds" % 10, app_url]).decode('utf-8').split('\n')
+        for line in output:
+            print(line)
     else:
-        output = subprocess.check_output(["ab", "-l", "-k", "-c", str(concurrency), "-n", str(count), app_url]).decode('utf-8').split('\n')
+        if no_keep_alive:
+            output = subprocess.check_output(["ab", "-l", "-c", str(concurrency), "-n", str(count), app_url]).decode('utf-8').split('\n')
+        else:
+            output = subprocess.check_output(["ab", "-l", "-k", "-c", str(concurrency), "-n", str(count), app_url]).decode('utf-8').split('\n')
 
-    failed_requests = 1
-    complete_requests = 0
-    for line in output:
-        if 'Failed requests' in line:
-            if len(line.split()) == 3:
-               failed_requests = int(line.split()[2])
-            if failed_requests > 0:
-               print(line)
-        elif 'Requests per second' in line:
-            print(line)
-        elif 'Complete requests' in line:
-            if len(line.split()) == 3:
-               complete_requests = int(line.split()[2])
-            print(line)
+        failed_requests = 1
+        complete_requests = 0
+        for line in output:
+            if 'Failed requests' in line:
+                if len(line.split()) == 3:
+                   failed_requests = int(line.split()[2])
+                if failed_requests > 0:
+                   print(line)
+            elif 'Requests per second' in line:
+                print(line)
+            elif 'Complete requests' in line:
+                if len(line.split()) == 3:
+                   complete_requests = int(line.split()[2])
+                print(line)
+
     print("------------")
 
     if expected_http_line != None:
@@ -73,13 +87,14 @@ def run(command, hypervisor_name, host_port, guest_port, http_path, expected_htt
             print("ERROR: Guest failed on kill() or join(): %s" % str(ex))
             success = False
 
-    if failed_requests > 0:
-        print("FAILED ab - encountered failed requests: %d" % failed_requests)
-        success = False
+    if test_client == 'ab':
+        if failed_requests > 0:
+            print("FAILED ab - encountered failed requests: %d" % failed_requests)
+            success = False
 
-    if complete_requests < count:
-        print("FAILED ab - too few complete requests : %d ? %d" % (complete_requests, count))
-        success = False
+        if complete_requests < count:
+            print("FAILED ab - too few complete requests : %d ? %d" % (complete_requests, count))
+            success = False
 
     if success:
         print('----------')
@@ -107,6 +122,7 @@ if __name__ == "__main__":
     parser.add_argument("--no_keep_alive", action="store_true", help="do not use 'keep alive' flag - '-k' with ab")
     parser.add_argument("--error_line_to_ignore_on_kill", action="store", default='',
                         help="error line to ignore on kill")
+    parser.add_argument("--kernel_path", action="store", help="path to kernel.elf.")
 
     cmdargs = parser.parse_args()
 
@@ -122,8 +138,21 @@ if __name__ == "__main__":
         os.environ['OSV_HOSTNAME'] = '172.16.0.2'
     else:
         os.environ['OSV_HOSTNAME'] = 'localhost'
+
+    kernel_path = cmdargs.kernel_path
+    if not kernel_path and os.getenv('OSV_KERNEL'):
+        kernel_path = os.getenv('OSV_KERNEL')
+
+    if kernel_path and not os.path.exists(kernel_path):
+        print("The file %s does not exist!" % kernel_path)
+        sys.exit(-1)
+
+    test_client = 'ab'
+    if os.getenv('HTTP_CLIENT'):
+        test_client = os.getenv('HTTP_CLIENT')
         
     set_verbose_output(True)
     run(cmdargs.execute, hypervisor_name, cmdargs.host_port, cmdargs.guest_port,
        cmdargs.http_path ,cmdargs.http_line, cmdargs.image, cmdargs.line,
-       cmdargs.concurrency, cmdargs.count, cmdargs.pre_script, cmdargs.no_keep_alive, cmdargs.error_line_to_ignore_on_kill)
+       cmdargs.concurrency, cmdargs.count, cmdargs.pre_script, cmdargs.no_keep_alive,
+       cmdargs.error_line_to_ignore_on_kill, kernel_path, test_client)
