@@ -325,15 +325,16 @@ build_openjdk11-zulu-package() {
 build_kernel_and_standard_osv_modules() {
   ASK=1
   build_osv_image_loader_and_bootstrap_package
-
-  build_httpserver_api_package
-  build_httpserver_html5_gui_package
-  build_httpserver_html5_cli_package
-  build_httpserver_monitoring_package
-  build_cli_package
+  build_unit_tests_package
 
   build_run_java_package
   build_and_publish_mpm golang
+
+  build_httpserver_api_package
+  build_httpserver_monitoring_package
+  build_http_server_tests_package
+  build_http_server_https_tests_package
+
   ASK=0
   build_and_publish_mpm libz
 }
@@ -381,10 +382,6 @@ build_other_example_apps() {
 # ---- TESTS 
 build_test_apps() {
   ASK=1
-  build_unit_tests_package
-  build_http_server_tests_package
-  build_http_server_https_tests_package
-
   build_and_publish_mpm rust-example
   build_and_publish_mpm rust-httpserver
 
