@@ -40,7 +40,12 @@ def run(command, hypervisor_name, image_path=None, line=None, guest_port=None, h
     app.join()
 
     print('----------')
-    print('SUCCESS')
+    print('  SUCCESS')
+
+    status_file_name = os.getenv('STATUS_FILE')
+    if status_file_name:
+       with open(status_file_name, "a+") as status_file:
+         status_file.write('  SUCCESS\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='test_app')

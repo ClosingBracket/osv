@@ -36,9 +36,17 @@ def run(command, hypervisor_name, host_port, guest_port, script_path, image_path
 
     print("-----------------------------------")
     if script_out['success'] == True:
-        print("SUCCESS")
+        print("  SUCCESS")
     else:
-        print("FAILURE")
+        print("  FAILURE")
+
+    status_file_name = os.getenv('STATUS_FILE')
+    if status_file_name:
+       with open(status_file_name, "a+") as status_file:
+         if script_out['success'] == True:
+            status_file.write("  SUCCESS\n")
+         else:
+            status_file.write("  FAILURE\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='test_app')
