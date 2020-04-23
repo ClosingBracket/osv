@@ -351,6 +351,7 @@ void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
     SCOPE_LOCK(read_lock);
     cached_page* cp = find_in_cache(read_cache, key);
     if (cp) {
+        //printf("pagecache:get remove_read_mapping\n");
         remove_read_mapping(read_cache, cp, ptep);
     }
 }
@@ -441,9 +442,6 @@ static std::unique_ptr<cached_page_write> create_write_cached_page(vfs_file* fp,
     struct iovec iov {cp->addr(), mmu::page_size};
 
     assert(sys_read(fp, &iov, 1, key.offset, &bytes) == 0);
-    if (bytes != mmu::page_size) {
-        printf("-----> create_write_cached_page: less than page: %ld\n", bytes);
-    }
     return std::unique_ptr<cached_page_write>(cp);
 }
 
@@ -482,13 +480,12 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     cached_page_write* wcp = find_in_cache(write_cache, key);
 
     bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
-    if (zfs) {
-        assert(0);
-    }
 
     if (write) {
         if (!wcp) {
             auto newcp = create_write_cached_page(fp, key);
+            printf("[pagecache::get] [%d, %s, %ld] --> write fault, COW 1, shared:%d (sys_read) ... then drop/remove read mapping\n",
+                    sched::thread::current()->id(), fp->f_dentry->d_path, offset, shared);
             if (shared) {
                 // write fault into shared mapping, there page is not in write cache yet, add it.
                 wcp = newcp.release();
@@ -512,6 +509,8 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
             }
         } else if (!shared) {
             // cow (copy-on-write) of private page from write cache
+            printf("[pagecache::get] [%d, %s, %ld] --> write fault, COW 2\n",
+                   sched::thread::current()->id(), fp->f_dentry->d_path, offset);
             void* page = memory::alloc_page();
             memcpy(page, wcp->addr(), mmu::page_size);
             return mmu::write_pte(page, ptep, pte);
@@ -524,6 +523,8 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 WITH_LOCK(arc_read_lock) {
                     cached_page_arc* cp = find_in_cache(arc_read_cache, key);
                     if (cp) {
+                        printf("[pagecache::get] [%d, %s, %ld] --> read fault, return page from page cache\n",
+                               sched::thread::current()->id(), fp->f_dentry->d_path, offset);
                         add_arc_read_mapping(cp, ptep);
                         return mmu::write_pte(cp->addr(), ptep, mmu::pte_mark_cow(pte, true));
                     }
@@ -533,16 +534,27 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 WITH_LOCK(read_lock) {
                     cached_page* cp = find_in_cache(read_cache, key);
                     if (cp) {
+                        printf("[pagecache::get] [%d, %s, %ld] --> read fault, return page from page cache\n",
+                               sched::thread::current()->id(), fp->f_dentry->d_path, offset);
                         add_read_mapping(cp, ptep);
                         return mmu::write_pte(cp->addr(), ptep, mmu::pte_mark_cow(pte, true));
                     }
                 }
             }
 
+            printf("[pagecache::get] [%d, %s, %ld] --> read fault, read from FS and put in page cache (VOP_CACHE)\n",
+                   sched::thread::current()->id(), fp->f_dentry->d_path, offset);
+
             DROP_LOCK(write_lock) {
                 // page is not in cache yet, create and try again
                 // function may sleep so drop write lock while executing it
-                ret = create_read_cached_page(fp, key);
+                WITH_LOCK(read_lock) {
+                    if (!find_in_cache(read_cache, key))
+                        ret = create_read_cached_page(fp, key);
+                    else {
+                        ret = 0;
+                    }
+                }
             }
 
             // we dropped write lock, need to re-check write cache again
@@ -580,6 +592,8 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         if (wcp && mmu::virt_to_phys(wcp->addr()) == old.addr()) {
             // page is in write cache
             wcp->unmap(ptep);
+            printf("[pagecache::release] [%d, %s, %ld] --> WRITE (unmap?)\n",
+                    sched::thread::current()->id(), fp->f_dentry->d_path, offset);
             if (old.dirty()) {
                 // unmapped pte was dirty, mark page dirty for writeback
                 wcp->mark_dirty();
@@ -588,8 +602,9 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         }
     }
 
+    printf("[pagecache::release] [%d, %s, %ld] --> READ (unmap?)\n",
+            sched::thread::current()->id(), fp->f_dentry->d_path, offset);
     if (IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid)) {
-        assert(0);
         WITH_LOCK(arc_read_lock) {
             cached_page_arc* rcp = find_in_cache(arc_read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
@@ -639,7 +654,7 @@ void sync(vfs_file* fp, off_t start, off_t end)
         dirty.pop();
     }
 }
-
+/*
 TRACEPOINT(trace_access_scanner, "scanned=%u, cleared=%u, %%cpu=%g", unsigned, unsigned, double);
 static class access_scanner {
     static constexpr double _max_cpu = 20;
@@ -734,7 +749,7 @@ private:
 } s_access_scanner;
 
 constexpr double access_scanner::_max_cpu;
-constexpr double access_scanner::_min_cpu;
+constexpr double access_scanner::_min_cpu;*/
 
 
 }

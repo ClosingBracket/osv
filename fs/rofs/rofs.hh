@@ -129,7 +129,7 @@ namespace rofs {
     int
     cache_read(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, struct uio *uio);
     int
-    cache_get_page_address(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, off_t offset, void **addr);
+    cache_get_page_address(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, struct uio *uio, void **addr);
 }
 
 int rofs_read_blocks(struct device *device, uint64_t starting_block, uint64_t blocks_count, void* buf);

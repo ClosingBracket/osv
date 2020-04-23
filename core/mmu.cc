@@ -986,6 +986,8 @@ ulong evacuate(uintptr_t start, uintptr_t end)
 
 static void unmap(const void* addr, size_t size)
 {
+    printf("[mmu::unmap] [%d, %p, %ld] --> unmapping (what file?)\n",
+           sched::thread::current()->id(), addr, size);
     size = align_up(size, mmu::page_size);
     auto start = reinterpret_cast<uintptr_t>(addr);
     evacuate(start, start+size);

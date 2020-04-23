@@ -59,13 +59,17 @@ public:
         this->block_count = _block_count;
         this->data_ready = false;   // Data has to be loaded from disk
         auto size = _cache->sb->block_size * _block_count;
-        // Only allocate contigous page-aligned memory if size greater or equal a page
+        // Only allocate contiguous page-aligned memory if size greater or equal a page
         // to make sure page-cache mapping works properly
+        if (_block_count < CACHE_SEGMENT_SIZE_IN_BLOCKS) {
+            printf("............... Mniejszy: %ld!\n", _block_count);
+        }
         if (size >= mmu::page_size) {
             this->data = memory::alloc_phys_contiguous_aligned(size, mmu::page_size);
         } else {
             this->data = malloc(size);
         }
+        //memset(this->data, 0, size);
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
         rofs_block_allocated += block_count;
 #endif
@@ -95,6 +99,7 @@ public:
     //
     // Read data from memory per uio
     int read(struct uio *uio, uint64_t offset_in_segment, uint64_t bytes_to_read) {
+        //printf
         print("[rofs] [%d] -> file_cache_segment::read() i-node: %d, starting block %d, reading [%d] bytes at segment offset [%d]\n",
               sched::thread::current()->id(), cache->inode->inode_no, starting_block, bytes_to_read,
               offset_in_segment);
@@ -111,13 +116,16 @@ public:
             blocks_remaining++;
         }
         auto block_count_to_read = std::min(block_count, blocks_remaining);
-        print("[rofs] [%d] -> file_cache_segment::write() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+        //printf
+        print("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
               sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         auto error = rofs_read_blocks(device, block, block_count_to_read, data);
         this->data_ready = (error == 0);
         if (error) {
-            print("!!!!! Error reading from disk\n");
+            printf("!!!!! Error reading from disk\n");
         }
+        //printf("[rofs] [%d] -> file_cache_segment::read_from_disk() COMPLETED i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+        //      sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         return error;
     }
 };
@@ -161,6 +169,7 @@ struct cache_segment_transaction {
             this->transaction_type = CacheTransactionType::READ_FROM_DISK;
         }
         this->segment_offset = file_offset % segment->length();
+        //this->segment_offset = file_offset % (CACHE_SEGMENT_SIZE_IN_BLOCKS * 512);
         this->bytes_to_read = std::min(segment->length() - segment_offset, _bytes_to_read);
     }
 };
@@ -292,27 +301,26 @@ cache_read(struct rofs_inode *inode, struct device *device, struct rofs_super_bl
 // Ensure a page (4096 bytes) of a file specified by offset is in memory in cache. Otherwise
 // load it from disk and eventually return address of the page in memory.
 int
-cache_get_page_address(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, off_t offset, void **addr)
+cache_get_page_address(struct rofs_inode *inode, struct device *device, struct rofs_super_block *sb, struct uio *uio, void **addr)
 {
-    //
+    //cache_get_page_address
     // Find existing one or create new file cache
     struct file_cache *cache = get_or_create_file_cache(inode, sb);
 
-    struct uio _uio;
-    _uio.uio_offset = offset;
-    _uio.uio_resid = mmu::page_size;
     //
     // Prepare a cache transaction (copy from memory
     // or read from disk into cache memory and then copy into memory)
-    auto segment_transactions = plan_cache_transactions(cache, &_uio);
+    auto segment_transactions = plan_cache_transactions(cache, uio);
+    //printf
     print("[rofs] [%d] rofs_get_page_address called for i-node [%d] at %d with %d ops\n",
           sched::thread::current()->id(), inode->inode_no, offset, segment_transactions.size());
 
     int error = 0;
 
-    auto it = segment_transactions.begin();
-    assert(it != segment_transactions.end()); // There should be at least ONE transaction
-    auto transaction = *it;
+    //auto it = segment_transactions.begin();
+    //assert(it != segment_transactions.end()); // There should be at least ONE transaction
+    assert(segment_transactions.size() == 1);
+    auto transaction = segment_transactions[0];
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
     rofs_cache_reads += 1;
 #endif
