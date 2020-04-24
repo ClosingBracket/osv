@@ -203,6 +203,7 @@ public:
             if (_dirty) {
                 writeback();
             }
+            printf("---> Freeing page!\n");
             memory::free_page(_page);
             vrele(_vp);
         }
@@ -482,9 +483,9 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     cached_page_write* wcp = find_in_cache(write_cache, key);
 
     bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
-    if (zfs) {
-        assert(0);
-    }
+    //if (zfs) {
+    //    assert(0);
+    //}
 
     if (write) {
         if (!wcp) {
@@ -589,7 +590,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     }
 
     if (IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid)) {
-        assert(0);
+        //assert(0);
         WITH_LOCK(arc_read_lock) {
             cached_page_arc* rcp = find_in_cache(arc_read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {

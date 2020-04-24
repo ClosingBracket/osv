@@ -61,9 +61,6 @@ public:
         auto size = _cache->sb->block_size * _block_count;
         // Only allocate contiguous page-aligned memory if size greater or equal a page
         // to make sure page-cache mapping works properly
-        if (_block_count < CACHE_SEGMENT_SIZE_IN_BLOCKS) {
-            printf("............... Mniejszy: %ld!\n", _block_count);
-        }
         if (size >= mmu::page_size) {
             this->data = memory::alloc_phys_contiguous_aligned(size, mmu::page_size);
         } else {
@@ -117,12 +114,17 @@ public:
         }
         auto block_count_to_read = std::min(block_count, blocks_remaining);
         //printf
-        print("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
               sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         auto error = rofs_read_blocks(device, block, block_count_to_read, data);
         this->data_ready = (error == 0);
         if (error) {
             printf("!!!!! Error reading from disk\n");
+        } else {
+            if (bytes_remaining < this->length()) {
+                printf("... zeroing with %ld bytes\n", this->length() - bytes_remaining);
+                memset(data + bytes_remaining, 0, this->length() - bytes_remaining);
+            }
         }
         //printf("[rofs] [%d] -> file_cache_segment::read_from_disk() COMPLETED i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
         //      sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);

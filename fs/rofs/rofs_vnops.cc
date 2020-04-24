@@ -294,11 +294,11 @@ int rofs_map_cached_page(struct vnode *vnode, struct file* fp, struct uio *uio) 
         return EINVAL;
     if (uio->uio_offset % mmu::page_size)
         return EINVAL;
-    if (uio->uio_offset + uio->uio_resid > (off_t)vnode->v_size) {
-        printf("--> rofs_map_cached_page: off:%ld, resid:%ld, (off + resid):%ld, file_size:%ld\n",
-                uio->uio_offset, uio->uio_resid, uio->uio_offset + uio->uio_resid, (off_t)vnode->v_size);
+    //if (uio->uio_offset + uio->uio_resid > (off_t)vnode->v_size) {
+    //    printf("--> rofs_map_cached_page: off:%ld, resid:%ld, (off + resid):%ld, file_size:%ld\n",
+    //            uio->uio_offset, uio->uio_resid, uio->uio_offset + uio->uio_resid, (off_t)vnode->v_size);
         //return EINVAL;
-    }
+    //}
 
     void *page_address;
     int ret = rofs::cache_get_page_address(inode, device, sb, uio, &page_address);
@@ -347,7 +347,8 @@ struct vnops rofs_vnops = {
     rofs_inactive,           /* inactive */
     rofs_truncate,           /* truncate - returns error when called*/
     rofs_link,               /* link - returns error when called*/
-    (vnop_cache_t)vop_nullop, //rofs_map_cached_page,    /* map page in cache */
+    rofs_map_cached_page,
+    //(vnop_cache_t) nullptr, //rofs_map_cached_page,    /* map page in cache */
     rofs_fallocate,          /* fallocate - returns error when called*/
     rofs_readlink,           /* read link */
     rofs_symlink             /* symbolic link - returns error when called*/

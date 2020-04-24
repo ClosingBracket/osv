@@ -976,6 +976,10 @@ ulong evacuate(uintptr_t start, uintptr_t end)
             if (dead.has_flags(mmap_jvm_heap)) {
                 memory::stats::on_jvm_heap_free(size);
             }
+            if (dead.has_flags(mmap_file)) {
+                printf("[mmu::unmap] [%d, %p, 0x%08x] --> unmapping (what file?)\n",
+                       sched::thread::current()->id(), start, size);
+            }
             vma_list.erase(dead);
             delete &dead;
         }
@@ -986,8 +990,8 @@ ulong evacuate(uintptr_t start, uintptr_t end)
 
 static void unmap(const void* addr, size_t size)
 {
-    printf("[mmu::unmap] [%d, %p, %ld] --> unmapping (what file?)\n",
-           sched::thread::current()->id(), addr, size);
+    //printf("[mmu::unmap] [%d, %p, %ld] --> unmapping (what file?)\n",
+    //       sched::thread::current()->id(), addr, size);
     size = align_up(size, mmu::page_size);
     auto start = reinterpret_cast<uintptr_t>(addr);
     evacuate(start, start+size);
