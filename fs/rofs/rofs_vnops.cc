@@ -306,6 +306,8 @@ int rofs_map_cached_page(struct vnode *vnode, struct file* fp, struct uio *uio) 
     if (!ret) {
         pagecache::map_read_cached_page((pagecache::hashkey*)uio->uio_iov->iov_base, page_address);
         uio->uio_resid = 0;
+    } else {
+        abort("ROFS cache failed!");
     }
 
     return ret;

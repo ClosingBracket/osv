@@ -126,8 +126,8 @@ public:
                 memset(data + bytes_remaining, 0, this->length() - bytes_remaining);
             }
         }
-        //printf("[rofs] [%d] -> file_cache_segment::read_from_disk() COMPLETED i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
-        //      sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
+        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() COMPLETED i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+              sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         return error;
     }
 };
