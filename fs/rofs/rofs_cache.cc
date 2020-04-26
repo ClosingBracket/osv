@@ -114,8 +114,8 @@ public:
         }
         auto block_count_to_read = std::min(block_count, blocks_remaining);
         //printf
-        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
-              sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
+        //printf("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+        //      sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         auto error = rofs_read_blocks(device, block, block_count_to_read, data);
         this->data_ready = (error == 0);
         if (error) {
@@ -126,8 +126,8 @@ public:
                 memset(data + bytes_remaining, 0, this->length() - bytes_remaining);
             }
         }
-        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() COMPLETED i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
-              sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
+        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() starting at %ld, reading [%ld] bytes\n",
+              sched::thread::current()->id(), (long long)starting_block * 512, (long long)block_count_to_read * 512);
         return error;
     }
 };

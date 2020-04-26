@@ -972,8 +972,8 @@ ulong evacuate(uintptr_t start, uintptr_t end)
         if (contains(start, end, *i)) {
             auto& dead = *i--;
             if (dead.has_flags(mmap_file)) {
-                printf("[mmu::unmap] [%d, %p, 0x%08x] --> unmapping (what file?)\n",
-                       sched::thread::current()->id(), start, size);
+                //printf("[mmu::unmap] [%d, %p, 0x%08x] --> unmapping (what file?)\n",
+                //       sched::thread::current()->id(), start, size);
             }
             auto size = dead.operate_range(unpopulate<account_opt::yes>(dead.page_ops()));
             ret += size;

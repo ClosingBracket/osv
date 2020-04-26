@@ -188,7 +188,7 @@ std::unique_ptr<mmu::file_vma> vfs_file::mmap(addr_range range, unsigned flags, 
 		return mmu::default_file_mmap(this, range, flags, perm, offset);
 	}
 	auto v = mmu::map_file_mmap(this, range, flags, perm, offset);
-    printf("[vfs_file::mmap] [%d, %s, 0x%08x, %p] --> mapping to %p\n",
-           sched::thread::current()->id(), fp->f_dentry->d_path, offset, range.end() - range.start(), v->addr());
+    //printf("[vfs_file::mmap] [%d, %s, 0x%08x, %p] --> mapping to %p\n",
+    //       sched::thread::current()->id(), fp->f_dentry->d_path, offset, range.end() - range.start(), v->addr());
 	return v;
 }
