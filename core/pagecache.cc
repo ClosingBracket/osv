@@ -640,7 +640,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
                 //        sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset);
                 // page is in regular read cache
                 remove_read_mapping(read_cache, rcp, ptep);
-                return false;
+                return false; //Returning true does not work
             }
         }
     }
@@ -648,6 +648,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     // if a private page, caller will free it
     //printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> WRITE private (unmap?), non-zero: %d\n",
     //       sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset, addr != zero_page);
+    //mmu::flush_tlb_all(); -> DOES not fix
     return addr != zero_page;
 }
 
