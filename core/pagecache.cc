@@ -204,7 +204,6 @@ public:
                 writeback();
             }
             memory::free_page(_page);
-            printf("--> Freeing COW page: %p\n", _page);
             vrele(_vp);
         }
     }
@@ -322,6 +321,7 @@ static T find_in_cache(std::unordered_map<hashkey, T>& cache, hashkey& key)
 static void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
 {
     assert(read_lock.owned());
+    mmu::flush_tlb_all();
     cp->map(ptep);
 }
 
@@ -337,8 +337,8 @@ static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_pa
 {
     assert(read_lock.owned());
     if (cp->unmap(ptep) == 0) {
-        printf("[remove_read_mapping] [%d, %p] erasing from read cache\n",
-               sched::thread::current()->id(), cp->addr());
+        //printf("[remove_read_mapping] [%d, %p] erasing from read cache\n",
+        //       sched::thread::current()->id(), cp->addr());
         cache.erase(cp->key());
         delete cp;
     }
@@ -484,7 +484,7 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     struct stat st;
     fp->stat(&st);
     hashkey key {st.st_dev, st.st_ino, offset};
-    printf("pagecache:get() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
+    //printf("pagecache:get() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
 
     SCOPE_LOCK(write_lock);
     cached_page_write* wcp = find_in_cache(write_cache, key);
@@ -514,8 +514,8 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 }
                 // cow (copy-on-write) of private page from read cache
                 auto p = newcp->release();
-                printf("[pagecache::get] [%d, %s, %p, 0x%08x] --> write fault, COW 1, shared:%d (sys_read) ... after drop/remove read mapping\n",
-                       sched::thread::current()->id(), fp->f_dentry->d_path, p, offset, shared);
+                //printf("[pagecache::get] [%d, %s, %p, 0x%08x] --> write fault, COW 1, shared:%d (sys_read) ... after drop/remove read mapping\n",
+                //       sched::thread::current()->id(), fp->f_dentry->d_path, p, offset, shared);
                 return mmu::write_pte(p, ptep, pte);
             }
         } else if (!shared) {
@@ -597,7 +597,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     struct stat st;
     fp->stat(&st);
     hashkey key {st.st_dev, st.st_ino, offset};
-    printf("pagecache:release() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
+    //printf("pagecache:release() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
 
     auto old = clear_pte(ptep);
 
@@ -609,8 +609,8 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         if (wcp && mmu::virt_to_phys(wcp->addr()) == old.addr()) {
             // page is in write cache
             wcp->unmap(ptep);
-            printf("[pagecache::release] [%d, %s, 0x%016x] --> WRITE (unmap?)\n",
-                    sched::thread::current()->id(), fp->f_dentry->d_path, offset);
+            //printf("[pagecache::release] [%d, %s, 0x%016x] --> WRITE (unmap?)\n",
+            //        sched::thread::current()->id(), fp->f_dentry->d_path, offset);
             if (old.dirty()) {
                 // unmapped pte was dirty, mark page dirty for writeback
                 wcp->mark_dirty();
@@ -635,8 +635,8 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
             assert(read_lock.owned());
             cached_page* rcp = find_in_cache(read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
-                printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> READ (unmap?)\n",
-                        sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset);
+                //printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> READ (unmap?)\n",
+                //        sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset);
                 // page is in regular read cache
                 remove_read_mapping(read_cache, rcp, ptep);
                 return false;
@@ -645,8 +645,8 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     }
 
     // if a private page, caller will free it
-    printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> WRITE private (unmap?), non-zero: %d\n",
-           sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset, addr != zero_page);
+    //printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> WRITE private (unmap?), non-zero: %d\n",
+    //       sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset, addr != zero_page);
     return addr != zero_page;
 }
 

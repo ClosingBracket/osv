@@ -269,7 +269,7 @@ static int rofs_getattr(struct vnode *vnode, struct vattr *attr)
 
     attr->va_nodeid = vnode->v_ino;
     attr->va_size = vnode->v_size;
-    attr->va_fsid = 7;
+    attr->va_fsid = vnode->v_mount->m_fsid.__val[1];
 
     return 0;
 }
