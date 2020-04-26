@@ -321,6 +321,7 @@ static T find_in_cache(std::unordered_map<hashkey, T>& cache, hashkey& key)
 
 static void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
 {
+    assert(read_lock.owned());
     cp->map(ptep);
 }
 
@@ -334,6 +335,7 @@ static void add_arc_read_mapping(cached_page_arc *cp, mmu::hw_ptep<0> ptep)
 template<typename T>
 static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_page* cp, mmu::hw_ptep<0> ptep)
 {
+    assert(read_lock.owned());
     if (cp->unmap(ptep) == 0) {
         printf("[remove_read_mapping] [%d, %p] erasing from read cache\n",
                sched::thread::current()->id(), cp->addr());
@@ -352,6 +354,7 @@ static void remove_arc_read_mapping(cached_page_arc* cp, mmu::hw_ptep<0> ptep)
 void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
     SCOPE_LOCK(read_lock);
+    assert(read_lock.owned());
     cached_page* cp = find_in_cache(read_cache, key);
     if (cp) {
         //printf("pagecache:get remove_read_mapping\n");
@@ -391,6 +394,7 @@ static unsigned drop_arc_read_cached_page(cached_page_arc* cp, bool flush)
 static void drop_read_cached_page(hashkey& key)
 {
     SCOPE_LOCK(read_lock);
+    assert(read_lock.owned());
     cached_page* cp = find_in_cache(read_cache, key);
     if (cp) {
         drop_read_cached_page(read_cache, cp, true);
@@ -429,6 +433,7 @@ void map_arc_buf(hashkey *key, arc_buf_t* ab, void *page)
 void map_read_cached_page(hashkey *key, void *page)
 {
     SCOPE_LOCK(read_lock);
+    assert(read_lock.owned());
     cached_page* pc = new cached_page(*key, page);
     read_cache.emplace(*key, pc);
 }
@@ -479,6 +484,8 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
     struct stat st;
     fp->stat(&st);
     hashkey key {st.st_dev, st.st_ino, offset};
+    printf("pagecache:get() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
+
     SCOPE_LOCK(write_lock);
     cached_page_write* wcp = find_in_cache(write_cache, key);
 
@@ -536,6 +543,7 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
             }
             else {
                 WITH_LOCK(read_lock) {
+                    assert(read_lock.owned());
                     cached_page* cp = find_in_cache(read_cache, key);
                     if (cp) {
                         //printf("[pagecache::get] [%d, %s, %ld] --> read fault, return page from page cache\n",
@@ -589,6 +597,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     struct stat st;
     fp->stat(&st);
     hashkey key {st.st_dev, st.st_ino, offset};
+    printf("pagecache:release() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
 
     auto old = clear_pte(ptep);
 
@@ -623,6 +632,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
         }
     } else {
         WITH_LOCK(read_lock) {
+            assert(read_lock.owned());
             cached_page* rcp = find_in_cache(read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
                 printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> READ (unmap?)\n",
