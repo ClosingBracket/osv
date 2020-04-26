@@ -321,7 +321,7 @@ static T find_in_cache(std::unordered_map<hashkey, T>& cache, hashkey& key)
 static void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
 {
     assert(read_lock.owned());
-    mmu::flush_tlb_all();
+    //mmu::flush_tlb_all();
     cp->map(ptep);
 }
 
@@ -341,7 +341,7 @@ static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_pa
         //       sched::thread::current()->id(), cp->addr());
         cache.erase(cp->key());
         delete cp;
-        //mmu::flush_tlb_all();
+        mmu::flush_tlb_all();
     }
 }
 
