@@ -341,7 +341,7 @@ static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_pa
         //       sched::thread::current()->id(), cp->addr());
         cache.erase(cp->key());
         delete cp;
-        mmu::flush_tlb_all();
+        //mmu::flush_tlb_all();
     }
 }
 
@@ -360,6 +360,7 @@ void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
     if (cp) {
         //printf("pagecache:get remove_read_mapping\n");
         remove_read_mapping(read_cache, cp, ptep);
+        mmu::flush_tlb_all();
     }
 }
 
