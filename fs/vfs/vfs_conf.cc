@@ -67,13 +67,13 @@ extern "C" int zfs_init(void);
  * VFS switch table
  */
 const struct vfssw vfssw[] = {
-	{{0, RAMFS_ID}, "ramfs",	ramfs_init,	&ramfs_vfsops},
-	{{0, DEVFS_ID}, "devfs",	devfs_init,	&devfs_vfsops},
-	{{0, NFS_ID}, "nfs",		nfs_init,	&nfs_vfsops},
-	{{0, PROCFS_ID}, "procfs",	procfs_init,	&procfs_vfsops},
-	{{0, SYSFS_ID}, "sysfs",	sysfs_init,	&sysfs_vfsops},
-	{{0, ZFS_ID}, "zfs",		zfs_init,	&zfs_vfsops},
-	{{0, ROFS_ID}, "rofs", 	rofs_init, 	&rofs_vfsops},
-	{{0, VIRTIOFS_ID}, "virtiofs", 	virtiofs_init, 	&virtiofs_vfsops},
-	{{0, 0}, nullptr,	fs_noop,	nullptr},
+	{"ramfs",	ramfs_init,	&ramfs_vfsops},
+	{"devfs",	devfs_init,	&devfs_vfsops},
+	{"nfs",		nfs_init,	&nfs_vfsops},
+	{"procfs",	procfs_init,	&procfs_vfsops},
+	{"sysfs",	sysfs_init,	&sysfs_vfsops},
+	{"zfs",		zfs_init,	&zfs_vfsops},
+	{"rofs", 	rofs_init, 	&rofs_vfsops},
+	{"virtiofs", 	virtiofs_init, 	&virtiofs_vfsops},
+	{nullptr,	fs_noop,	nullptr},
 };

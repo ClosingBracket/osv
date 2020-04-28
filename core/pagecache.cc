@@ -14,6 +14,7 @@
 #include <osv/pagecache.hh>
 #include <osv/mempool.hh>
 #include <fs/vfs/vfs.h>
+#include <fs/vfs/vfs_id.h>
 #include <osv/trace.hh>
 #include <osv/prio.hh>
 #include <chrono>
@@ -320,7 +321,7 @@ static T find_in_cache(std::unordered_map<hashkey, T>& cache, hashkey& key)
 
 static void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
 {
-    assert(read_lock.owned());
+    //assert(read_lock.owned());
     //mmu::flush_tlb_all();
     cp->map(ptep);
 }
@@ -335,7 +336,7 @@ static void add_arc_read_mapping(cached_page_arc *cp, mmu::hw_ptep<0> ptep)
 template<typename T>
 static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_page* cp, mmu::hw_ptep<0> ptep)
 {
-    assert(read_lock.owned());
+    //assert(read_lock.owned());
     if (cp->unmap(ptep) == 0) {
         //printf("[remove_read_mapping] [%d, %p] erasing from read cache\n",
         //       sched::thread::current()->id(), cp->addr());
@@ -479,19 +480,18 @@ static void insert(cached_page_write* cp) {
     }
 }
 
-#define IS_ZFS(fsid) (fsid.__val[1] == ZFS_ID)
+#define IS_ZFS(st_dev) ((st_dev & (0xffULL<<56)) == ZFS_ID)
 
 bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pte, bool write, bool shared)
 {
     struct stat st;
     fp->stat(&st);
     hashkey key {st.st_dev, st.st_ino, offset};
-    //printf("pagecache:get() -> st_dev:%d, st_ino:%d, offset:%ld\n", st.st_dev, st.st_ino, offset);
+    printf("pagecache:get() -> st_dev:%016llx, st_ino:%d, offset:%ld, IS_ZFS:%d\n",
+            st.st_dev, st.st_ino, offset, IS_ZFS(st.st_dev));
 
     SCOPE_LOCK(write_lock);
     cached_page_write* wcp = find_in_cache(write_cache, key);
-
-    bool zfs = IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid);
 
     if (write) {
         if (!wcp) {
@@ -502,14 +502,14 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 insert(wcp);
                 // page is moved from read cache to write cache
                 // drop read page if exists, removing all mappings
-                if (zfs) {
+                if (IS_ZFS(st.st_dev)) {
                     drop_arc_read_cached_page(key);
                 } else {
                     drop_read_cached_page(key);
                 }
             } else {
                 // remove mapping to read cache page if exists
-                if (zfs) {
+                if (IS_ZFS(st.st_dev)) {
                     remove_arc_read_mapping(key, ptep);
                 } else {
                     remove_read_mapping(key, ptep);
@@ -532,7 +532,7 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
         int ret;
         // read fault and page is not in write cache yet, return one from ARC, mark it cow
         do {
-            if (zfs) {
+            if (IS_ZFS(st.st_dev)) {
                 WITH_LOCK(arc_read_lock) {
                     cached_page_arc* cp = find_in_cache(arc_read_cache, key);
                     if (cp) {
@@ -623,7 +623,7 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
 
     //printf("[pagecache::release] [%d, %s, %p, 0x%08x] --> READ (unmap?)\n",
     //        sched::thread::current()->id(), fp->f_dentry->d_path, addr, offset);
-    if (IS_ZFS(fp->f_dentry->d_vnode->v_mount->m_fsid)) {
+    if (IS_ZFS(st.st_dev)) {
         WITH_LOCK(arc_read_lock) {
             cached_page_arc* rcp = find_in_cache(arc_read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
@@ -679,7 +679,7 @@ void sync(vfs_file* fp, off_t start, off_t end)
         dirty.pop();
     }
 }
-/*
+
 TRACEPOINT(trace_access_scanner, "scanned=%u, cleared=%u, %%cpu=%g", unsigned, unsigned, double);
 static class access_scanner {
     static constexpr double _max_cpu = 20;
@@ -774,7 +774,7 @@ private:
 } s_access_scanner;
 
 constexpr double access_scanner::_max_cpu;
-constexpr double access_scanner::_min_cpu;*/
+constexpr double access_scanner::_min_cpu;
 
 
 }

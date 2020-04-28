@@ -66,7 +66,6 @@ public:
         } else {
             this->data = malloc(size);
         }
-        //memset(this->data, 0, size);
 #if defined(ROFS_DIAGNOSTICS_ENABLED)
         rofs_block_allocated += block_count;
 #endif
@@ -96,7 +95,6 @@ public:
     //
     // Read data from memory per uio
     int read(struct uio *uio, uint64_t offset_in_segment, uint64_t bytes_to_read) {
-        //printf
         print("[rofs] [%d] -> file_cache_segment::read() i-node: %d, starting block %d, reading [%d] bytes at segment offset [%d]\n",
               sched::thread::current()->id(), cache->inode->inode_no, starting_block, bytes_to_read,
               offset_in_segment);
@@ -113,9 +111,8 @@ public:
             blocks_remaining++;
         }
         auto block_count_to_read = std::min(block_count, blocks_remaining);
-        //printf
-        //printf("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
-        //      sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
+        printf("[rofs] [%d] -> file_cache_segment::read_from_disk() i-node: %d, starting block %d, reading [%d] blocks at disk offset [%d]\n",
+              sched::thread::current()->id(), cache->inode->inode_no, starting_block, block_count_to_read, block);
         auto error = rofs_read_blocks(device, block, block_count_to_read, data);
         this->data_ready = (error == 0);
         if (error) {

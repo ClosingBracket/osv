@@ -76,15 +76,6 @@ extern int vfs_debug;
 
 #define OPEN_MAX	256
 
-#define RAMFS_ID    1
-#define DEVFS_ID    2
-#define NFS_ID      3
-#define PROCFS_ID   4
-#define SYSFS_ID    5
-#define ZFS_ID      6
-#define ROFS_ID     7
-#define VIRTIOFS_ID 8
-
 /*
  * per task data
  */
