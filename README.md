@@ -53,14 +53,44 @@ the application files together. This, in high level can be achieved in two ways:
 If your intention is to try to run your app on OSv with the least effort possible, you should pursue the *capstan*
 route. For introduction please read this 
 [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan).
-For more details about capstan please read 
-[this documentation](https://github.com/cloudius-systems/capstan#documentation).
+For more details about *capstan* please read 
+[this documentation](https://github.com/cloudius-systems/capstan#documentation). Pre-built OSv kernel files
+(`ovs-loader.qemu`) can be downloaded using *capstan* from 
+[the OSv regular releases page](https://github.com/cloudius-systems/osv/releases) or manually from 
+[the nightly releases repo](https://github.com/osvunikernel/osv-nightly-releases/releases/tag/ci-master-latest).
 
 If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
-read remaining part of this page to guide you how to set up your development environment and build OSv kernel
-and application images.
+read [this part of the page](#setting-up-development-environment) to guide you how to set up your
+ development environment and build OSv kernel and application images.
 
-## Setting up development environment
+## Releases
+
+We aim to release OSv 2-3 times a year. You can find [the latest one on github](https://github.com/cloudius-systems/osv/releases)
+along with number of published artifacts including kernel and some modules.
+
+In addition, we have set-up [Travis-based CI/CD pipeline](https://travis-ci.org/github/cloudius-systems/osv) where each
+commit triggers full build of the latest kernel and publishes some artifacts to 
+[the "nightly releases repo"](https://github.com/osvunikernel/osv-nightly-releases/releases). Each commit also
+triggers publishing of new Docker "build tool chain" images to [the Docker hub](https://hub.docker.com/u/osvunikernel).
+
+## Design
+
+Ref components 
+High level:
+
+## Metrics and Performance
+
+### Kernel Size
+
+### Boot Time
+
+### Memory Utilization
+
+## Testing
+
+Mention docker runner
+
+## Setting up Development Environment
 
 OSv can only be built on a 64-bit x86 Linux distribution. Please note that
 this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
@@ -69,6 +99,10 @@ In order to build OSv kernel you need a physical or virtual machine with Linux d
 all necessary packages and libraries OSv build process depends on. The easiest way to set it up is to use
 [Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) that OSv comes with.
 You can use them to build your own Docker image and then start it in order to build OSv kernel inside of it.
+Alternatively, you may find it even easier to pull pre-built base **Docker images** for 
+[Ubuntu](https://hub.docker.com/repository/docker/osvunikernel/osv-ubuntu-19.10-builder-base) 
+and [Fedora](https://hub.docker.com/repository/docker/osvunikernel/osv-fedora-31-builder-base) 
+from Docker hub that get rebuilt and published to upon every commit. 
 
 Otherwise, you can manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
 to install GCC and all required packages, as long as it supports your Linux distribution, and you have both git 
@@ -84,7 +118,7 @@ The `setup.py` recognizes and installs packages for number of Linux distribution
 (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora 
 support is actively maintained and tested, so your mileage with other distributions may vary.
 
-## Building OSv kernel and creating images
+## Building OSv Kernel and Creating Images
 
 Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
 that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
@@ -147,6 +181,9 @@ Please note that simple "hello world" app should work just fine, but overall the
  For more information about the aarch64 port please read [this Wiki page](https://github.com/cloudius-systems/osv/wiki/AArch64).
 Mention Raspberry Pi 4.
 
+### Filesystems
+ ZFS, ROFS, RAMFS
+
 ## Running OSv
 
 Running an OSv image, built by `scripts/build`, is as easy as:
@@ -162,6 +199,8 @@ The `run.py` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM
 
 Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). 
 This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory named exactly like `run.py` does.
+
+### Mention direct kernel boot Firecraker and QEMU PVH
 
 Please note that in order to run OSv with the best performance on Linux under QEMU or Firecracker you need KVM enabled 
 (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). 
