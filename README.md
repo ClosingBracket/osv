@@ -69,16 +69,29 @@ We aim to release OSv 2-3 times a year. You can find [the latest one on github](
 along with number of published artifacts including kernel and some modules.
 
 In addition, we have set-up [Travis-based CI/CD pipeline](https://travis-ci.org/github/cloudius-systems/osv) where each
-commit triggers full build of the latest kernel and publishes some artifacts to 
+commit to the master and ipv6 branches triggers full build of the latest kernel and publishes some artifacts to 
 [the "nightly releases repo"](https://github.com/osvunikernel/osv-nightly-releases/releases). Each commit also
 triggers publishing of new Docker "build tool chain" images to [the Docker hub](https://hub.docker.com/u/osvunikernel).
 
 ## Design
 
-Ref components 
-High level:
+Good bit of the design of OSv is pretty well explained in 
+[the Components of OSv](https://github.com/cloudius-systems/osv/wiki/Components-of-OSv) wiki page. You 
+can find even more information in the original 
+[USENIX paper and its presentation](https://www.usenix.org/conference/atc14/technical-sessions/presentation/kivity).
+
+In addition, you can find a lot of good information about design of specific OSv components on
+[the main wiki page](https://github.com/cloudius-systems/osv/wiki) and http://osv.io/ and http://blog.osv.io/.
+Unfortunately some of that information may be outdated (especially on http://osv.io/), so it is always
+best to ask on [the mailing list](https://groups.google.com/forum/#!forum/osv-dev) if in doubt.
 
 ## Metrics and Performance
+
+There are no official **up-to date** performance metrics comparing OSv to other unikernels or Linux.
+In general file I/O heavy not very good primarily due to coarse-grain locking in VFS around read/write operation [find issue],
+ but network I/O should be better. You can find some old "numbers" on the wiki, http://osv.io/ and some papers listed below.
+ So OSv is probably not best suited to run MySQL or ElasticSearch, but should be pretty for general stateless
+ apps [Improve].
 
 ### Kernel Size
 
