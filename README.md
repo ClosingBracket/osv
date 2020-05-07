@@ -1,4 +1,10 @@
-***OSv was originally designed and implemented by Cloudius Systems (now ScyllaDB) however currently it is being maintained and enhanced by a small community of volunteers. If you are into systems programming or want to learn and help us improve OSv please contact us on [OSv Google Group forum](https://groups.google.com/forum/#!forum/osv-dev). For details on how to format and send patches, please read [this wiki](https://github.com/cloudius-systems/osv/wiki/Formatting-and-sending-patches) (__we do NOT accept pull requests__).***
+***OSv was originally designed and implemented by Cloudius Systems (now ScyllaDB) however
+ currently it is being maintained and enhanced by a small community of volunteers.
+ If you are into systems programming or want to learn and help us improve OSv please
+ contact us on [OSv Google Group forum](https://groups.google.com/forum/#!forum/osv-dev).
+ For details on how to format and send patches, please read 
+ [this wiki](https://github.com/cloudius-systems/osv/wiki/Formatting-and-sending-patches) 
+ (__we do NOT accept pull requests__).***
 
 # OSv
 
@@ -7,7 +13,7 @@ Linux applications** securely on micro-VMs in the cloud. Built from
 the ground up for effortless deployment and management of microservices
 and serverless apps, with superior performance.
 
-OSv has new APIs for new applications, but also runs unmodified x86-64 Linux
+OSv has been designed to run unmodified x86-64 Linux
 binaries **as is**, which effectively makes it a **Linux binary compatible unikernel**
 (for more details about Linux ABI compatibility please read
 [this doc](https://github.com/cloudius-systems/osv/wiki/OSv-Linux-ABI-Compatibility)).
@@ -16,10 +22,13 @@ In particular OSv can run many managed language runtimes including
 **Python** [**2**](https://github.com/cloudius-systems/osv-apps/tree/master/python2x) and
 [**3**](https://github.com/cloudius-systems/osv-apps/tree/master/python3x),
 [**Node.JS**](https://github.com/cloudius-systems/osv-apps/tree/master/node-from-host),
-[**Ruby**](https://github.com/cloudius-systems/osv-apps/tree/master/ruby-example), **Erlang**, and applications built on top of one.
+[**Ruby**](https://github.com/cloudius-systems/osv-apps/tree/master/ruby-example), **Erlang**, 
+and applications built on top of one.
 It can also run applications written in languages compiling directly to native machine code like
-**C**, **C++**, [**Golang**](https://github.com/cloudius-systems/osv-apps/tree/master/golang-httpserver)
-and [**Rust**](https://github.com/cloudius-systems/osv-apps/tree/master/rust-httpserver) as well as native images produced
+**C**, **C++**, 
+[**Golang**](https://github.com/cloudius-systems/osv-apps/tree/master/golang-httpserver)
+and [**Rust**](https://github.com/cloudius-systems/osv-apps/tree/master/rust-httpserver) 
+as well as native images produced
 by [**GraalVM**](https://github.com/cloudius-systems/osv-apps/tree/master/graalvm-example).
 
 OSv can boot as fast as **~5 ms** on Firecracker using as low as 15 MiB of memory.
@@ -34,19 +43,21 @@ and http://osv.io/.
 
 ## Building and Running Apps on OSv
 
-In order to run an application on OSv, one needs to build an image by fusing OSv kernel and
+In order to run an application on OSv, one needs to build an image by fusing OSv kernel, and
 the application files together. This, in high level can be achieved in two ways:
 - by using the script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
  that builds the kernel from source and fuses it with application files
-- by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses *pre-built kernel*
- and combines it with application files to produce final image
+- by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses *pre-built
+ kernel* and combines it with application files to produce final image
 
-If your intention is to try to run your app on OSv with least effort, you should pursue the *capstan*
-route. For introduction please read this [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan)
-and for more details about capstan read [this documentation](https://github.com/cloudius-systems/capstan#documentation).
+If your intention is to try to run your app on OSv with the least effort possible, you should pursue the *capstan*
+route. For introduction please read this 
+[crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan).
+For more details about capstan please read 
+[this documentation](https://github.com/cloudius-systems/capstan#documentation).
 
 If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
-read remaining part of this page to guide you how to setup your development environment and build OSv kernel
+read remaining part of this page to guide you how to set up your development environment and build OSv kernel
 and application images.
 
 ## Setting up development environment
@@ -60,23 +71,28 @@ all necessary packages and libraries OSv build process depends on. The easiest w
 You can use them to build your own Docker image and then start it in order to build OSv kernel inside of it.
 
 Otherwise, you can manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
-to install GCC and all required packages, as long as it supports your Linux distribution and you have both git and python 2.7 installed on your machine:
+to install GCC and all required packages, as long as it supports your Linux distribution, and you have both git 
+and python 3 installed on your machine:
 ```bash
 git clone https://github.com/cloudius-systems/osv.git
 cd osv && git submodule update --init --recursive
 ./scripts/setup.py
 ```
 
-The `setup.py` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, [Debian](https://github.com/cloudius-systems/osv/wiki/Building-OSv-on-Debian-stable), LinuxMint and RedHat ones (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora support is actively maintained and tested so your milage with other distributions may vary.
+The `setup.py` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, 
+[Debian](https://github.com/cloudius-systems/osv/wiki/Building-OSv-on-Debian-stable), LinuxMint and RedHat ones 
+(Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora 
+support is actively maintained and tested, so your mileage with other distributions may vary.
 
 ## Building OSv kernel and creating images
 
 Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
 that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
-to build the kernel and by using number of Python scripts like [module.py](https://github.com/cloudius-systems/osv/blob/master/scripts/module.py) to build application and *fuse* it together with the kernel
+to build the kernel and by using number of Python scripts like [module.py](https://github.com/cloudius-systems/osv/blob/master/scripts/module.py) 
+to build application and *fuse* it together with the kernel
 into a final image placed at ./build/release/usr.img (or ./build/$(arch)/usr.img in general). Please note that *building app* does
 not necessarily mean building from source as in many cases the app files would be simply located on and taken from the Linux build machine
-(see [manifest_from_host.sh](https://github.com/cloudius-systems/osv/blob/master/scripts/manifest_from_host.sh) for details).
+(see [this Wiki page](https://github.com/cloudius-systems/osv/wiki/Running-unmodified-Linux-executables-on-OSv) for details).
 
 The build script can be used like so per the examples below:
 ```bash
@@ -119,11 +135,17 @@ For example:
 scripts/convert raw
 ```
 
-By default OSv builds kernel for x86_64 architecture but it is also possible to build one for ARM by adding **arch** parameter like so:
+By default, OSv kernel gets built for x86_64 architecture, but it is also possible
+ to build one for ARM by adding **arch** parameter like so:
 ```bash
 ./scripts/build arch=aarch64
 ```
-Please note that even though the **aarch64** version of OSv kernel should build fine, most likely it will **not** run as the ARM part of OSv has not been well maintained and tested due to the lack of volunteers.
+At this point cross-compiling the **aarch64** version of OSv is only supported on Fedora and relevant aarch64 gcc and libraries'
+binaries can be downloaded using [this script](https://raw.githubusercontent.com/cloudius-systems/osv/master/scripts/download_fedora_aarch64_packages.py).
+Please note that simple "hello world" app should work just fine, but overall the ARM part of OSv has not been
+ as well maintained and tested as x86_64 due to the lack of volunteers. 
+ For more information about the aarch64 port please read [this Wiki page](https://github.com/cloudius-systems/osv/wiki/AArch64).
+Mention Raspberry Pi 4.
 
 ## Running OSv
 
@@ -132,32 +154,43 @@ Running an OSv image, built by `scripts/build`, is as easy as:
 ./scripts/run.py
 ```
 
-By default, the `run.py` runs OSv under KVM, with 4 VCPUs and 2GB of memory. You can control these and tens of other ones by passing relevant parameters to the `run.py`. For details on how to use the script please run `./scripts/run.py --help`.
+By default, the `run.py` runs OSv under KVM, with 4 vCPUs and 2 GB of memory. 
+You can control these and tens of other ones by passing relevant parameters to the `run.py`. For details on how to use the script please
+ run `./scripts/run.py --help`.
 
 The `run.py` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM you can terminate by hitting Ctrl+A X.
 
-Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). This script automatically downloads firecracker and accepts number of parameters like number ot VCPUs, memory named exactly like `run.py` does.
+Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). 
+This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory named exactly like `run.py` does.
 
-Please note that in order to run OSv with best performance on Linux under QEMU or Firecracker you need KVM enabled (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). The easiest way to verify KVM is enabled is to check if `/dev/kvm` is present and your user can read from and write to it. Adding your user to the kvm group may be necessary like so:
+Please note that in order to run OSv with the best performance on Linux under QEMU or Firecracker you need KVM enabled 
+(this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). 
+The easiest way to verify KVM is enabled is to check if `/dev/kvm` is present, and your user can read from and write to it. 
+Adding your user to the kvm group may be necessary like so:
 ```bash
 usermod -aG kvm <user name>
 ```
 
-For more information about building and running JVM, Node.JS, Python and other managed runtimes as well as Rust, Golang or C/C++ apps on OSv, please read this [wiki page](https://github.com/cloudius-systems/osv/wiki#running-your-application-on-osv). For more information about various example apps you can build and run on OSv, please read [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
+For more information about building and running JVM, Node.JS, Python and other managed runtimes as well as Rust, Golang or C/C++ apps
+ on OSv, please read this [wiki page](https://github.com/cloudius-systems/osv/wiki#running-your-application-on-osv). 
+ For more information about various example apps you can build and run on OSv, please read 
+ [the osv-apps repo README](https://github.com/cloudius-systems/osv-apps#osv-applications).
 
 ### Networking
 
-By default the `run.py`  starts OSv with [user networking/SLIRP](https://wiki.qemu.org/Documentation/Networking#User_Networking_.28SLIRP.29) on. To start OSv with more performant external networking:
+By default, the `run.py`  starts OSv with
+ [user networking/SLIRP](https://wiki.qemu.org/Documentation/Networking#User_Networking_.28SLIRP.29) on. 
+To start OSv with more performant external networking:
 
 ```
 sudo ./scripts/run.py -n -v
 ```
 
 The -v is for kvm's vhost that provides better performance
-and its setup requires a tap and thus we use sudo.
+and its setup requires tap device and thus we use sudo.
 
-By default OSv spawns a dhcpd that automatically configures the virtual nics.
-Static config can be done within OSv, configure networking like so:
+By default, OSv spawns a dhcpd-like thread that automatically configures virtual NICs.
+A static configuration can be done within OSv, configure networking like so:
 
 ```
 ifconfig virtio-net0 192.168.122.100 netmask 255.255.255.0 up
@@ -172,6 +205,10 @@ test invoke TCPExternalCommunication
 
 ## Debugging, Monitoring, Profiling OSv
 
-- OSv can be debugged with gdb; for more details please read this [wiki](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
-- OSv kernel and application can be traced and profiled; for more details please read this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
-- OSv comes with the admin/montioring REST API server; for more details please read [this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
+- OSv can be debugged with gdb; for more details please read this
+ [wiki](https://github.com/cloudius-systems/osv/wiki/Debugging-OSv)
+- OSv kernel and application can be traced and profiled; for more details please read 
+this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
+- OSv comes with the admin/monitoring REST API server; for more details please read 
+[this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and
+ [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
