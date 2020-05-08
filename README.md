@@ -95,7 +95,48 @@ In general file I/O heavy not very good primarily due to coarse-grain locking in
 
 ### Kernel Size
 
+At this moment (as of May 2020) the size of the uncompressed OSv kernel (`kernel.elf` artifact) is around
+6.7 MB (the compressed is ~ 2.7 MB). Which is not that small comparing to Linux kernel or very large comparing
+to other unikernels. However, bear in mind that OSv kernel (being unikernel) provides **subset** of functionality
+ of the following Linux libraries (see their approximate size on Linux host):
+- `libresolv.so.2` (_100 K_)
+- `libc.so.6` (_2 MB_)
+- `libm.so.6` (_1.4 MB_)
+- `ld-linux-x86-64.so.2` (_184 K_)
+- `libpthread.so.0` (_156 K_)
+- `libdl.so.2` (_20 K_)
+- `librt.so.1` (_40 K_)
+- `libstdc++.so.6` (_2 MB_)
+- `libaio.so.1` (_16 K_)
+- `libxenstore.so.3.0` (_32 K_)
+- `libcrypt.so.1` (_44 K_)
+
+The equivalent static version of `libstdc++.so.6` is actually linked `--whole-archive` so that
+any C++ apps can run without having to add `libstdc++.so.6` to the image. Finally, OSv kernel
+comes with ZFS implementation which in theory later can be extracted as a separate library. The
+point of this is to illustrate that comparing OSv kernel size to Linux kernel size does not
+quite make sense.
+
 ### Boot Time
+
+OSv with _Read-Only FS with networking off_ can boot as fast as **~5 ms** on Firecracker 
+and even faster around **~3 ms** on QEMU with the microvm machine. However, in general the boot time
+will depend on many factors like hypervisor including settings of individual para-virtual devices, 
+filesystem (ZFS, RoFS or RAMFS) and some boot parameters. Please note that by default OSv images
+get built with ZFS filesystem, but you can change it to other one using `fs` parameter of the `scripts/build`.
+
+For example, the boot time of ZFS image on Firecracker is around ~40 ms and regular QEMU around 200 ms these days. Also,
+newer versions of QEMU (>=4.0) are typically faster to boot. Booting on QEMU in PVH/HVM mode (aka direct kernel boot, enabled 
+by `-k` option of `run.py`) should always be faster as it directly jumps to 64-bit long mode. Please see
+[this Wiki](https://github.com/cloudius-systems/osv/wiki/OSv-boot-methods-overview) for the brief review of the boot
+modes OSv supports.  
+
+Finally, some boot parameters passed to the kernel may affect the boot time:
+- `--console serial`
+- `--nopci`
+- `--redirect=/tmp/out`
+
+You can always see boot time breakdown by adding `--bootchart` parameter:
 
 ### Memory Utilization
 
