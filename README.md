@@ -140,9 +140,31 @@ You can always see boot time breakdown by adding `--bootchart` parameter:
 
 ### Memory Utilization
 
+OSv needs at least 15 M of memory to run a _hello world_ app. Even though it is half of
+what it was 2 years ago, it is still quite a lot comparing to other unikernels. We are planning to further lower
+this number by reducing the size of kernel, adding self-tuning logic to L1/l2 memory pools and
+making application threads use lazily allocated stacks.
+
 ## Testing
 
-Mention docker runner
+OSv comes with around 130 unit tests that get executed upon every commit. There are also number of extra
+tests located under `tests/` sub-tree that are not automated at this point.
+
+You can run unit tests in number of ways:
+```
+./scripts/build check                                            # Create ZFS test image and run all tests in it on QEMU
+./scripts/build check fs=rofs                                    # Create RoFS test image and run all tests in it on QEMU
+./scripts/build image=tests && ./scripts/test.py -p firecracker  # Create ZFS test image and run all tests in it on Firecracker
+./scripts/build image=tests && ./scripts/test.py -p qemu_microvm # Create ZFS test image and run all tests in it on QEMU with microvm machine
+```
+
+In addition, there is an [Automated Testing Framework](https://github.com/cloudius-systems/osv/wiki/Automated-Testing-Framework)
+that can be used to run around 30 real apps some of them
+under stress using `ab` or `wrk` tools. The intention is to catch any regressions that might be missed
+by unit tests.
+
+Finally, one can use [Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) to
+test OSv on different Linux distribution.
 
 ## Setting up Development Environment
 
@@ -169,8 +191,8 @@ cd osv && git submodule update --init --recursive
 
 The `setup.py` recognizes and installs packages for number of Linux distributions including Fedora, Ubuntu, 
 [Debian](https://github.com/cloudius-systems/osv/wiki/Building-OSv-on-Debian-stable), LinuxMint and RedHat ones 
-(Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that only Ubuntu and Fedora 
-support is actively maintained and tested, so your mileage with other distributions may vary.
+(Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that we actively
+maintain and test only Ubuntu and Fedora, so your mileage with other distributions may vary.
 
 ## Building OSv Kernel and Creating Images
 
@@ -254,7 +276,7 @@ The `run.py` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM
 Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). 
 This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory named exactly like `run.py` does.
 
-### Mention direct kernel boot Firecraker and QEMU PVH
+### Mention direct kernel boot Firecracker and QEMU PVH
 
 Please note that in order to run OSv with the best performance on Linux under QEMU or Firecracker you need KVM enabled 
 (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). 
@@ -279,7 +301,7 @@ To start OSv with more performant external networking:
 sudo ./scripts/run.py -n -v
 ```
 
-The -v is for kvm's vhost that provides better performance
+The -v is for KVM's vhost that provides better performance
 and its setup requires tap device and thus we use sudo.
 
 By default, OSv spawns a dhcpd-like thread that automatically configures virtual NICs.
