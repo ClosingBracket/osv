@@ -194,6 +194,8 @@ The `setup.py` recognizes and installs packages for number of Linux distribution
 (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that we actively
 maintain and test only Ubuntu and Fedora, so your mileage with other distributions may vary.
 
+Mention CLion an Eclipse.
+
 ## Building OSv Kernel and Creating Images
 
 Building OSv is as easy as using the shell script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
@@ -327,3 +329,7 @@ this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-tr
 - OSv comes with the admin/monitoring REST API server; for more details please read 
 [this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and
  [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
+ 
+## Papers and articles about OSv
+
+## FAQ and Contact
