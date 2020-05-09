@@ -252,10 +252,11 @@ By default, OSv kernel gets built for x86_64 architecture, but it is also possib
 ```bash
 ./scripts/build arch=aarch64
 ```
-At this point cross-compiling the **aarch64** version of OSv is only supported on Fedora and relevant aarch64 gcc and libraries'
-binaries can be downloaded using [this script](https://raw.githubusercontent.com/cloudius-systems/osv/master/scripts/download_fedora_aarch64_packages.py).
+At this point cross-compiling the **aarch64** version of OSv is only supported
+on Fedora and relevant aarch64 gcc and libraries' binaries can be downloaded using
+[this script](https://raw.githubusercontent.com/cloudius-systems/osv/master/scripts/download_fedora_aarch64_packages.py).
 Please note that simple "hello world" app should work just fine, but overall the ARM part of OSv has not been
- as well maintained and tested as x86_64 due to the lack of volunteers. 
+ as well maintained and tested as x86_64 due to the lack of volunteers.
  For more information about the aarch64 port please read [this Wiki page](https://github.com/cloudius-systems/osv/wiki/AArch64).
 Mention Raspberry Pi 4.
 
@@ -330,6 +331,21 @@ this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-tr
 [this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and
  [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
  
-## Papers and articles about OSv
-
 ## FAQ and Contact
+
+If you want to learn more about OSv or ask us questions, 
+please contact us on [OSv Google Group forum](https://groups.google.com/forum/#!forum/osv-dev).
+You can also follow us on [Twitter](https://twitter.com/osv_unikernel).
+
+## Papers and Articles about OSv
+
+List of somewhat newer articles about OSv found on the Web:
+* [Unikernels vs Containers: An In-Depth Benchmarking Study in the context of Microservice Applications](https://biblio.ugent.be/publication/8582433/file/8582438)
+* [Towards a Practical Ecosystem of Specialized OS Kernels](http://cs.iit.edu/~khale/docs/diver-ross19.pdf)
+* [A Performance Evaluation of Unikernels](https://pdfs.semanticscholar.org/d956/f72dbc65301578dc95e0f751f4ae7c09d831.pdf)
+* [Security Perspective on Unikernels](https://arxiv.org/pdf/1911.06260.pdf)
+* [Performance Evaluation of OSv for Server Applications](http://www.cs.utah.edu/~peterm/prelim-osv-performance.pdf)
+* [Time provisioning Evaluation of KVM, Docker and Unikernels in a Cloud Platform](https://tiagoferreto.github.io/pubs/2016ccgrid_xavier.pdf)
+* [Unikernels - Beyond Containers to the Next Generation of the Cloud](https://theswissbay.ch/pdf/_to_sort/O'Reilly/unikernels.pdf)
+
+You can find some older articles and presentations at http://osv.io/resources and http://blog.osv.io/.
