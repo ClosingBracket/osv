@@ -138,7 +138,26 @@ Finally, some boot parameters passed to the kernel may affect the boot time:
 a lot, so redirecting standard output and error to a file might speed up performance quite a lot
 
 You can always see boot time breakdown by adding `--bootchart` parameter:
-???
+```
+./scripts/run.py -e '--bootchart /hello'
+OSv v0.54.0-197-g1f0df4e4
+eth0: 192.168.122.15
+	disk read (real mode): 25.85ms, (+25.85ms)
+	uncompress lzloader.elf: 45.11ms, (+19.26ms)
+	TLS initialization: 45.72ms, (+0.61ms)
+	.init functions: 47.61ms, (+1.89ms)
+	SMP launched: 48.08ms, (+0.47ms)
+	VFS initialized: 50.99ms, (+2.91ms)
+	Network initialized: 51.12ms, (+0.14ms)
+	pvpanic done: 51.25ms, (+0.13ms)
+	pci enumerated: 61.55ms, (+10.29ms)
+	drivers probe: 61.55ms, (+0.00ms)
+	drivers loaded: 135.91ms, (+74.36ms)
+	ROFS mounted: 136.98ms, (+1.07ms)
+	Total time: 138.16ms, (+1.18ms)
+Cmdline: /hello
+Hello from C code
+```
 
 ### Memory Utilization
 
