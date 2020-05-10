@@ -133,7 +133,7 @@ modes OSv supports.
 
 Finally, some boot parameters passed to the kernel may affect the boot time:
 - `--console serial` - this disables VGA console that is [slow to initialize](https://github.com/cloudius-systems/osv/issues/987) and can shave off 60-70 ms on QEMU
-- `--nopci` - this disables enumeration of PCI devices especially if we know none are present (QEMU with microvm or firecracker) and can shave off 10-20 ms 
+- `--nopci` - this disables enumeration of PCI devices especially if we know none are present (QEMU with microvm or Firecracker) and can shave off 10-20 ms 
 - `--redirect=/tmp/out` - writing to the console can impact the performance quite severely (30-40%) if application logs 
 a lot, so redirecting standard output and error to a file might speed up performance quite a lot
 
@@ -215,7 +215,12 @@ The `setup.py` recognizes and installs packages for number of Linux distribution
 (Scientific Linux, NauLinux, CentOS Linux, Red Hat Enterprise Linux, Oracle Linux). Please note that we actively
 maintain and test only Ubuntu and Fedora, so your mileage with other distributions may vary.
 
-Mention CLion an Eclipse.
+### IDEs
+
+If you like working in IDEs, we recommend either [Eclipse CDT](https://www.eclipse.org/cdt/) which can be setup
+as described in this [wiki page](https://github.com/cloudius-systems/osv/wiki/Working-With-Eclipse-CDT) or 
+[CLion from JetBrains](https://www.jetbrains.com/clion/) which can be setup to work with OSv makefile using
+so called compilation DB as described in this [guide](https://www.jetbrains.com/help/clion/managing-makefile-projects.html).
 
 ## Building OSv Kernel and Creating Images
 
@@ -306,7 +311,9 @@ You can control these and tens of other ones by passing relevant parameters to t
 The `run.py` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM you can terminate by hitting Ctrl+A X.
 
 Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). 
-This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory named exactly like `run.py` does.
+This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory
+named exactly like `run.py` does. You can read more details about running OSv on Firecracker in 
+this [wiki](https://github.com/cloudius-systems/osv/wiki/Running-OSv-on-Firecracker). 
 
 Please note that in order to run OSv with the best performance on Linux under QEMU or Firecracker you need KVM enabled 
 (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). 
@@ -342,12 +349,6 @@ ifconfig virtio-net0 192.168.122.100 netmask 255.255.255.0 up
 route add default gw 192.168.122.1
 ```
 
-Test networking:
-
-```
-test invoke TCPExternalCommunication
-```
-
 To enable networking on Firecracker, you have to explicitly pass `-n` option
 to `firecracker.py`.
 
@@ -363,7 +364,9 @@ If you need IPV6, please build from [ipv6 branch](https://github.com/cloudius-sy
 this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-trace.py)
 - OSv comes with the admin/monitoring REST API server; for more details please read 
 [this](https://github.com/cloudius-systems/osv/wiki/Command-Line-Interface-(CLI)) and
- [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API).
+ [that wiki page](https://github.com/cloudius-systems/osv/wiki/Using-OSv-REST-API). There is also
+ lighter [monitoring REST API module](https://github.com/cloudius-systems/osv/commit/aa32614221254ce300f401bb99c506b528b85682) 
+ that is effectively a read-only subset of the former one. 
  
 ## FAQ and Contact
 
