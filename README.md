@@ -45,8 +45,8 @@ and http://osv.io/.
 
 In order to run an application on OSv, one needs to build an image by fusing OSv kernel, and
 the application files together. This, in high level can be achieved in two ways:
-- by using the script [build](https://github.com/cloudius-systems/osv/blob/master/scripts/build)
- that builds the kernel from source and fuses it with application files
+- by using the shell script located at `./scripts/build`
+ that builds the kernel from sources and fuses it with application files
 - by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses *pre-built
  kernel* and combines it with application files to produce final image
 
@@ -60,7 +60,7 @@ For more details about *capstan* please read
 [the nightly releases repo](https://github.com/osvunikernel/osv-nightly-releases/releases/tag/ci-master-latest).
 
 If you are comfortable with make and GCC toolchain and want to try the latest OSv code, then you should
-read [this part of the page](#setting-up-development-environment) to guide you how to set up your
+read this [part of the readme](#setting-up-development-environment) to guide you how to set up your
  development environment and build OSv kernel and application images.
 
 ## Releases
@@ -132,11 +132,13 @@ by `-k` option of `run.py`) should always be faster as it directly jumps to 64-b
 modes OSv supports.  
 
 Finally, some boot parameters passed to the kernel may affect the boot time:
-- `--console serial`
-- `--nopci`
-- `--redirect=/tmp/out`
+- `--console serial` - this disables VGA console that is [slow to initialize](https://github.com/cloudius-systems/osv/issues/987) and can shave off 60-70 ms on QEMU
+- `--nopci` - this disables enumeration of PCI devices especially if we know none are present (QEMU with microvm or firecracker) and can shave off 10-20 ms 
+- `--redirect=/tmp/out` - writing to the console can impact the performance quite severely (30-40%) if application logs 
+a lot, so redirecting standard output and error to a file might speed up performance quite a lot
 
 You can always see boot time breakdown by adding `--bootchart` parameter:
+???
 
 ### Memory Utilization
 
@@ -261,7 +263,15 @@ Please note that simple "hello world" app should work just fine, but overall the
 Mention Raspberry Pi 4.
 
 ### Filesystems
- ZFS, ROFS, RAMFS
+
+At the end of the boot process, OSv dynamic linker loads an application ELF and any related libraries
+ from the filesystem on a disk that is part of an image. By default, the images built by `./script/built`
+ contain a disk formatted as ZFS, which you can read more about [here](https://github.com/cloudius-systems/osv/wiki/ZFS).
+ ZFS is a great read-write file system if you want to run MySQL or ElasticSearch on OSv but maybe overkill
+ if you want to execute stateless apps in which case you may consider 
+ [Read-Only FS](https://github.com/cloudius-systems/osv/commit/cd449667b7f86721095ddf4f9f3f8b87c1c414c9). Finally,
+ you can also have OSv load you application from RAMFS. You can specify which filesystem to use by setting
+ parameter `fs` to `./scripts/build` which could be equal to `zfs`, `rofs` or `ramfs`.
 
 ## Running OSv
 
@@ -278,8 +288,6 @@ The `run.py` can run OSv image on QEMU/KVM, Xen and VMware. If running under KVM
 
 Alternatively you can use `./scripts/firecracker.py` to run OSv on [Firecracker](https://firecracker-microvm.github.io/). 
 This script automatically downloads firecracker and accepts number of parameters like number ot vCPUs, memory named exactly like `run.py` does.
-
-### Mention direct kernel boot Firecracker and QEMU PVH
 
 Please note that in order to run OSv with the best performance on Linux under QEMU or Firecracker you need KVM enabled 
 (this is only possible on *physical* Linux machines, EC2 bare metal instances or VMs that support nested virtualization with KVM on). 
@@ -321,6 +329,13 @@ Test networking:
 test invoke TCPExternalCommunication
 ```
 
+To enable networking on Firecracker, you have to explicitly pass `-n` option
+to `firecracker.py`.
+
+Finally, please note that the master branch of OSv only implements IPV4 subset of networking stack.
+If you need IPV6, please build from [ipv6 branch](https://github.com/cloudius-systems/osv/tree/ipv6)
+ or use IPV6 kernel published to [nightly releases repo](https://github.com/osvunikernel/osv-nightly-releases/releases/tag/ci-ipv6-latest). 
+
 ## Debugging, Monitoring, Profiling OSv
 
 - OSv can be debugged with gdb; for more details please read this
@@ -333,7 +348,7 @@ this [wiki](https://github.com/cloudius-systems/osv/wiki/Trace-analysis-using-tr
  
 ## FAQ and Contact
 
-If you want to learn more about OSv or ask us questions, 
+If you want to learn more about OSv or ask questions, 
 please contact us on [OSv Google Group forum](https://groups.google.com/forum/#!forum/osv-dev).
 You can also follow us on [Twitter](https://twitter.com/osv_unikernel).
 
