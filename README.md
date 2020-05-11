@@ -56,17 +56,17 @@ and http://osv.io/.
 ## Building and Running Apps on OSv
 
 In order to run an application on OSv, one needs to build an image by fusing OSv kernel, and
-the application files together. This, in high level can be achieved in two ways:
+the application files together. This, in high level can be achieved in two ways, either:
 - by using the shell script located at `./scripts/build`
- that builds the kernel from sources and fuses it with application files
+ that builds the kernel from sources and fuses it with application files, or
 - by using the [capstan tool](https://github.com/cloudius-systems/capstan) that uses *pre-built
- kernel* and combines it with application files to produce final image
+ kernel* and combines it with application files to produce a final image.
 
 If your intention is to try to run your app on OSv with the least effort possible, you should pursue the *capstan*
 route. For introduction please read this 
 [crash course](https://github.com/cloudius-systems/osv/wiki/Build-and-run-apps-on-OSv-using-Capstan).
 For more details about *capstan* please read 
-this [documentation](https://github.com/cloudius-systems/capstan#documentation). Pre-built OSv kernel files
+this more detailed [documentation](https://github.com/cloudius-systems/capstan#documentation). Pre-built OSv kernel files
 (`ovs-loader.qemu`) can be automatically downloaded by *capstan* from 
 the [OSv regular releases page](https://github.com/cloudius-systems/osv/releases) or manually from 
 the [nightly releases repo](https://github.com/osvunikernel/osv-nightly-releases/releases/tag/ci-master-latest).
@@ -103,11 +103,11 @@ There are no official **up-to date** performance metrics comparing OSv to other 
 In general OSv lags behind Linux in disk-I/O-intensive workloads partially due to coarse-grained locking 
 in VFS around read/write operations as described in this [issue](https://github.com/cloudius-systems/osv/issues/450).
 In network-I/O-intensive workloads, OSv should fare better (or at least used to as Linux has advanced a lot since)
-as shown with performance tests of Redis and [memcached](https://github.com/cloudius-systems/osv/wiki/OSv-Case-Study:-Memcached).
-You can find some old "numbers" on the main wiki, http://osv.io/benchmarks and some papers listed below.
+as shown with performance tests of Redis and [Memcached](https://github.com/cloudius-systems/osv/wiki/OSv-Case-Study:-Memcached).
+You can find some old "numbers" on the main wiki, http://osv.io/benchmarks and some papers listed at the bottom of this readme.
 
 So OSv is probably not best suited to run MySQL or ElasticSearch, but should deliver pretty solid performance for general
- stateless applications like microservices or serverless.
+ stateless applications like microservices or serverless (at least as some papers show).
 
 ### Kernel Size
 
@@ -128,8 +128,8 @@ to other unikernels. However, bear in mind that OSv kernel (being unikernel) pro
 - `libcrypt.so.1` (_44 K_)
 
 The equivalent static version of `libstdc++.so.6` is actually linked `--whole-archive` so that
-any C++ apps can run without having to add `libstdc++.so.6` to the image. Finally, OSv kernel
-comes with ZFS implementation which in theory later can be extracted as a 
+any C++ apps can run without having to add `libstdc++.so.6` to the image (whether it needs it or not).
+Finally, OSv kernel comes with ZFS implementation which in theory later can be extracted as a 
 [separate library](https://github.com/cloudius-systems/osv/issues/1009). The
 point of this is to illustrate that comparing OSv kernel size to Linux kernel size does not
 quite make sense.
@@ -144,7 +144,7 @@ get built with ZFS filesystem, but you can change it to other one using `fs` par
 
 For example, the boot time of ZFS image on Firecracker is around ~40 ms and regular QEMU around 200 ms these days. Also,
 newer versions of QEMU (>=4.0) are typically faster to boot. Booting on QEMU in PVH/HVM mode (aka direct kernel boot, enabled 
-by `-k` option of `run.py`) should always be faster as it directly jumps to 64-bit long mode. Please see
+by `-k` option of `run.py`) should always be faster as OSv is directly invoked in 64-bit long mode. Please see
 [this Wiki](https://github.com/cloudius-systems/osv/wiki/OSv-boot-methods-overview) for the brief review of the boot
 methods OSv supports.
 
@@ -185,7 +185,7 @@ making application threads use [lazily allocated stacks](https://github.com/clou
 
 ## Testing
 
-OSv comes with around 130 unit tests that get executed upon every commit. There are also number of extra
+OSv comes with around 130 unit tests that get executed upon every commit and run on ScyllaDB servers. There are also number of extra
 tests located under `tests/` sub-tree that are not automated at this point.
 
 You can run unit tests in number of ways:
@@ -212,12 +212,12 @@ this means the "x86_64" or "amd64" version, not the 32-bit "i386" version.
 In order to build OSv kernel you need a physical or virtual machine with Linux distribution on it and GCC toolchain and
 all necessary packages and libraries OSv build process depends on. The fastest way to set it up is to use the
 [Docker files](https://github.com/cloudius-systems/osv/tree/master/docker#docker-osv-builder) that OSv comes with.
-You can use them to build your own Docker image and then start it in order to build OSv kernel inside of it.
+You can use them to build your own Docker image and then start it in order to build OSv kernel or run an app on OSv inside of it.
 Please note that the main docker file depends on pre-built base **Docker images** for 
 [Ubuntu](https://hub.docker.com/repository/docker/osvunikernel/osv-ubuntu-19.10-builder-base) 
 or [Fedora](https://hub.docker.com/repository/docker/osvunikernel/osv-fedora-31-builder-base) 
 that get published to DockerHub upon every commit. This should speed up building the final images
-as all necessary packages should already be installed.
+as all necessary packages should already be part of the base images.
 
 Alternatively, you can manually clone OSv repo and use [setup.py](https://github.com/cloudius-systems/osv/blob/master/scripts/setup.py)
 to install all required packages and libraries, as long as it supports your Linux distribution, and you have both git 
@@ -245,14 +245,15 @@ so called compilation DB as described in this [guide](https://www.jetbrains.com/
 
 Building OSv is as easy as using the shell script `./scripts/build`
 that orchestrates the build process by delegating to the main [makefile](https://github.com/cloudius-systems/osv/blob/master/Makefile)
-to build the kernel and by using number of Python scripts like [module.py](https://github.com/cloudius-systems/osv/blob/master/scripts/module.py) 
+to build the kernel and by using number of Python scripts like `./scripts/module.py` 
 to build application and *fuse* it together with the kernel
 into a final image placed at `./build/release/usr.img` (or `./build/$(arch)/usr.img` in general).
 Please note that *building an application* does not necessarily mean building from sources as in many 
 cases the application binaries would be located on and copied from the Linux build machine
+using the shell script `./scripts/manifest_from_host.sh`
 (see [this Wiki page](https://github.com/cloudius-systems/osv/wiki/Running-unmodified-Linux-executables-on-OSv) for details).
 
-The `build` shell script can be used as the examples below illustrate:
+The shell script `build` can be used as the examples below illustrate:
 ```bash
 # Create default image that comes with command line and REST API server
 ./scripts/build
@@ -284,7 +285,7 @@ In that case, make and scripts/build do not need the parameter -j.
 
 For details on how to use the build script, please run `./scripts/build --help`.
 
-The `.scripts/build` creates the image `build/last/usr.img` in qcow2 format.
+The `./scripts/build` creates the image `build/last/usr.img` in qcow2 format.
 To convert this image to other formats, use the `./scripts/convert`
 tool, which can convert an image to the vmdk, vdi or raw formats.
 For example:
