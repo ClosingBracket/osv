@@ -8,21 +8,11 @@
 
 # OSv
 
-Stare:
-OSv is a new open-source operating system for virtual-machines.	OSv is an open-source versatile modular **unikernel** designed to run **unmodified
-OSv was designed from the ground up to execute a single application on top	Linux applications** securely on micro-VMs in the cloud. Built from
-of a hypervisor, resulting in superior performance and effortless management	the ground up for effortless deployment and management of microservices
-when compared to traditional operating systems which were designed for	and serverless apps, with superior performance.
-a vast range of physical machines.
-
-OSv is an open-source versatile modular **unikernel** designed to run **unmodified
-Linux applications** securely on micro-VMs in the cloud. Built from
+OSv is an open-source versatile modular **unikernel** designed to run single **unmodified
+Linux application** securely as microVM on top of a hypervisor, when compared to traditional
+operating systems which were designed for a vast range of physical machines. Built from
 the ground up for effortless deployment and management of microservices
 and serverless apps, with superior performance.
-
-By some it can be called "library OS".
-
-----
 
 OSv has been designed to run unmodified x86-64 Linux
 binaries **as is**, which effectively makes it a **Linux binary compatible unikernel**
@@ -34,7 +24,7 @@ In particular OSv can run many managed language runtimes including
 [**3**](https://github.com/cloudius-systems/osv-apps/tree/master/python3x),
 [**Node.JS**](https://github.com/cloudius-systems/osv-apps/tree/master/node-from-host),
 [**Ruby**](https://github.com/cloudius-systems/osv-apps/tree/master/ruby-example), **Erlang**, 
-and applications built on top of one.
+and applications built on top of those runtimes.
 It can also run applications written in languages compiling directly to native machine code like
 **C**, **C++**, 
 [**Golang**](https://github.com/cloudius-systems/osv-apps/tree/master/golang-httpserver)
@@ -112,7 +102,7 @@ So OSv is probably not best suited to run MySQL or ElasticSearch, but should del
 ### Kernel Size
 
 At this moment (as of May 2020) the size of the uncompressed OSv kernel (`kernel.elf` artifact) is around
-6.7 MB (the compressed is ~ 2.7 MB). This is not that small comparing to Linux kernel and large comparing
+6.7 MB (the compressed is ~ 2.7 MB). This is not that small comparing to Linux kernel and quite large comparing
 to other unikernels. However, bear in mind that OSv kernel (being unikernel) provides **subset** of functionality
  of the following Linux libraries (see their approximate size on Linux host):
 - `libresolv.so.2` (_100 K_)
@@ -140,7 +130,7 @@ OSv with _Read-Only FS with networking off_ can boot as fast as **~5 ms** on Fir
 and even faster around **~3 ms** on QEMU with the microvm machine. However, in general the boot time
 will depend on many factors like hypervisor including settings of individual para-virtual devices, 
 filesystem (ZFS, ROFS or RAMFS) and some boot parameters. Please note that by default OSv images
-get built with ZFS filesystem, but you can change it to other one using `fs` parameter of the `./scripts/build`.
+get built with ZFS filesystem.
 
 For example, the boot time of ZFS image on Firecracker is around ~40 ms and regular QEMU around 200 ms these days. Also,
 newer versions of QEMU (>=4.0) are typically faster to boot. Booting on QEMU in PVH/HVM mode (aka direct kernel boot, enabled 
