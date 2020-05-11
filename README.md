@@ -182,10 +182,10 @@ You can run unit tests in number of ways:
 ```
 ./scripts/build check                  # Create ZFS test image and run all tests in it on QEMU
 ./scripts/build check fs=rofs          # Create ROFS test image and run all tests in it on QEMU
-./scripts/build image=tests && \
-./scripts/test.py -p firecracker       # Create ZFS test image and run all tests in it on Firecracker
-./scripts/build image=tests && \
-./scripts/test.py -p qemu_microvm      # Create ZFS test image and run all tests in it on QEMU with microvm machine
+./scripts/build image=tests && \       # Create ZFS test image and run all tests in it on Firecracker
+  ./scripts/test.py -p firecracker
+./scripts/build image=tests && \       # Create ZFS test image and run all tests in it on QEMU
+  ./scripts/test.py -p qemu_microvm    # with microvm machine
 ```
 
 In addition, there is an [Automated Testing Framework](https://github.com/cloudius-systems/osv/wiki/Automated-Testing-Framework)
