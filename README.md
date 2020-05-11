@@ -180,10 +180,13 @@ tests located under `tests/` sub-tree that are not automated at this point.
 
 You can run unit tests in number of ways:
 ```
-./scripts/build check                                            # Create ZFS test image and run all tests in it on QEMU
-./scripts/build check fs=rofs                                    # Create ROFS test image and run all tests in it on QEMU
-./scripts/build image=tests && ./scripts/test.py -p firecracker  # Create ZFS test image and run all tests in it on Firecracker
-./scripts/build image=tests && ./scripts/test.py -p qemu_microvm # Create ZFS test image and run all tests in it on QEMU with microvm machine
+./scripts/build check                              # Create ZFS test image and run all tests in it on QEMU
+./scripts/build check fs=rofs                      # Create ROFS test image and run all tests in it on QEMU
+./scripts/build image=tests && ./scripts/test.py \
+  -p firecracker                                   # Create ZFS test image and run all tests in it on Firecracker
+./scripts/build image=tests && ./scripts/test.py \
+  -p qemu_microvm                                  # Create ZFS test image and run all tests in it on QEMU
+                                                   # with microvm machine
 ```
 
 In addition, there is an [Automated Testing Framework](https://github.com/cloudius-systems/osv/wiki/Automated-Testing-Framework)
@@ -255,13 +258,13 @@ The shell script `build` can be used as the examples below illustrate:
 ./scripts/build JAVA_VERSION=10 image=openjdk-zulu-9-and-above,spring-boot-example
 
  # Create image with 'ls' executable taken from the host
-./scripts/manifest_from_host.sh -w ls && ./script/build --append-manifest
+./scripts/manifest_from_host.sh -w ls && ./scripts/build --append-manifest
 
 # Create test image and run all tests in it
-./script/build check
+./scripts/build check
 
 # Clean the build tree
-./script/build clean
+./scripts/build clean
 ```
 
 Command nproc will calculate the number of jobs/threads for make and `./scripts/build` automatically.
