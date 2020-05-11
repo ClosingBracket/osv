@@ -310,8 +310,9 @@ At the end of the boot process, OSv dynamic linker loads an application ELF and 
  ZFS is a great read-write file system and may be a perfect fit if you want to run MySQL on OSv. However, it may be an overkill
  if you want to run stateless apps in which case you may consider 
  [Read-Only FS](https://github.com/cloudius-systems/osv/commit/cd449667b7f86721095ddf4f9f3f8b87c1c414c9). Finally,
- you can also have OSv load you application binary from RAM FS. You can specify which filesystem to use by setting
- parameter `fs` to `./scripts/build` which could be equal to `zfs`, `rofs` or `ramfs`.
+ you can also have OSv read the application binary from RAMFS, in which case the filesystem get embedded as part of
+ the kernel ELF. You can specify which filesystem to build image disk as
+  by setting parameter `fs` of `./scripts/build` to one of the three values -`zfs`, `rofs` or `ramfs`.
 
 ## Running OSv
 
