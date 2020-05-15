@@ -50,6 +50,8 @@ enum mcr {
     LOOPBACK_MODE       = 0x16,
 };
 
+mmioaddr_t mmio_isa_serial_console::_addr_mmio;
+
 void mmio_isa_serial_console::early_init()
 {
     u64 address = 0x40001000; //TODO: Should parse from early console boot command line

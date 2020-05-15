@@ -25,7 +25,6 @@ public:
     virtual char readch();
 private:
     //std::unique_ptr<sgi_edge_interrupt> _irq;
-    //static constexpr mmioaddr_t _addr_mmio = static_cast<mmioaddr_t>((void*)0x7l);
     static mmioaddr_t _addr_mmio;
 
     virtual void dev_start();
