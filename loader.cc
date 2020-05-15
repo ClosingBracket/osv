@@ -230,6 +230,7 @@ static void parse_options(int loader_argc, char** loader_argv)
         opt_maxnic = true;
         maxnic = options::extract_option_int_value(options_values, "maxnic", handle_parse_error);
     }
+    maxnic = 0;
 
     if (extract_option_flag(options_values, "trace-backtrace")) {
         opt_log_backtrace = true;
@@ -261,6 +262,7 @@ static void parse_options(int loader_argc, char** loader_argv)
     }
 
     opt_mount = !extract_option_flag(options_values, "nomount");
+    opt_mount = false;
     opt_pivot = !extract_option_flag(options_values, "nopivot");
     opt_random = !extract_option_flag(options_values, "norandom");
     opt_init = !extract_option_flag(options_values, "noinit");
@@ -350,13 +352,17 @@ std::vector<std::vector<std::string> > prepare_commands(char* app_cmdline)
     std::vector<std::vector<std::string> > commands;
     bool ok;
 
-    printf("Cmdline: %s\n", app_cmdline);
-    commands = osv::parse_command_line(app_cmdline, ok);
+    //printf("Cmdline: %s\n", app_cmdline);
+    //commands = osv::parse_command_line(app_cmdline, ok);
+    puts("Before parse.");
+    commands = osv::parse_command_line("/tools/hello.so", ok);
 
+    puts("Before OK.");
     if (!ok) {
         puts("Failed to parse command line.");
         osv::poweroff();
     }
+    puts("Before commands.");
     if (commands.size() == 0) {
         puts("This image has an empty command line. Nothing to run.");
         osv::poweroff();

@@ -354,6 +354,7 @@ tools := tools/mkfs/mkfs.so tools/cpiod/cpiod.so
 $(out)/tools/%.o: COMMON += -fPIC
 
 tools += tools/uush/uush.so
+tools += tools/uush/hello.so
 tools += tools/uush/ls.so
 tools += tools/uush/mkdir.so
 
