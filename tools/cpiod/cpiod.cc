@@ -142,7 +142,7 @@ static void handle_parse_error(const std::string &message)
     exit(1);
 }
 
-int main(int ac, char** av)
+int __attribute__((visibility("default"))) main(int ac, char** av)
 {
     int port = 10000;
     std::string prefix("/");
