@@ -445,7 +445,7 @@ acpi-defines = -DACPI_MACHINE_WIDTH=64 -DACPI_USE_LOCAL_CACHE
 acpi-source := $(shell find external/$(arch)/acpica/source/components -type f -name '*.c')
 acpi = $(patsubst %.c, %.o, $(acpi-source))
 
-$(acpi:%=$(out)/%): CFLAGS += -fno-strict-aliasing -Wno-stringop-truncation
+$(acpi:%=$(out)/%): CFLAGS += -fno-strict-aliasing -Wno-stringop-truncation -fvisibility=hidden
 
 endif # x64
 
@@ -767,7 +767,6 @@ libtsm += drivers/libtsm/tsm_vte.o
 libtsm += drivers/libtsm/tsm_vte_charsets.o
 
 drivers := $(bsd) $(solaris)
-drivers += core/mmu.o
 drivers += arch/$(arch)/early-console.o
 drivers += drivers/console.o
 drivers += drivers/console-multiplexer.o
@@ -776,7 +775,6 @@ drivers += drivers/line-discipline.o
 drivers += drivers/clock.o
 drivers += drivers/clock-common.o
 drivers += drivers/clockevent.o
-drivers += core/elf.o
 drivers += drivers/random.o
 drivers += drivers/zfs.o
 drivers += drivers/null.o
@@ -827,6 +825,9 @@ drivers += drivers/virtio-net.o
 drivers += drivers/virtio-fs.o
 endif # aarch64
 
+#$(drivers): CXXFLAGS += -fvisibility=hidden
+$(drivers:%=$(out)/%): CXXFLAGS += -fvisibility=hidden
+
 objects += arch/$(arch)/arch-trace.o
 objects += arch/$(arch)/arch-setup.o
 objects += arch/$(arch)/signal.o
@@ -875,6 +876,8 @@ objects += core/sampler.o
 objects += $(acpi)
 endif # x64
 
+objects += core/elf.o
+objects += core/mmu.o
 objects += core/xen_intr.o
 objects += core/math.o
 objects += core/spinlock.o
@@ -1689,9 +1692,6 @@ musl += regex/regerror.o
 musl += regex/tre-mem.o
 $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 
-$(out)/tools/cpiod/cpio.o: CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti -ffunction-sections -fdata-sections
-$(out)/tools/cpiod/cpiod.o: CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti -ffunction-sections -fdata-sections
-
 libc += pthread.o
 libc += pthread_barrier.o
 libc += libc.o
@@ -1931,8 +1931,7 @@ $(out)/tools/mkfs/mkfs.so: $(out)/tools/mkfs/mkfs.o $(out)/libzfs.so
 
 $(out)/tools/cpiod/cpiod.so: $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o $(out)/libzfs.so
 	$(makedir)
-	#$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs -Wl,--gc-sections -Wl,--print-gc-sections, LINK cpiod.so)
-	$(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs -Wl,--gc-sections -Wl,--print-gc-sections
+	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs, LINK cpiod.so)
 
 ################################################################################
 # The dependencies on header files are automatically generated only after the

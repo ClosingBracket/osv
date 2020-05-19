@@ -1,0 +1,16 @@
+"libresolv.so.2"         100 K
+"libc.so.6"              2.0 MB
+"libm.so.6"              1.4 MB
+"ld-linux-x86-64.so.2"   184 K
+"libpthread.so.0"        156 K	/lib/x86_64-linux-gnu/libpthread-2.30.so
+"libdl.so.2"		 20 K
+"librt.so.1"	         40 K
+"libstdc++.so.6"         2 MB 	/usr/lib/x86_64-linux-gnu/libstdc++.so.6.0.28
+"libaio.so.1"	         16 K   /usr/lib/x86_64-linux-gnu/libaio.so.1.0.1
+"libxenstore.so.3.0"     32 K   /usr/lib/x86_64-linux-gnu/libxenstore.so.3.0.3
+"libcrypt.so.1"          44 K   /lib/x86_64-linux-gnu/libcrypt-2.30.so
+
+TOTAL:                   592 K + 5.4 MB
+
+"libc.musl-x86_64.so.1"
+provides ZFS

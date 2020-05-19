@@ -6,10 +6,11 @@ INCLUDES += -I. -I../httpserver-api -I $(SRC)/libc/internal
 #  -g    adds debugging information to the executable file
 #  -Wall turns on most, but not all, compiler warnings
 autodepend = -MD -MT $@ -MP
-CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti -ffunction-sections -fdata-sections
+CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -ffunction-sections -fdata-sections
 #TODO: Figure out why lto breaks exception handling
 #CXXFLAGS  = -g -Wall -std=c++11 -fPIC $(INCLUDES) -O2 $(autodepend) -DMONITORING -fvisibility=hidden -flto
 #LDFLAGS = -flto
+LDFLAGS = -Wl,--gc-sections
 src = $(shell readlink -f ../..)
 
 ifndef ARCH
@@ -52,14 +53,10 @@ DEPS := $(OBJ_FILES:.o=.d)
 module: all
 
 all: lib$(TARGET).so
-	echo $(CXX)
 	$(call very-quiet, $(SRC)/scripts/manifest_from_host.sh lib$(TARGET).so > usr.manifest)
 
-#EXTRA_LDFLAGS="--gc-sections --print-gc-sections"
-
 lib$(TARGET).so: $(JSON_OBJ_FILES) $(OBJ_FILES)
-	#$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
-	$(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS) -Wl,--gc-sections -Wl,--print-gc-sections
+	$(call quiet, $(CXX) $(CXXFLAGS) -shared $(STATIC_LIBS) -o $@ $^ $(DYN_LIBS), LINK $@)
 
 ifneq ($(MAKECMDGOALS),clean)
 -include $(DEPS)

@@ -279,7 +279,7 @@ gcc-sysroot = $(if $(CROSS_PREFIX), --sysroot $(aarch64_gccbase)) \
 #
 #   mydir/*.o EXTRA_FLAGS = <MY_STUFF>
 EXTRA_FLAGS = -D__OSV_CORE__ -DOSV_KERNEL_BASE=$(kernel_base) -DOSV_KERNEL_VM_BASE=$(kernel_vm_base) \
-	-DOSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) -DOSV_LZKERNEL_BASE=$(lzkernel_base)
+	-DOSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) -DOSV_LZKERNEL_BASE=$(lzkernel_base) -ffunction-sections -fdata-sections
 EXTRA_LIBS =
 COMMON = $(autodepend) -g -Wall -Wno-pointer-arith $(CFLAGS_WERROR) -Wformat=0 -Wno-format-security \
 	-D __BSD_VISIBLE=1 -U _FORTIFY_SOURCE -fno-stack-protector $(INCLUDES) \
@@ -1689,9 +1689,6 @@ musl += regex/regerror.o
 musl += regex/tre-mem.o
 $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 
-$(out)/tools/cpiod/cpio.o: CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti -ffunction-sections -fdata-sections
-$(out)/tools/cpiod/cpiod.o: CXXFLAGS += -fvisibility=hidden -fvisibility-inlines-hidden -fno-rtti -ffunction-sections -fdata-sections
-
 libc += pthread.o
 libc += pthread_barrier.o
 libc += libc.o
@@ -1862,7 +1859,7 @@ $(out)/loader.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/bootfs.o $(lo
 	    $(^:%.ld=-T %.ld) \
 	    --whole-archive \
 	      $(libstdc++.a) $(libgcc_eh.a) \
-	      $(boost-libs) \
+	      $(boost-libs) --gc-sections \
 	    --no-whole-archive $(libgcc.a), \
 		LINK loader.elf)
 	@# Build libosv.so matching this loader.elf. This is not a separate
@@ -1878,7 +1875,7 @@ $(out)/kernel.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/empty_bootfs.
 	    $(^:%.ld=-T %.ld) \
 	    --whole-archive \
 	      $(libstdc++.a) $(libgcc_eh.a) \
-	      $(boost-libs) \
+	      $(boost-libs) --gc-sections \
 	    --no-whole-archive $(libgcc.a), \
 		LINK kernel.elf)
 	$(call quiet, $(STRIP) $(out)/kernel.elf -o $(out)/kernel-stripped.elf, STRIP kernel.elf -> kernel-stripped.elf )
@@ -1931,8 +1928,7 @@ $(out)/tools/mkfs/mkfs.so: $(out)/tools/mkfs/mkfs.o $(out)/libzfs.so
 
 $(out)/tools/cpiod/cpiod.so: $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o $(out)/libzfs.so
 	$(makedir)
-	#$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs -Wl,--gc-sections -Wl,--print-gc-sections, LINK cpiod.so)
-	$(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs -Wl,--gc-sections -Wl,--print-gc-sections
+	$(call quiet, $(CC) $(CFLAGS) -o $@ $(out)/tools/cpiod/cpiod.o $(out)/tools/cpiod/cpio.o -L$(out) -lzfs, LINK cpiod.so)
 
 ################################################################################
 # The dependencies on header files are automatically generated only after the
