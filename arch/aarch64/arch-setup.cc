@@ -132,7 +132,7 @@ void arch_setup_free_memory()
     arch_init_early_console();
     //osv::poweroff(); //--> GETS here
     debug_early("OSv (OLO) -> from arch_setup_free_memory\n");
-    osv::poweroff();
+    //osv::poweroff();
 }
 
 void arch_setup_tls(void *tls, const elf::tls_data& info)
@@ -233,8 +233,6 @@ bool arch_setup_console(std::string opt_console)
     } else {
         return false;
     }*/
-    //osv::poweroff();
     console::console_driver_add(&console::arch_early_console);
-    //osv::poweroff();
     return true;
 }
