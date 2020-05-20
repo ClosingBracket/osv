@@ -131,7 +131,7 @@ void arch_setup_free_memory()
 
     arch_init_early_console();
     //osv::poweroff(); //--> GETS here
-    debug_early("OSv (OLO) \n");
+    debug_early("OSv (OLO) -> from arch_setup_free_memory\n");
     osv::poweroff();
 }
 
@@ -217,6 +217,9 @@ void arch_init_early_console()
     //console::aarch64_console.pl011.set_base_addr(addr);
     //console::aarch64_console.pl011.set_irqid(irqid);
 
+    new (&console::aarch64_console.mmio_isa_serial) console::mmio_isa_serial_console();
+    console::arch_early_console = console::aarch64_console.mmio_isa_serial;
+
     console::mmio_isa_serial_console::early_init();
 }
 
@@ -231,7 +234,7 @@ bool arch_setup_console(std::string opt_console)
         return false;
     }*/
     //osv::poweroff();
-    //console::console_driver_add(&console::arch_early_console);
+    console::console_driver_add(&console::arch_early_console);
     //osv::poweroff();
     return true;
 }

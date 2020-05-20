@@ -95,13 +95,13 @@ void mmio_isa_serial_console::early_init()
     mmio_isa_serial_console_putchar('O');
     mmio_isa_serial_console_putchar('L');
     mmio_isa_serial_console_putchar('O');
+    mmio_isa_serial_console_putchar(' ');
 
     //osv::poweroff();
 }
 
 void mmio_isa_serial_console::write(const char *str, size_t len)
 {
-    osv::poweroff();
     while (len-- > 0)
         putchar(*str++);
 }
@@ -132,7 +132,6 @@ void mmio_isa_serial_console::putchar(const char ch)
 {
     u8 val;
 
-    //osv::poweroff();
     do {
         val = mmio_getb(_addr_mmio + (int)regs::LSR);
     } while (!(val & lsr::TRANSMIT_HOLD_EMPTY));
