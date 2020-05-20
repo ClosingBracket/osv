@@ -23,9 +23,11 @@ public:
     virtual void flush() {}
     virtual bool input_ready() override;
     virtual char readch();
+
+    static mmioaddr_t _addr_mmio;
 private:
     //std::unique_ptr<sgi_edge_interrupt> _irq;
-    static mmioaddr_t _addr_mmio;
+    //static mmioaddr_t _addr_mmio;
 
     virtual void dev_start();
     void enable_interrupt();

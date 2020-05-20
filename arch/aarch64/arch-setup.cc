@@ -130,7 +130,7 @@ void arch_setup_free_memory()
     //osv::poweroff();
 
     arch_init_early_console();
-    osv::poweroff(); //--> GETS here
+    //osv::poweroff(); //--> GETS here
     debug_early("OSv (OLO) \n");
     osv::poweroff();
 }

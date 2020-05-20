@@ -53,6 +53,17 @@ enum mcr {
 
 mmioaddr_t mmio_isa_serial_console::_addr_mmio;
 
+static void mmio_isa_serial_console_putchar(const char ch)
+{
+    u8 val;
+
+    do {
+        val = mmio_getb(mmio_isa_serial_console::_addr_mmio + (int)regs::LSR);
+    } while (!(val & lsr::TRANSMIT_HOLD_EMPTY));
+
+    mmio_setb(mmio_isa_serial_console::_addr_mmio, ch);
+}
+
 void mmio_isa_serial_console::early_init()
 {
     u64 address = 0x40001000; //TODO: Should parse from early console boot command line
@@ -80,6 +91,12 @@ void mmio_isa_serial_console::early_init()
     // interrupts to be generated. QEMU doesn't bother checking this
     // bit, but interestingly VMWare does, so we must set it.
     mmio_setb(_addr_mmio + (int)regs::MCR, mcr::AUX_OUTPUT_2);
+
+    mmio_isa_serial_console_putchar('O');
+    mmio_isa_serial_console_putchar('L');
+    mmio_isa_serial_console_putchar('O');
+
+    //osv::poweroff();
 }
 
 void mmio_isa_serial_console::write(const char *str, size_t len)
