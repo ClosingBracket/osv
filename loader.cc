@@ -94,6 +94,7 @@ extern "C" {
 
 void premain()
 {
+    poweroff();
     arch_init_early_console();
 
     /* besides reporting the OSV version, this string has the function

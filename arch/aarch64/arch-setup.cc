@@ -25,6 +25,7 @@
 #include "drivers/pl011.hh"
 #include "early-console.hh"
 #include <osv/pci.hh>
+#include "drivers/mmio-isa-serial.hh"
 
 #include <alloca.h>
 
@@ -179,23 +180,27 @@ void arch_init_drivers()
 
 void arch_init_early_console()
 {
+    /*
     if (is_xen()) {
         new (&console::aarch64_console.xen) console::XEN_Console();
         console::arch_early_console = console::aarch64_console.xen;
         return;
-    }
+    }*/
 
+    /* Comment out for now
     new (&console::aarch64_console.pl011) console::PL011_Console();
     console::arch_early_console = console::aarch64_console.pl011;
     int irqid;
-    u64 addr = dtb_get_uart(&irqid);
-    if (!addr) {
+    u64 addr = dtb_get_uart(&irqid);*/
+    //if (!addr) {
         /* keep using default addresses */
-        return;
-    }
+    //    return;
+    //}
 
-    console::aarch64_console.pl011.set_base_addr(addr);
-    console::aarch64_console.pl011.set_irqid(irqid);
+    //console::aarch64_console.pl011.set_base_addr(addr);
+    //console::aarch64_console.pl011.set_irqid(irqid);
+
+    console::mmio_isa_serial_console::early_init();
 }
 
 bool arch_setup_console(std::string opt_console)

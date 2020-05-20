@@ -18,10 +18,15 @@ start_elf:
 
         bl      validate_el // check that we are at EL1 or die
         bl      init_stack
+        // bl      poweroff // 1) !!! Crashes on FC
         bl      zero_bss    // initialize bss contents to 0
+        // bl      poweroff // 2) Exits -> gets here 
         bl      init_cpu
+        // bl      poweroff // 3) Exits -> gets here as well 
         bl      init_boot_pt
+        // bl      poweroff // 4) Exits -> gets here as well (2)
         bl      init_mmu
+        //bl      poweroff  // 2) Exits -> gets here as well (3) 
 
         adrp    x1, elf_header              // store elf header address
         str     x3, [x1, #:lo12:elf_header]
@@ -32,6 +37,7 @@ start_elf:
 
         mov     x29, xzr
         bl      init_xen
+        // bl      poweroff // Gets here is as well (4)// 
 
         mov     x29, xzr
         bl      premain
@@ -190,7 +196,8 @@ ident_pt_l4_ttbr0:
 ident_pt_l3_ttbr0:
         .quad ident_pt_l2_0_ttbr0 + 0x3
         .quad ident_pt_l2_1_ttbr0 + 0x3
-        .rept 510
+        .quad ident_pt_l2_2_ttbr0 + 0x3
+        .rept 509
         .quad 0
         .endr
 ident_pt_l2_0_ttbr0:
@@ -203,6 +210,13 @@ ident_pt_l2_0_ttbr0:
 ident_pt_l2_1_ttbr0:
         index = 0
         offset = 0x40000000
+        .rept 512
+        .quad offset + (index << 21) + 0x411
+        index = index + 1
+        .endr
+ident_pt_l2_2_ttbr0:
+        index = 0
+        offset = 0x80000000
         .rept 512
         .quad offset + (index << 21) + 0x411
         index = index + 1
