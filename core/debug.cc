@@ -14,6 +14,7 @@
 #include <osv/sched.hh>
 #include <osv/debug.hh>
 #include <osv/debug.h>
+#include <osv/power.hh>
 
 #include "early-console.hh"
 
@@ -264,11 +265,13 @@ extern "C" {
     // we need to this ourselves
     void debug_early(const char *msg)
     {
+        //osv::poweroff(); //GETS here
         while (*msg) {
             if (*msg == '\n') {
                 console::arch_early_console.write("\r", 1);
             }
             console::arch_early_console.write(msg++, 1);
+            osv::poweroff();
          }
          console::arch_early_console.flush();
     }

@@ -13,6 +13,7 @@
 
 #include <osv/debug.hh>
 #include <osv/prio.hh>
+#include <osv/power.hh>
 
 #include "arch-dtb.hh"
 
@@ -49,6 +50,7 @@ arm_clock::arm_clock() {
 
 static __attribute__((constructor(init_prio::clock))) void setup_arm_clock()
 {
+    osv::poweroff();
     debug_early_entry("setup_arm_clock()");
     clock::register_clock(new arm_clock);
 }

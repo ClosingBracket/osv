@@ -194,8 +194,10 @@ ident_pt_l4_ttbr0:
         .quad 0
         .endr
 ident_pt_l3_ttbr0:
-        .quad ident_pt_l2_0_ttbr0 + 0x3
-        .quad ident_pt_l2_1_ttbr0 + 0x3
+        .quad 0
+        .quad 0
+        //.quad ident_pt_l2_0_ttbr0 + 0x3
+        //.quad ident_pt_l2_1_ttbr0 + 0x3
         .quad ident_pt_l2_2_ttbr0 + 0x3
         .rept 509
         .quad 0

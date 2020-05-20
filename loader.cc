@@ -94,30 +94,37 @@ extern "C" {
 
 void premain()
 {
-    poweroff();
-    arch_init_early_console();
+    //poweroff();
+    //arch_init_early_console();
 
     /* besides reporting the OSV version, this string has the function
        to check if the early console really works early enough,
        without depending on prior initialization. */
-    debug_early("OSv " OSV_VERSION "\n");
+    //debug_early("OSv " OSV_VERSION "\n");
 
     arch_init_premain();
 
     auto inittab = elf::get_init(reinterpret_cast<elf::Elf64_Ehdr*>(
         (void*)elf_header + OSV_KERNEL_VM_SHIFT));
 
+    //poweroff();
     if (inittab.tls.start == nullptr) {
         debug_early("premain: failed to get TLS data from ELF\n");
         arch::halt_no_interrupts();
     }
+    //poweroff(); // Gets here//
 
     setup_tls(inittab);
+    //poweroff(); // as well`
     boot_time.event(3,"TLS initialization");
     for (auto init = inittab.start; init < inittab.start + inittab.count; ++init) {
         (*init)();
     }
+    poweroff();
     boot_time.event(".init functions");
+
+    //arch_init_early_console();
+    //debug_early("OSv " OSV_VERSION "\n");
 }
 
 int main(int loader_argc, char **loader_argv)

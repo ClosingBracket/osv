@@ -8,11 +8,11 @@
 #ifndef EARLY_CONSOLE_HH
 #define EARLY_CONSOLE_HH
 
-#include "drivers/mmio-isa-serial.hh"
+//#include "drivers/mmio-isa-serial.hh"
 
 namespace console {
 
-extern mmio_isa_serial_console arch_early_console;
+//extern mmio_isa_serial_console arch_early_console;
 
 }
 

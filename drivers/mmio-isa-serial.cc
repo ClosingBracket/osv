@@ -6,6 +6,7 @@
  */
 
 #include "mmio-isa-serial.hh"
+#include <osv/power.hh>
 
 namespace console {
 
@@ -58,6 +59,7 @@ void mmio_isa_serial_console::early_init()
     u64 size = 4096;
 
     _addr_mmio = mmio_map(address, size);
+    //osv::poweroff();
 
     // Set the UART speed to to 115,200 bps, This is done by writing 1,0 to
     // Divisor Latch registers, but to access these we need to temporarily
@@ -82,6 +84,7 @@ void mmio_isa_serial_console::early_init()
 
 void mmio_isa_serial_console::write(const char *str, size_t len)
 {
+    osv::poweroff();
     while (len-- > 0)
         putchar(*str++);
 }
@@ -112,6 +115,7 @@ void mmio_isa_serial_console::putchar(const char ch)
 {
     u8 val;
 
+    //osv::poweroff();
     do {
         val = mmio_getb(_addr_mmio + (int)regs::LSR);
     } while (!(val & lsr::TRANSMIT_HOLD_EMPTY));

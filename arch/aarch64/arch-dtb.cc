@@ -225,7 +225,8 @@ bool dtb_get_gic_v2(u64 *dist, size_t *dist_len, u64 *cpu, size_t *cpu_len)
     if (!dtb)
         return false;
 
-    node = fdt_node_offset_by_compatible(dtb, -1, "arm,cortex-a15-gic");
+    //node = fdt_node_offset_by_compatible(dtb, -1, "arm,cortex-a15-gic");
+    node = fdt_node_offset_by_compatible(dtb, -1, "arm,gic-400");
     if (node < 0)
         return false;
 
@@ -562,11 +563,14 @@ bool dtb_get_vmm_is_xen()
     return fdt_node_offset_by_compatible(dtb, -1, "xen,xen") >= 0;
 }
 
+#include <osv/power.hh>
 void  __attribute__((constructor(init_prio::dtb))) dtb_setup()
 {
     int node;
     char *cmdline_override;
     int len;
+
+    //osv::poweroff(); // Gets here
 
     if (fdt_check_header(dtb) != 0) {
         abort("dtb_setup: device tree blob invalid.\n");
@@ -579,6 +583,7 @@ void  __attribute__((constructor(init_prio::dtb))) dtb_setup()
 
     /* command line will be overwritten with DTB: move it inside DTB */
 
+    //osv::poweroff();
     node = fdt_path_offset(dtb, "/chosen");
     if (node < 0) {
         node = fdt_path_offset(dtb, "/");
@@ -613,11 +618,12 @@ void  __attribute__((constructor(init_prio::dtb))) dtb_setup()
         abort("dtb_setup: failed to parse cpu mpid.\n");
     }
 
+    //osv::poweroff();
     dtb_timer_irq = dtb_parse_timer_irq();
     dtb_pci_irqmask = dtb_parse_pci_irqmask();
     dtb_pci_irqmap_count = dtb_parse_pci_irqmap_count();
     if (!dtb_parse_pci_irqmap(dtb_pci_bdfs, dtb_pci_irq_ids, dtb_pci_irqmap_count)) {
-        abort("dtb_setup: failed to parse pci_irq_map.\n");
+        //abort("dtb_setup: failed to parse pci_irq_map.\n");
     }
 
     register u64 edata;
@@ -634,4 +640,5 @@ void  __attribute__((constructor(init_prio::dtb))) dtb_setup()
     /* remove amount of memory used for ELF from avail memory */
     mmu::phys addr = (mmu::phys)elf_start + elf_size;
     memory::phys_mem_size -= addr - mmu::mem_addr;
+    //osv::poweroff();
 }

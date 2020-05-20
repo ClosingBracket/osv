@@ -17,6 +17,7 @@
 #include <osv/debug.hh>
 #include <osv/commands.hh>
 #include <osv/xen.hh>
+#include <osv/power.hh>
 
 #include "arch-mmu.hh"
 #include "arch-dtb.hh"
@@ -73,7 +74,9 @@ void arch_setup_pci()
 
 void arch_setup_free_memory()
 {
+    //osv::poweroff();
     setup_temporary_phys_map();
+    //osv::poweroff();
 
     /* import from loader.cc */
     extern size_t elf_size;
@@ -82,41 +85,54 @@ void arch_setup_free_memory()
     mmu::phys addr = (mmu::phys)elf_start + elf_size;
     mmu::free_initial_memory_range(addr, memory::phys_mem_size);
 
+    //osv::poweroff();
+
     /* linear_map [TTBR1] */
     for (auto&& area : mmu::identity_mapped_areas) {
         auto base = reinterpret_cast<void*>(get_mem_area_base(area));
         mmu::linear_map(base + addr, addr, memory::phys_mem_size);
     }
+    //osv::poweroff();
 
     /* linear_map [TTBR0 - boot, DTB and ELF] */
     mmu::linear_map((void *)mmu::mem_addr, (mmu::phys)mmu::mem_addr,
                     addr - mmu::mem_addr);
 
-    if (!is_xen()) {
+    //osv::poweroff();
+    //if (!is_xen()) {
         /* linear_map [TTBR0 - UART] */
-        addr = (mmu::phys)console::aarch64_console.pl011.get_base_addr();
-        mmu::linear_map((void *)addr, addr, 0x1000, mmu::page_size,
-                        mmu::mattr::dev);
-    }
+    //    addr = (mmu::phys)console::aarch64_console.pl011.get_base_addr();
+    //    mmu::linear_map((void *)addr, addr, 0x1000, mmu::page_size,
+    //                    mmu::mattr::dev);
+    //}
 
     /* linear_map [TTBR0 - GIC DIST and GIC CPU] */
     u64 dist, cpu;
     size_t dist_len, cpu_len;
     if (!dtb_get_gic_v2(&dist, &dist_len, &cpu, &cpu_len)) {
+        //osv::poweroff();
         abort("arch-setup: failed to get GICv2 information from dtb.\n");
     }
+    //osv::poweroff();
     gic::gic = new gic::gic_driver(dist, cpu);
     mmu::linear_map((void *)dist, (mmu::phys)dist, dist_len, mmu::page_size,
                     mmu::mattr::dev);
     mmu::linear_map((void *)cpu, (mmu::phys)cpu, cpu_len, mmu::page_size,
                     mmu::mattr::dev);
 
-    arch_setup_pci();
+    //osv::poweroff();
+    //arch_setup_pci();
 
     // get rid of the command line, before memory is unmapped
     osv::parse_cmdline(cmdline);
 
     mmu::switch_to_runtime_page_tables();
+    //osv::poweroff();
+
+    arch_init_early_console();
+    osv::poweroff(); //--> GETS here
+    debug_early("OSv (OLO) \n");
+    osv::poweroff();
 }
 
 void arch_setup_tls(void *tls, const elf::tls_data& info)
@@ -147,6 +163,7 @@ void arch_init_premain()
 void arch_init_drivers()
 {
     extern boot_time_chart boot_time;
+    //osv::poweroff();
 
     int irqmap_count = dtb_get_pci_irqmap_count();
     if (irqmap_count > 0) {
@@ -205,12 +222,16 @@ void arch_init_early_console()
 
 bool arch_setup_console(std::string opt_console)
 {
+    /*
     if (opt_console.compare("pl011") == 0) {
         console::console_driver_add(&console::arch_early_console);
     } else if (opt_console.compare("all") == 0) {
         console::console_driver_add(&console::arch_early_console);
     } else {
         return false;
-    }
+    }*/
+    //osv::poweroff();
+    //console::console_driver_add(&console::arch_early_console);
+    //osv::poweroff();
     return true;
 }
