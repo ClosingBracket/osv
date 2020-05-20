@@ -117,11 +117,11 @@ void premain()
     setup_tls(inittab);
     //poweroff(); // as well`
     boot_time.event(3,"TLS initialization");
-    auto i = 0;
+    //auto i = 0;
     for (auto init = inittab.start; init < inittab.start + inittab.count; ++init) {
-        i++;
-        if (i > 10)
-            debug_early_u64("--> init: ", reinterpret_cast<u64>(&(*init)));
+        //i++;
+        //if (i > 10)
+        //    debug_early_u64("--> init: ", reinterpret_cast<u64>(&(*init)));
         (*init)();
     }
     //poweroff();

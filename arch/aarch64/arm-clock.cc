@@ -50,7 +50,7 @@ arm_clock::arm_clock() {
 
 static __attribute__((constructor(init_prio::clock))) void setup_arm_clock()
 {
-    osv::poweroff();
+    //osv::poweroff();
     debug_early_entry("setup_arm_clock()");
     clock::register_clock(new arm_clock);
 }
