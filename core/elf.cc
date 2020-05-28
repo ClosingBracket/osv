@@ -1310,7 +1310,6 @@ program::program(void* addr)
           "libpthread.so.0",
           "libdl.so.2",
           "librt.so.1",
-          "libstdc++.so.6",
           "libaio.so.1",
           "libxenstore.so.3.0",
           "libcrypt.so.1",

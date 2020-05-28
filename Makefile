@@ -1873,10 +1873,11 @@ $(out)/kernel.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/empty_bootfs.
 	    --defsym=OSV_KERNEL_VM_BASE=$(kernel_vm_base) --defsym=OSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) \
 		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -L$(out)/arch/$(arch) \
 	    $(^:%.ld=-T %.ld) \
+	    --version-script=/tmp/version_script \
 	    --whole-archive \
-	      $(libstdc++.a) $(libgcc_eh.a) \
+	      $(libgcc_eh.a) \
 	      $(boost-libs) \
-	    --no-whole-archive $(libgcc.a), \
+	    --no-whole-archive $(libstdc++.a) $(libgcc.a), \
 		LINK kernel.elf)
 	$(call quiet, $(STRIP) $(out)/kernel.elf -o $(out)/kernel-stripped.elf, STRIP kernel.elf -> kernel-stripped.elf )
 	$(call very-quiet, cp $(out)/kernel-stripped.elf $(out)/kernel.elf)
