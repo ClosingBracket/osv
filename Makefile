@@ -279,7 +279,7 @@ gcc-sysroot = $(if $(CROSS_PREFIX), --sysroot $(aarch64_gccbase)) \
 #
 #   mydir/*.o EXTRA_FLAGS = <MY_STUFF>
 EXTRA_FLAGS = -D__OSV_CORE__ -DOSV_KERNEL_BASE=$(kernel_base) -DOSV_KERNEL_VM_BASE=$(kernel_vm_base) \
-	-DOSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) -DOSV_LZKERNEL_BASE=$(lzkernel_base)
+	-DOSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) -DOSV_LZKERNEL_BASE=$(lzkernel_base) -ffunction-sections -fdata-sections
 EXTRA_LIBS =
 COMMON = $(autodepend) -g -Wall -Wno-pointer-arith $(CFLAGS_WERROR) -Wformat=0 -Wno-format-security \
 	-D __BSD_VISIBLE=1 -U _FORTIFY_SOURCE -fno-stack-protector $(INCLUDES) \
@@ -1857,10 +1857,8 @@ $(out)/loader.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/bootfs.o $(lo
 	    --defsym=OSV_KERNEL_VM_BASE=$(kernel_vm_base) --defsym=OSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) \
 		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -L$(out)/arch/$(arch) \
 	    $(^:%.ld=-T %.ld) \
-	    --whole-archive \
-	      $(libstdc++.a) $(libgcc_eh.a) \
-	      $(boost-libs) \
-	    --no-whole-archive $(libgcc.a), \
+	    --version-script=/tmp/version_script --print-gc-sections --gc-sections \
+	    --no-whole-archive $(libstdc++.a) $(libgcc.a) $(libgcc_eh.a) $(boost-libs), \
 		LINK loader.elf)
 	@# Build libosv.so matching this loader.elf. This is not a separate
 	@# rule because that caused bug #545.
@@ -1873,11 +1871,8 @@ $(out)/kernel.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/empty_bootfs.
 	    --defsym=OSV_KERNEL_VM_BASE=$(kernel_vm_base) --defsym=OSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) \
 		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -L$(out)/arch/$(arch) \
 	    $(^:%.ld=-T %.ld) \
-	    --version-script=/tmp/version_script \
-	    --whole-archive \
-	      $(libgcc_eh.a) \
-	      $(boost-libs) \
-	    --no-whole-archive $(libstdc++.a) $(libgcc.a), \
+	    --version-script=/tmp/version_script --gc-sections \
+	    --no-whole-archive $(libstdc++.a) $(libgcc.a) $(libgcc_eh.a) $(boost-libs), \
 		LINK kernel.elf)
 	$(call quiet, $(STRIP) $(out)/kernel.elf -o $(out)/kernel-stripped.elf, STRIP kernel.elf -> kernel-stripped.elf )
 	$(call very-quiet, cp $(out)/kernel-stripped.elf $(out)/kernel.elf)
