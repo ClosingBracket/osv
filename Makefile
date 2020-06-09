@@ -737,7 +737,7 @@ zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zrlock.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/zvol.o
 zfs += bsd/sys/cddl/contrib/opensolaris/uts/common/fs/zfs/lz4.o
 
-solaris += $(zfs)
+#solaris += $(zfs)
 
 $(zfs:%=$(out)/%): CFLAGS+= \
 	-DBUILDING_ZFS \
@@ -778,7 +778,7 @@ drivers += drivers/clock-common.o
 drivers += drivers/clockevent.o
 drivers += core/elf.o
 drivers += drivers/random.o
-drivers += drivers/zfs.o
+#drivers += drivers/zfs.o
 drivers += drivers/null.o
 drivers += drivers/device.o
 #drivers += drivers/pci-generic.o

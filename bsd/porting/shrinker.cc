@@ -22,12 +22,12 @@ public:
 private:
     struct eventhandler_entry_generic *_ee;
 };
-
+/*
 class arc_shrinker : public memory::shrinker {
 public:
     explicit arc_shrinker();
     size_t request_memory(size_t s, bool hard);
-};
+};*/
 
 bsd_shrinker::bsd_shrinker(struct eventhandler_entry_generic *ee)
     : shrinker("BSD"), _ee(ee)
@@ -39,7 +39,7 @@ size_t bsd_shrinker::request_memory(size_t s, bool hard)
     // Return the amount of released memory.
     return _ee->func(_ee->ee.ee_arg);
 }
-
+/*
 arc_shrinker::arc_shrinker()
     : shrinker("ARC")
 {
@@ -74,7 +74,7 @@ size_t arc_shrinker::request_memory(size_t s, bool hard)
         ret += r;
     } while (ret < s);
     return ret;
-}
+}*/
 
 void bsd_shrinker_init(void)
 {
@@ -89,11 +89,11 @@ void bsd_shrinker_init(void)
 
         auto *_ee = (struct eventhandler_entry_generic *)ep;
 
-        if ((void *)_ee->func == (void *)arc_lowmem) {
-            new arc_shrinker();
-        } else {
+        //if ((void *)_ee->func == (void *)arc_lowmem) {
+        //    new arc_shrinker();
+        //} else {
             new bsd_shrinker(_ee);
-        }
+        //}
     }
     EHL_UNLOCK(list);
 

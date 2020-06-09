@@ -401,8 +401,8 @@ void* do_main_thread(void *_main_args)
         if(mount_rofs_rootfs(opt_pivot) != 0) {
             //
             // Failed -> try to mount zfs
-            zfsdev::zfsdev_init();
-            mount_zfs_rootfs(opt_pivot, opt_extra_zfs_pools);
+            //zfsdev::zfsdev_init();
+            //mount_zfs_rootfs(opt_pivot, opt_extra_zfs_pools);
             bsd_shrinker_init();
 
             boot_time.event("ZFS mounted");
