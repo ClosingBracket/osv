@@ -1859,7 +1859,7 @@ $(out)/loader.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/bootfs.o $(lo
 	    --defsym=OSV_KERNEL_VM_BASE=$(kernel_vm_base) --defsym=OSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) \
 		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -L$(out)/arch/$(arch) \
 	    $(^:%.ld=-T %.ld) \
-	    --version-script=/tmp/version_script --print-gc-sections --gc-sections \
+	    --version-script=/tmp/version_script_min --print-gc-sections --gc-sections \
 	    --no-whole-archive $(libstdc++.a) $(libgcc.a) $(libgcc_eh.a) $(boost-libs), \
 		LINK loader.elf)
 	@# Build libosv.so matching this loader.elf. This is not a separate
@@ -1873,7 +1873,7 @@ $(out)/kernel.elf: $(stage1_targets) arch/$(arch)/loader.ld $(out)/empty_bootfs.
 	    --defsym=OSV_KERNEL_VM_BASE=$(kernel_vm_base) --defsym=OSV_KERNEL_VM_SHIFT=$(kernel_vm_shift) \
 		-Bdynamic --export-dynamic --eh-frame-hdr --enable-new-dtags -L$(out)/arch/$(arch) \
 	    $(^:%.ld=-T %.ld) \
-	    --version-script=/tmp/version_script --gc-sections \
+	    --version-script=/tmp/version_script_min --gc-sections \
 	    --no-whole-archive $(libstdc++.a) $(libgcc.a) $(libgcc_eh.a) $(boost-libs), \
 		LINK kernel.elf)
 	$(call quiet, $(STRIP) $(out)/kernel.elf -o $(out)/kernel-stripped.elf, STRIP kernel.elf -> kernel-stripped.elf )

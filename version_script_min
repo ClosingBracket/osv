@@ -1,0 +1,12 @@
+{
+  global:
+                 __cxa_finalize;
+                 __gmon_start__;
+                 _ITM_deregisterTMCloneTable;
+                 _ITM_registerTMCloneTable;
+                 __libc_start_main;
+                 puts;
+
+  local:
+    *;
+};
