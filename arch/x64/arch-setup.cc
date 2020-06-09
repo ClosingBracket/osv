@@ -250,7 +250,7 @@ void arch_init_premain()
 }
 
 #include "drivers/driver.hh"
-#include "drivers/pvpanic.hh"
+//#include "drivers/pvpanic.hh"
 #include "drivers/virtio.hh"
 #include "drivers/virtio-blk.hh"
 #include "drivers/virtio-scsi.hh"
@@ -267,7 +267,7 @@ extern bool opt_pci_disabled;
 void arch_init_drivers()
 {
     // initialize panic drivers
-    panic::pvpanic::probe_and_setup();
+    //panic::pvpanic::probe_and_setup();
     boot_time.event("pvpanic done");
 
     if (!opt_pci_disabled) {

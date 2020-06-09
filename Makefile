@@ -803,11 +803,11 @@ drivers += drivers/virtio-scsi.o
 drivers += drivers/virtio-rng.o
 drivers += drivers/virtio-fs.o
 drivers += drivers/kvmclock.o drivers/xenclock.o drivers/hypervclock.o
-drivers += drivers/acpi.o
-drivers += drivers/hpet.o
+#drivers += drivers/acpi.o
+#drivers += drivers/hpet.o
 drivers += drivers/rtc.o
 drivers += drivers/xenfront.o drivers/xenfront-xenbus.o drivers/xenfront-blk.o
-drivers += drivers/pvpanic.o
+#drivers += drivers/pvpanic.o
 drivers += drivers/ahci.o
 drivers += drivers/ide.o
 drivers += drivers/scsi-common.o
@@ -872,7 +872,7 @@ objects += arch/x64/entry-xen.o
 objects += arch/x64/vmlinux.o
 objects += arch/x64/vmlinux-boot64.o
 objects += core/sampler.o
-objects += $(acpi)
+#objects += $(acpi)
 endif # x64
 
 objects += core/xen_intr.o

@@ -15,7 +15,7 @@
 extern "C" {
 #include "acpi.h"
 }
-#include <drivers/acpi.hh>
+//#include <drivers/acpi.hh>
 #include <boost/intrusive/parent_from_member.hpp>
 #include <osv/debug.hh>
 #include <osv/sched.hh>
@@ -48,7 +48,7 @@ static void register_cpu(unsigned cpu_id, u32 apic_id, u32 acpi_id = 0)
     smp_stack_free = &c->arch.initstack;
     sched::cpus.push_back(c);
 }
-
+/*
 void parse_madt()
 {
     char madt_sig[] = ACPI_SIG_MADT;
@@ -77,6 +77,7 @@ void parse_madt()
     }
     debug(fmt("%d CPUs detected\n") % nr_cpus);
 }
+*/
 
 #define MPF_IDENTIFIER (('_'<<24) | ('P'<<16) | ('M'<<8) | '_')
 struct mpf_structure {
@@ -184,11 +185,11 @@ void parse_mp_table()
 
 void smp_init()
 {
-    if (acpi::is_enabled()) {
-        parse_madt();
-    } else {
+//    if (acpi::is_enabled()) {
+//        parse_madt();
+//    } else {
         parse_mp_table();
-    }
+//    }
 
     sched::current_cpu = sched::cpus[0];
     for (auto c : sched::cpus) {

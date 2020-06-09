@@ -48,7 +48,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <osv/align.hh>
 #include <osv/stubbing.hh>
-#include "drivers/pvpanic.hh"
+//#include "drivers/pvpanic.hh"
 #include <api/sys/resource.h>
 #include <api/math.h>
 #include <osv/shutdown.hh>
@@ -123,7 +123,7 @@ void abort(const char *fmt, ...)
         debug_early("Halting.\n");
     }
 #ifndef AARCH64_PORT_STUB
-    panic::pvpanic::panicked();
+    //panic::pvpanic::panicked();
 #endif /* !AARCH64_PORT_STUB */
 
     if (opt_power_off_on_abort) {

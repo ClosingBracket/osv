@@ -20,7 +20,7 @@
 #include "smp.hh"
 
 #ifndef AARCH64_PORT_STUB
-#include "drivers/acpi.hh"
+//#include "drivers/acpi.hh"
 #endif /* !AARCH64_PORT_STUB */
 
 #include <osv/sched.hh>
@@ -617,7 +617,7 @@ void main_cont(int loader_argc, char** loader_argv)
     memory::enable_debug_allocator();
 
 #ifndef AARCH64_PORT_STUB
-    acpi::init();
+    //acpi::init();
 #endif /* !AARCH64_PORT_STUB */
 
     if (sched::cpus.size() > sched::max_cpus) {
