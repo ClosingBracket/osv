@@ -13,7 +13,7 @@
 #include "processor.hh"
 #include "processor-flags.h"
 #include "msr.hh"
-#include <osv/xen.hh>
+//#include <osv/xen.hh>
 #include <osv/elf.hh>
 #include <osv/types.h>
 #include <alloca.h>
@@ -214,7 +214,7 @@ void arch_setup_tls(void *tls, const elf::tls_data& info)
 static inline void disable_pic()
 {
     // PIC not present in Xen
-    XENPV_ALTERNATIVE({ processor::outb(0xff, 0x21); processor::outb(0xff, 0xa1); }, {});
+    //XENPV_ALTERNATIVE({ processor::outb(0xff, 0x21); processor::outb(0xff, 0xa1); }, {});
 }
 
 extern "C" void syscall_entry(void);
@@ -253,15 +253,15 @@ void arch_init_premain()
 //#include "drivers/pvpanic.hh"
 #include "drivers/virtio.hh"
 #include "drivers/virtio-blk.hh"
-#include "drivers/virtio-scsi.hh"
+//#include "drivers/virtio-scsi.hh"
 #include "drivers/virtio-net.hh"
-#include "drivers/virtio-rng.hh"
-#include "drivers/virtio-fs.hh"
-#include "drivers/xenplatform-pci.hh"
-#include "drivers/ahci.hh"
-#include "drivers/vmw-pvscsi.hh"
-#include "drivers/vmxnet3.hh"
-#include "drivers/ide.hh"
+//#include "drivers/virtio-rng.hh"
+//#include "drivers/virtio-fs.hh"
+//#include "drivers/xenplatform-pci.hh"
+//#include "drivers/ahci.hh"
+//#include "drivers/vmw-pvscsi.hh"
+//#include "drivers/vmxnet3.hh"
+//#include "drivers/ide.hh"
 
 extern bool opt_pci_disabled;
 void arch_init_drivers()
@@ -272,7 +272,7 @@ void arch_init_drivers()
 
     if (!opt_pci_disabled) {
         // Enumerate PCI devices
-        pci::pci_device_enumeration();
+        //pci::pci_device_enumeration();
         boot_time.event("pci enumerated");
     }
 
@@ -282,15 +282,15 @@ void arch_init_drivers()
     // Initialize all drivers
     hw::driver_manager* drvman = hw::driver_manager::instance();
     drvman->register_driver(virtio::blk::probe);
-    drvman->register_driver(virtio::scsi::probe);
+    //drvman->register_driver(virtio::scsi::probe);
     drvman->register_driver(virtio::net::probe);
-    drvman->register_driver(virtio::rng::probe);
-    drvman->register_driver(virtio::fs::probe);
-    drvman->register_driver(xenfront::xenplatform_pci::probe);
-    drvman->register_driver(ahci::hba::probe);
-    drvman->register_driver(vmw::pvscsi::probe);
-    drvman->register_driver(vmw::vmxnet3::probe);
-    drvman->register_driver(ide::ide_drive::probe);
+    //drvman->register_driver(virtio::rng::probe);
+    //drvman->register_driver(virtio::fs::probe);
+    //drvman->register_driver(xenfront::xenplatform_pci::probe);
+    //drvman->register_driver(ahci::hba::probe);
+    //drvman->register_driver(vmw::pvscsi::probe);
+    //drvman->register_driver(vmw::vmxnet3::probe);
+    //drvman->register_driver(ide::ide_drive::probe);
     boot_time.event("drivers probe");
     drvman->load_all();
     drvman->list_drivers();
@@ -298,7 +298,7 @@ void arch_init_drivers()
 
 #include "drivers/console.hh"
 #include "drivers/isa-serial.hh"
-#include "drivers/vga.hh"
+//#include "drivers/vga.hh"
 #include "early-console.hh"
 
 void arch_init_early_console()
@@ -308,15 +308,15 @@ void arch_init_early_console()
 
 bool arch_setup_console(std::string opt_console)
 {
-    hw::driver_manager* drvman = hw::driver_manager::instance();
+    //hw::driver_manager* drvman = hw::driver_manager::instance();
 
     if (opt_console.compare("serial") == 0) {
         console::console_driver_add(&console::arch_early_console);
-    } else if (opt_console.compare("vga") == 0) {
-        drvman->register_driver(console::VGAConsole::probe);
+    //} else if (opt_console.compare("vga") == 0) {
+    //    drvman->register_driver(console::VGAConsole::probe);
     } else if (opt_console.compare("all") == 0) {
         console::console_driver_add(&console::arch_early_console);
-        drvman->register_driver(console::VGAConsole::probe);
+        //drvman->register_driver(console::VGAConsole::probe);
     } else {
         return false;
     }

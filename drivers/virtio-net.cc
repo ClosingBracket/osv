@@ -303,6 +303,7 @@ net::net(virtio_device& dev)
     ether_ifattach(_ifn, _config.mac);
 
     interrupt_factory int_factory;
+    /*
     int_factory.register_msi_bindings = [this,poll_task](interrupt_manager &msi) {
        msi.easy_register({
            { 0, [&] { this->_rxq.vqueue->disable_interrupts(); }, poll_task },
@@ -315,7 +316,7 @@ net::net(virtio_device& dev)
             pci_dev,
             [=] { return this->ack_irq(); },
             [=] { poll_task->wake(); });
-    };
+    };*/
 
 #ifndef AARCH64_PORT_STUB
     int_factory.create_gsi_edge_interrupt = [this,poll_task]() {

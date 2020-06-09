@@ -133,6 +133,7 @@ blk::blk(virtio_device& virtio_dev)
     auto queue = get_virt_queue(0);
 
     interrupt_factory int_factory;
+/*
     int_factory.register_msi_bindings = [queue, t](interrupt_manager &msi) {
         msi.easy_register( {{ 0, [=] { queue->disable_interrupts(); }, t }});
     };
@@ -142,7 +143,7 @@ blk::blk(virtio_device& virtio_dev)
             pci_dev,
             [=] { return this->ack_irq(); },
             [=] { t->wake(); });
-    };
+    };*/
 
 #ifndef AARCH64_PORT_STUB
     int_factory.create_gsi_edge_interrupt = [this,t]() {

@@ -588,18 +588,18 @@ bsd += bsd/sys/netinet/arpcache.o
 bsd += bsd/sys/xdr/xdr.o
 bsd += bsd/sys/xdr/xdr_array.o
 bsd += bsd/sys/xdr/xdr_mem.o
-bsd += bsd/sys/xen/evtchn.o
+#bsd += bsd/sys/xen/evtchn.o
 
 ifeq ($(arch),x64)
 $(out)/bsd/%.o: COMMON += -DXEN -DXENHVM
-bsd += bsd/sys/xen/gnttab.o
-bsd += bsd/sys/xen/xenstore/xenstore.o
-bsd += bsd/sys/xen/xenbus/xenbus.o
-bsd += bsd/sys/xen/xenbus/xenbusb.o
-bsd += bsd/sys/xen/xenbus/xenbusb_front.o
-bsd += bsd/sys/dev/xen/netfront/netfront.o
-bsd += bsd/sys/dev/xen/blkfront/blkfront.o
-bsd += bsd/sys/dev/hyperv/vmbus/hyperv.o
+#bsd += bsd/sys/xen/gnttab.o
+#bsd += bsd/sys/xen/xenstore/xenstore.o
+#bsd += bsd/sys/xen/xenbus/xenbus.o
+#bsd += bsd/sys/xen/xenbus/xenbusb.o
+#bsd += bsd/sys/xen/xenbus/xenbusb_front.o
+#bsd += bsd/sys/dev/xen/netfront/netfront.o
+#bsd += bsd/sys/dev/xen/blkfront/blkfront.o
+#bsd += bsd/sys/dev/hyperv/vmbus/hyperv.o
 endif
 
 bsd += bsd/sys/dev/random/hash.o
@@ -781,38 +781,40 @@ drivers += drivers/random.o
 drivers += drivers/zfs.o
 drivers += drivers/null.o
 drivers += drivers/device.o
-drivers += drivers/pci-generic.o
-drivers += drivers/pci-device.o
-drivers += drivers/pci-function.o
-drivers += drivers/pci-bridge.o
+#drivers += drivers/pci-generic.o
+#drivers += drivers/pci-device.o
+#drivers += drivers/pci-function.o
+#drivers += drivers/pci-bridge.o
 drivers += drivers/driver.o
 
 ifeq ($(arch),x64)
-drivers += $(libtsm)
-drivers += drivers/vga.o drivers/kbd.o drivers/isa-serial.o
+#drivers += $(libtsm)
+#drivers += drivers/vga.o drivers/kbd.o drivers/isa-serial.o
+drivers += drivers/kbd.o drivers/isa-serial.o
 drivers += arch/$(arch)/pvclock-abi.o
 drivers += drivers/virtio.o
-drivers += drivers/virtio-pci-device.o
+#drivers += drivers/virtio-pci-device.o
 drivers += drivers/virtio-vring.o
 drivers += drivers/virtio-mmio.o
 drivers += drivers/virtio-net.o
-drivers += drivers/vmxnet3.o
-drivers += drivers/vmxnet3-queues.o
+#drivers += drivers/vmxnet3.o
+#drivers += drivers/vmxnet3-queues.o
 drivers += drivers/virtio-blk.o
-drivers += drivers/virtio-scsi.o
-drivers += drivers/virtio-rng.o
-drivers += drivers/virtio-fs.o
-drivers += drivers/kvmclock.o drivers/xenclock.o drivers/hypervclock.o
+#drivers += drivers/virtio-scsi.o
+#drivers += drivers/virtio-rng.o
+#drivers += drivers/virtio-fs.o
+#drivers += drivers/kvmclock.o drivers/xenclock.o drivers/hypervclock.o
+drivers += drivers/kvmclock.o
 #drivers += drivers/acpi.o
 #drivers += drivers/hpet.o
 drivers += drivers/rtc.o
-drivers += drivers/xenfront.o drivers/xenfront-xenbus.o drivers/xenfront-blk.o
+#drivers += drivers/xenfront.o drivers/xenfront-xenbus.o drivers/xenfront-blk.o
 #drivers += drivers/pvpanic.o
-drivers += drivers/ahci.o
-drivers += drivers/ide.o
-drivers += drivers/scsi-common.o
-drivers += drivers/vmw-pvscsi.o
-drivers += drivers/xenplatform-pci.o
+#drivers += drivers/ahci.o
+#drivers += drivers/ide.o
+#drivers += drivers/scsi-common.o
+#drivers += drivers/vmw-pvscsi.o
+#drivers += drivers/xenplatform-pci.o
 endif # x64
 
 ifeq ($(arch),aarch64)
@@ -844,8 +846,8 @@ objects += arch/$(arch)/cpuid.o
 objects += arch/$(arch)/firmware.o
 objects += arch/$(arch)/hypervisor.o
 objects += arch/$(arch)/interrupt.o
-objects += arch/$(arch)/pci.o
-objects += arch/$(arch)/msi.o
+#objects += arch/$(arch)/pci.o
+#objects += arch/$(arch)/msi.o
 objects += arch/$(arch)/power.o
 objects += arch/$(arch)/feexcept.o
 objects += arch/$(arch)/xen.o
@@ -868,14 +870,14 @@ objects += arch/x64/arch-trace.o
 objects += arch/x64/ioapic.o
 objects += arch/x64/apic.o
 objects += arch/x64/apic-clock.o
-objects += arch/x64/entry-xen.o
+#objects += arch/x64/entry-xen.o
 objects += arch/x64/vmlinux.o
 objects += arch/x64/vmlinux-boot64.o
 objects += core/sampler.o
 #objects += $(acpi)
 endif # x64
 
-objects += core/xen_intr.o
+#objects += core/xen_intr.o
 objects += core/math.o
 objects += core/spinlock.o
 objects += core/lfmutex.o
@@ -1768,8 +1770,8 @@ fs_objs += rofs/rofs_vfsops.o \
 	rofs/rofs_cache.o \
 	rofs/rofs_common.o
 
-fs_objs += virtiofs/virtiofs_vfsops.o \
-	virtiofs/virtiofs_vnops.o
+#fs_objs += virtiofs/virtiofs_vfsops.o \
+#	virtiofs/virtiofs_vnops.o
 
 fs_objs += pseudofs/pseudofs.o
 fs_objs += procfs/procfs_vnops.o
