@@ -286,7 +286,7 @@ create_zfs_disk() {
 }
 
 create_rofs_disk() {
-	cp $bare $raw_disk.raw
+	cp /home/wkozaczuk/projects/osv/build/release.x64/boot.bin $raw_disk.raw
 	"$SRC"/scripts/imgedit.py setpartition "-f raw ${raw_disk}.raw" 2 $partition_offset $partition_size
 	qemu-img resize ${raw_disk}.raw ${image_size}b >/dev/null 2>&1
 	dd if=rofs.img of=${raw_disk}.raw obs=$partition_offset seek=1 >/dev/null 2>&1

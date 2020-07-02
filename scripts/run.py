@@ -72,7 +72,7 @@ def set_imgargs(options):
         execute = '--nopci ' + execute
 
     if options.arch == 'aarch64':
-        execute = '--nomount --maxnic=0 ' + execute #TODO: Investigate why both virtio-blk and virtio-net does not seem to work
+        execute = '--maxnic=0 ' + execute #TODO: Investigate why both virtio-blk and virtio-net does not seem to work
 
     options.osv_cmdline = execute
     if options.kernel or options.hypervisor == 'qemu_microvm' or options.arch == 'aarch64':

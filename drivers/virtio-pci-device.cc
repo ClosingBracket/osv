@@ -44,11 +44,17 @@ void virtio_pci_device::init()
 
 void virtio_pci_device::register_interrupt(interrupt_factory irq_factory)
 {
+    debug("virtio_pci_device: msi-bindings:%d, _dev->is_msix():%d\n", irq_factory.register_msi_bindings != NULL, _dev->is_msix());
+    /*
     if (irq_factory.register_msi_bindings && _dev->is_msix()) {
         irq_factory.register_msi_bindings(_msi);
+        debug("virtio_pci_device: registered MSI\n");
     } else {
         _irq.reset(irq_factory.create_pci_interrupt(*_dev));
-    }
+        debug("virtio_pci_device: registered non-MSI\n");
+    }*/
+    _irq.reset(irq_factory.create_pci_interrupt(*_dev));
+    debug("virtio_pci_device: registered non-MSI\n");
 }
 
 virtio_legacy_pci_device::virtio_legacy_pci_device(pci::device *dev)
