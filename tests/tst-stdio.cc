@@ -132,10 +132,6 @@ class TemporaryDir {
   DISALLOW_COPY_AND_ASSIGN(TemporaryDir);
 };
 
-//using namespace std::string_literals;
-
-//class stdio_DeathTest : public BionicDeathTest {};
-//class stdio_nofortify_DeathTest : public BionicDeathTest {};
 
 static void SetFileTo(const char* path, const char* content) {
   FILE* fp;
@@ -572,7 +568,6 @@ static void CheckInfNan(int snprintf_fn(T*, size_t, const T*, ...),
   EXPECT_TRUE(isnan(f));
 }
 
-/*
 TEST(STDIO_TEST, snprintf_sscanf_inf_nan) {
   CheckInfNan(snprintf, sscanf, "%s",
               "[%a]", "[%+a]",
@@ -608,6 +603,8 @@ TEST(STDIO_TEST, snprintf_sscanf_inf_nan) {
               "[-NAN]", "[NAN]", "[+NAN]");
 }
 
+/* Fails with '/tests/tst-stdio.so: failed looking up symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_ (boost::test_tools::tt_detail::equal_impl(wchar_t const*, wchar_t const*))'
+ * Fix same way as with  wstring -> use BOOST_REQUIRE( .. == ..)
 TEST(STDIO_TEST, swprintf_swscanf_inf_nan) {
   CheckInfNan(swprintf, swscanf, L"%s",
               L"[%a]", L"[%+a]",
@@ -641,17 +638,16 @@ TEST(STDIO_TEST, swprintf_swscanf_inf_nan) {
               L"[%G]", L"[%+G]",
               L"[-INF]", L"[INF]", L"[+INF]",
               L"[-NAN]", L"[NAN]", L"[+NAN]");
-}
-*/
+}*/
 
 TEST(STDIO_TEST, swprintf) {
   constexpr size_t nchars = 32;
   wchar_t buf[nchars];
 
   ASSERT_EQ(2, swprintf(buf, nchars, L"ab"));// << strerror(errno);
-  //ASSERT_EQ(std::wstring(L"ab"), buf);
+  BOOST_REQUIRE(std::wstring(L"ab") == buf);
   ASSERT_EQ(5, swprintf(buf, nchars, L"%s", "abcde"));
-  //ASSERT_EQ(std::wstring(L"abcde"), buf);
+  BOOST_REQUIRE(std::wstring(L"abcde") == buf);
 
   // Unlike swprintf(), swprintf() returns -1 in case of truncation
   // and doesn't necessarily zero-terminate the output!
@@ -659,9 +655,9 @@ TEST(STDIO_TEST, swprintf) {
 
   const char kString[] = "Hello, World";
   ASSERT_EQ(12, swprintf(buf, nchars, L"%s", kString));
-  //ASSERT_EQ(std::wstring(L"Hello, World"), buf);
+  BOOST_REQUIRE(std::wstring(L"Hello, World") == buf);
   ASSERT_EQ(12, swprintf(buf, 13, L"%s", kString));
-  //ASSERT_EQ(std::wstring(L"Hello, World"), buf);
+  BOOST_REQUIRE(std::wstring(L"Hello, World") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_a) {
@@ -669,7 +665,7 @@ TEST(STDIO_TEST, swprintf_a) {
   wchar_t buf[nchars];
 
   ASSERT_EQ(20, swprintf(buf, nchars, L"%a", 3.1415926535));
-  //ASSERT_EQ(std::wstring(L"0x1.921fb54411744p+1"), buf); FAILS to compile
+  BOOST_REQUIRE(std::wstring(L"0x1.921fb54411744p+1") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_lc) {
@@ -678,7 +674,7 @@ TEST(STDIO_TEST, swprintf_lc) {
 
   wint_t wc = L'a';
   EXPECT_EQ(3, swprintf(buf, nchars, L"<%lc>", wc));
-  //EXPECT_EQ(std::wstring(L"<a>"), buf);
+  BOOST_REQUIRE(std::wstring(L"<a>") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_C) { // Synonym for %lc.
@@ -687,7 +683,7 @@ TEST(STDIO_TEST, swprintf_C) { // Synonym for %lc.
 
   wint_t wc = L'a';
   EXPECT_EQ(3, swprintf(buf, nchars, L"<%C>", wc));
-  //EXPECT_EQ(std::wstring(L"<a>"), buf);
+  BOOST_REQUIRE(std::wstring(L"<a>") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_jd_INTMAX_MAX) {
@@ -695,7 +691,7 @@ TEST(STDIO_TEST, swprintf_jd_INTMAX_MAX) {
   wchar_t buf[nchars];
 
   swprintf(buf, nchars, L"%jd", INTMAX_MAX);
-  //EXPECT_EQ(std::wstring(L"9223372036854775807"), buf);
+  BOOST_REQUIRE(std::wstring(L"9223372036854775807") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_jd_INTMAX_MIN) {
@@ -703,7 +699,7 @@ TEST(STDIO_TEST, swprintf_jd_INTMAX_MIN) {
   wchar_t buf[nchars];
 
   swprintf(buf, nchars, L"%jd", INTMAX_MIN);
-  //EXPECT_EQ(std::wstring(L"-9223372036854775808"), buf);
+  BOOST_REQUIRE(std::wstring(L"-9223372036854775808") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_ju_UINTMAX_MAX) {
@@ -711,7 +707,7 @@ TEST(STDIO_TEST, swprintf_ju_UINTMAX_MAX) {
   wchar_t buf[nchars];
 
   swprintf(buf, nchars, L"%ju", UINTMAX_MAX);
-  //EXPECT_EQ(std::wstring(L"18446744073709551615"), buf);
+  BOOST_REQUIRE(std::wstring(L"18446744073709551615") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_1$ju_UINTMAX_MAX) {
@@ -719,7 +715,7 @@ TEST(STDIO_TEST, swprintf_1$ju_UINTMAX_MAX) {
   wchar_t buf[nchars];
 
   swprintf(buf, nchars, L"%1$ju", UINTMAX_MAX);
-  //EXPECT_EQ(std::wstring(L"18446744073709551615"), buf);
+  BOOST_REQUIRE(std::wstring(L"18446744073709551615") == buf);
 }
 
 TEST(STDIO_TEST, swprintf_ls) {
@@ -728,9 +724,9 @@ TEST(STDIO_TEST, swprintf_ls) {
 
   static const wchar_t kWideString[] = L"Hello\uff41 World";
   ASSERT_EQ(12, swprintf(buf, nchars, L"%ls", kWideString));
-  //ASSERT_EQ(std::wstring(kWideString), buf);
+  BOOST_REQUIRE(std::wstring(kWideString) == buf);
   ASSERT_EQ(12, swprintf(buf, 13, L"%ls", kWideString));
-  //ASSERT_EQ(std::wstring(kWideString), buf);
+  BOOST_REQUIRE(std::wstring(kWideString) == buf);
 }
 
 TEST(STDIO_TEST, swprintf_S) { // Synonym for %ls.
@@ -739,9 +735,9 @@ TEST(STDIO_TEST, swprintf_S) { // Synonym for %ls.
 
   static const wchar_t kWideString[] = L"Hello\uff41 World";
   ASSERT_EQ(12, swprintf(buf, nchars, L"%S", kWideString));
-  //ASSERT_EQ(std::wstring(kWideString), buf);
+  BOOST_REQUIRE(std::wstring(kWideString) == buf);
   ASSERT_EQ(12, swprintf(buf, 13, L"%S", kWideString));
-  //ASSERT_EQ(std::wstring(kWideString), buf);
+  BOOST_REQUIRE(std::wstring(kWideString) == buf);
 }
 
 TEST(STDIO_TEST, snprintf_d_INT_MAX) {
@@ -976,76 +972,6 @@ TEST(STDIO_TEST, fprintf_failures_7229520) {
   ASSERT_EQ(-1, fclose(fp));
 }
 
-TEST(STDIO_TEST, popen_r) {
-  //FILE* fp = popen("cat /proc/version", "r");
-  FILE* fp = popen("cat /proc/meminfo", "r");
-  ASSERT_TRUE(fp != nullptr);
-
-  char buf[16];
-  char* s = fgets(buf, sizeof(buf), fp);
-  buf[13] = '\0';
-  ASSERT_STREQ("Linux version", s);
-
-  ASSERT_EQ(0, pclose(fp));
-}
-
-TEST(STDIO_TEST, popen_socketpair) {
-  FILE* fp = popen("cat", "r+");
-  ASSERT_TRUE(fp != nullptr);
-
-  fputs("hello\nworld\n", fp);
-  fflush(fp);
-
-  char buf[16];
-  ASSERT_NE(nullptr, fgets(buf, sizeof(buf), fp));
-  EXPECT_STREQ("hello\n", buf);
-  ASSERT_NE(nullptr, fgets(buf, sizeof(buf), fp));
-  EXPECT_STREQ("world\n", buf);
-
-  ASSERT_EQ(0, pclose(fp));
-}
-
-TEST(STDIO_TEST, popen_socketpair_shutdown) {
-  FILE* fp = popen("uniq -c", "r+");
-  ASSERT_TRUE(fp != nullptr);
-
-  fputs("a\na\na\na\nb\n", fp);
-  fflush(fp);
-  ASSERT_EQ(0, shutdown(fileno(fp), SHUT_WR));
-
-  char buf[16];
-  ASSERT_NE(nullptr, fgets(buf, sizeof(buf), fp));
-  EXPECT_STREQ("      4 a\n", buf);
-  ASSERT_NE(nullptr, fgets(buf, sizeof(buf), fp));
-  EXPECT_STREQ("      1 b\n", buf);
-
-  ASSERT_EQ(0, pclose(fp));
-}
-
-TEST(STDIO_TEST, popen_return_value_0) {
-  FILE* fp = popen("true", "r");
-  ASSERT_TRUE(fp != nullptr);
-  int status = pclose(fp);
-  EXPECT_TRUE(WIFEXITED(status));
-  EXPECT_EQ(0, WEXITSTATUS(status));
-}
-
-TEST(STDIO_TEST, popen_return_value_1) {
-  FILE* fp = popen("false", "r");
-  ASSERT_TRUE(fp != nullptr);
-  int status = pclose(fp);
-  EXPECT_TRUE(WIFEXITED(status));
-  EXPECT_EQ(1, WEXITSTATUS(status));
-}
-
-TEST(STDIO_TEST, popen_return_value_signal) {
-  FILE* fp = popen("kill -7 $$", "r");
-  ASSERT_TRUE(fp != nullptr);
-  int status = pclose(fp);
-  EXPECT_TRUE(WIFSIGNALED(status));
-  EXPECT_EQ(7, WTERMSIG(status));
-}
-
 TEST(STDIO_TEST, getc) {
   FILE* fp = fopen("/proc/meminfo", "r");
   ASSERT_TRUE(fp != nullptr);
@@ -1236,26 +1162,34 @@ TEST(STDIO_TEST, sscanf_mlc) {
 //#pragma clang diagnostic pop
 }*/
 
-
-/* Failed up loookingg symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_
+/* Fails with 'page fault outside application, addr: 0x0000006f6c6c6000
+[registers]
+RIP: 0x0000000040489303 <strcmp+3>
+'
 TEST(STDIO_TEST, sscanf_ms) {
   CheckScanfM(sscanf, "hello", "%ms", 1, "hello");
   CheckScanfM(sscanf, "hello", "%4ms", 1, "hell");
   CheckScanfM(sscanf, "hello world", "%30ms", 1, "hello");
-}
+}*/
 
+/* Failed up loooking symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_
 TEST(STDIO_TEST, sscanf_mls) {
   CheckScanfM(sscanf, "hello", "%mls", 1, L"hello");
   CheckScanfM(sscanf, "hello", "%4mls", 1, L"hell");
   CheckScanfM(sscanf, "hello world", "%30mls", 1, L"hello");
-}
+}*/
 
+/* Fails with 'page fault outside application, addr: 0x0000006f6c6c6000
+[registers]
+RIP: 0x0000000040489303 <strcmp+3>
+'
 TEST(STDIO_TEST, sscanf_m_ccl) {
   CheckScanfM(sscanf, "hello", "%m[a-z]", 1, "hello");
   CheckScanfM(sscanf, "hello", "%4m[a-z]", 1, "hell");
   CheckScanfM(sscanf, "hello world", "%30m[a-z]", 1, "hello");
-}
+}*/
 
+/* Failed up loooking symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_
 TEST(STDIO_TEST, sscanf_ml_ccl) {
   CheckScanfM(sscanf, "hello", "%ml[a-z]", 1, L"hello");
   CheckScanfM(sscanf, "hello", "%4ml[a-z]", 1, L"hell");
@@ -1265,7 +1199,7 @@ TEST(STDIO_TEST, sscanf_ml_ccl) {
 TEST(STDIO_TEST, sscanf_ls) {
   wchar_t w[32] = {};
   ASSERT_EQ(1, sscanf("hello world", "%ls", w));
-  //ASSERT_EQ(L"hello", std::wstring(w));
+  BOOST_REQUIRE(L"hello" == std::wstring(w));
 }
 
 TEST(STDIO_TEST, sscanf_ls_suppress) {
@@ -1953,10 +1887,8 @@ TEST(STDIO_TEST, freopen_CLOEXEC) {
 }*/
 
 TEST(STDIO_TEST, fopen64_freopen64) {
-  //FILE* fp = fopen64("/proc/version", "r");
   FILE* fp = fopen64("/proc/meminfo", "r");
   ASSERT_TRUE(fp != nullptr);
-  //fp = freopen64("/proc/version", "re", fp);
   fp = freopen64("/proc/meminfo", "re", fp);
   ASSERT_TRUE(fp != nullptr);
   fclose(fp);
@@ -2327,19 +2259,18 @@ TEST(STDIO_TEST, printf_m_does_not_clobber_strerror) {
   ASSERT_STREQ("Unknown error -1", m);
 }
 
-/*
 TEST(STDIO_TEST, wprintf_m) {
   wchar_t buf[BUFSIZ];
   errno = 0;
   swprintf(buf, sizeof(buf), L"<%m>");
-  ASSERT_EQ(std::wstring(L"<Success>"), buf);
+  BOOST_REQUIRE(std::wstring(L"<Success>") == buf);
   errno = -1;
   swprintf(buf, sizeof(buf), L"<%m>");
-  ASSERT_EQ(std::wstring(L"<Unknown error -1>"), buf);
+  BOOST_REQUIRE(std::wstring(L"<Unknown error -1>") == buf);
   errno = EINVAL;
   swprintf(buf, sizeof(buf), L"<%m>");
-  ASSERT_EQ(std::wstring(L"<Invalid argument>"), buf);
-}*/
+  BOOST_REQUIRE(std::wstring(L"<Invalid argument>") == buf);
+}
 
 TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   wchar_t buf[BUFSIZ];
@@ -2347,7 +2278,7 @@ TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   ASSERT_STREQ("Unknown error -1", m);
   errno = -2;
   swprintf(buf, sizeof(buf), L"<%m>");
-  //ASSERT_EQ(std::wstring(L"<Unknown error -2>"), buf);
+  BOOST_REQUIRE(std::wstring(L"<Unknown error -2>") == buf);
   ASSERT_STREQ("Unknown error -1", m);
 }
 
@@ -2391,7 +2322,6 @@ TEST(STDIO_TEST, fdopen_append_mode_and_ftell) {
 TEST(STDIO_TEST, freopen_append_mode_and_ftell) {
   TemporaryFile tf;
   SetFileTo(tf.path, "0123456789");
-  //FILE* other_fp = fopen("/proc/version", "r");
   FILE* other_fp = fopen("/proc/meminfo", "r");
   FILE* fp = freopen(tf.path, "a", other_fp);
   EXPECT_EQ(10, ftell(fp));
@@ -2410,19 +2340,6 @@ TEST(STDIO_TEST, constants) {
   ASSERT_LE(FILENAME_MAX, PATH_MAX);
   ASSERT_EQ(L_tmpnam, PATH_MAX);
 }
-
-/*
-TEST(STDIO_TEST, perror) {
-  ExecTestHelper eth;
-  eth.Run([&]() { errno = EINVAL; perror("a b c"); exit(0); }, 0, "a b c: Invalid argument\n");
-  eth.Run([&]() { errno = EINVAL; perror(nullptr); exit(0); }, 0, "Invalid argument\n");
-  eth.Run([&]() { errno = EINVAL; perror(""); exit(0); }, 0, "Invalid argument\n");
-}
-
-TEST(STDIO_TEST, puts) {
-  ExecTestHelper eth;
-  eth.Run([&]() { exit(puts("a b c")); }, 0, "a b c\n");
-}*/
 
 TEST(STDIO_TEST, unlocked) {
   TemporaryFile tf;
@@ -2569,10 +2486,10 @@ TEST(STDIO_TEST, rename) {
   ASSERT_EQ(0, stat(new_path.c_str(), &sb));
 }
 
-/*
+/* Fails with 'failed looking up symbol renameat'
 TEST(STDIO_TEST, renameat) {
   TemporaryDir td;
-  android::base::unique_fd dirfd{open(td.path, O_PATH)};
+  auto dirfd = open(td.path, O_PATH);
   std::string old_path = std::string(td.path) + "/old";
   std::string new_path = std::string(td.path) + "/new";
 
@@ -2586,5 +2503,6 @@ TEST(STDIO_TEST, renameat) {
   ASSERT_EQ(0, renameat(dirfd, "old", dirfd, "new"));
   ASSERT_EQ(-1, stat(old_path.c_str(), &sb));
   ASSERT_EQ(0, stat(new_path.c_str(), &sb));
+  close(dirfd);
 }*/
 
