@@ -16,6 +16,8 @@
 
 //#include <gtest/gtest.h>
 #define BOOST_TEST_MODULE tst-stdio
+//gcc tests/tst-time.cc -lstdc++  -lboost_unit_test_framework -lboost_filesystem -o /tmp/a
+//#define BOOST_TEST_DYN_LINK //ONLY FOR LINUX
 
 #include <boost/test/unit_test.hpp>
 namespace utf = boost::unit_test;
@@ -975,11 +977,11 @@ TEST(STDIO_TEST, fprintf_failures_7229520) {
 TEST(STDIO_TEST, getc) {
   FILE* fp = fopen("/proc/meminfo", "r");
   ASSERT_TRUE(fp != nullptr);
-  ASSERT_EQ('L', getc(fp));
-  ASSERT_EQ('i', getc(fp));
-  ASSERT_EQ('n', getc(fp));
-  ASSERT_EQ('u', getc(fp));
-  ASSERT_EQ('x', getc(fp));
+  ASSERT_EQ('M', getc(fp));
+  ASSERT_EQ('e', getc(fp));
+  ASSERT_EQ('m', getc(fp));
+  ASSERT_EQ('T', getc(fp));
+  ASSERT_EQ('o', getc(fp));
   fclose(fp);
 }
 
