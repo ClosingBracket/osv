@@ -15,6 +15,7 @@
 #include "osv/mount.h"
 #include "libc/libc.hh"
 #include <safe-ptr.hh>
+#include <bits/__mman.h>
 
 TRACEPOINT(trace_memory_mmap, "addr=%p, length=%d, prot=%d, flags=%d, fd=%d, offset=%d", void *, size_t, int, int, int, off_t);
 TRACEPOINT(trace_memory_mmap_err, "%d", int);
