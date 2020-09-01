@@ -245,7 +245,6 @@ post-includes-bsd += -isystem bsd/sys
 post-includes-bsd += -isystem bsd/
 post-includes-bsd += -isystem bsd/$(arch)
 
-#$(out)/libc/%.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
 $(out)/musl/%.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
 
 ifneq ($(werror),0)
@@ -1620,6 +1619,7 @@ musl += time/__month_to_secs.o
 musl += time/__secs_to_tm.o
 musl += time/__tm_to_secs.o
 libc += time/__tz.o
+$(out)/libc/time/__tz.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
 musl += time/__year_to_secs.o
 musl += time/asctime.o
 #musl += time/asctime_r.o C_LOCALE
@@ -1671,7 +1671,7 @@ $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 libc += pthread.o
 libc += pthread_barrier.o
 libc += libc.o
-#libc += dlfcn.o
+libc += dlfcn.o
 libc += time.o
 libc += signal.o
 libc += mman.o
