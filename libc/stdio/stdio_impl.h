@@ -15,12 +15,6 @@ __BEGIN_DECLS
 	int __need_unlock = ((f)->no_locking ? 0 : __lockfile((f)))
 #define FUNLOCK(f) if (__need_unlock) __unlockfile((f)); else
 
-hidden FILE **__ofl_lock(void);
-hidden void __stdio_exit_needed(void);
-hidden off_t __lseek(int, off_t, int);
-hidden void __ofl_unlock(void);
-hidden int __dup3(int, int, int);
-
 #define F_PERM 1
 #define F_NORD 4
 #define F_NOWR 8
@@ -68,6 +62,10 @@ struct __FILE_s {
 	bool no_locking;
 	mutex_t mutex;
 };
+
+hidden FILE **__ofl_lock(void);
+hidden void __ofl_unlock(void);
+hidden void __stdio_exit_needed(void);
 
 size_t __stdio_read(FILE *, unsigned char *, size_t);
 size_t __stdio_write(FILE *, const unsigned char *, size_t);

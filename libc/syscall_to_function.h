@@ -1,8 +1,6 @@
 #include <bits/syscall.h>
 #include <unistd.h>
 
-hidden char *__randname(char *);
-
 #define sys_open(filename, flags, ...) (open(filename, flags __VA_OPT__(,) __VA_ARGS__))
 
 #define __OSV_TO_FUNCTION_SYS_open(filename, flags, ...) (open(filename, flags __VA_OPT__(,) __VA_ARGS__))

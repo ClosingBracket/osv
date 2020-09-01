@@ -229,6 +229,7 @@ ifeq ($(arch),x64)
 # C++ include directories, though they are already in the default search path.
 INCLUDES += $(shell $(CXX) -E -xc++ - -v </dev/null 2>&1 | awk '/^End/ {exit} /^ .*c\+\+/ {print "-isystem" $$0}')
 endif
+INCLUDES += $(pre-include-api)
 INCLUDES += -isystem include/api
 INCLUDES += -isystem include/api/$(arch)
 ifeq ($(arch),aarch64)
@@ -243,6 +244,9 @@ post-includes-bsd += -isystem bsd/sys
 # For acessing machine/ in cpp xen drivers
 post-includes-bsd += -isystem bsd/
 post-includes-bsd += -isystem bsd/$(arch)
+
+#$(out)/libc/%.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
+$(out)/musl/%.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
 
 ifneq ($(werror),0)
 	CFLAGS_WERROR = -Werror
@@ -1313,7 +1317,7 @@ musl += network/gethostbyname2_r.o
 musl += network/gethostbyaddr_r.o
 musl += network/gethostbyaddr.o
 libc += network/getaddrinfo.o
-#musl += network/freeaddrinfo.o
+#musl += network/freeaddrinfo.o LOCK
 musl += network/in6addr_any.o
 musl += network/in6addr_loopback.o
 libc += network/getnameinfo.o
@@ -1326,7 +1330,7 @@ libc += network/inet_ntop.o
 musl += network/proto.o
 libc += network/if_indextoname.o
 libc += network/if_nametoindex.o
-#musl += network/gai_strerror.o
+#musl += network/gai_strerror.o LCTRANS_CUR
 musl += network/h_errno.o
 musl += network/getservbyname_r.o
 musl += network/getservbyname.o
@@ -1404,7 +1408,7 @@ libc += stdio/fgetc.o
 musl += stdio/fgetln.o
 musl += stdio/fgetpos.o
 musl += stdio/fgets.o
-#musl += stdio/fgetwc.o
+#musl += stdio/fgetwc.o CURRENT_LOCALE
 musl += stdio/fgetws.o
 musl += stdio/fileno.o
 libc += stdio/flockfile.o
@@ -1544,14 +1548,11 @@ musl += string/strcasestr.o
 musl += string/strcat.o
 libc += string/__strcat_chk.o
 musl += string/strchr.o
-$(out)/musl/src/string/strchr.o: CFLAGS += --include musl/src/include/string.h
 musl += string/strchrnul.o
 musl += string/strcmp.o
 musl += string/strcpy.o
-$(out)/musl/src/string/strcpy.o: CFLAGS += --include musl/src/include/string.h
 libc += string/__strcpy_chk.o
 musl += string/strcspn.o
-$(out)/musl/src/string/strcspn.o: CFLAGS += --include musl/src/include/string.h
 musl += string/strdup.o
 libc += string/strerror_r.o
 musl += string/strlcat.o
@@ -1562,13 +1563,11 @@ musl += string/strncat.o
 libc += string/__strncat_chk.o
 musl += string/strncmp.o
 musl += string/strncpy.o
-$(out)/musl/src/string/strncpy.o: CFLAGS += --include musl/src/include/string.h
 libc += string/__strncpy_chk.o
 musl += string/strndup.o
 musl += string/strnlen.o
 musl += string/strpbrk.o
 musl += string/strrchr.o
-$(out)/musl/src/string/strrchr.o: CFLAGS += --include musl/src/include/string.h
 musl += string/strsep.o
 libc += string/stresep.o
 #musl += string/strsignal.o
@@ -1609,45 +1608,35 @@ musl += string/wmemmove.o
 musl += string/wmemset.o
 
 musl += temp/__randname.o
-$(out)/musl/src/temp/__randname.o: CFLAGS += --include musl/src/include/time.h
 musl += temp/mkdtemp.o
-$(out)/musl/src/temp/mkdtemp.o: CFLAGS += --include musl/src/include/stdlib.h
 musl += temp/mkstemp.o
-$(out)/musl/src/temp/mkstemp.o: CFLAGS += --include musl/src/include/stdlib.h
 musl += temp/mktemp.o
-$(out)/musl/src/temp/mktemp.o: CFLAGS += --include musl/src/include/stdlib.h
-#musl += temp/mkostemp.o
-#musl += temp/mkostemps.o
-#$(out)/musl/src/temp/mkostemps.o: CFLAGS += --include musl/src/include/stdlib.h REDEFINES BSD_SOURCE
+musl += temp/mkostemp.o
+musl += temp/mkostemps.o
 
 musl += time/__map_file.o
-$(out)/musl/src/time/__map_file.o: CFLAGS += --include libc/syscall_to_function.h --include musl/src/include/sys/mman.h
+$(out)/musl/src/time/__map_file.o: CFLAGS += --include libc/syscall_to_function.h
 musl += time/__month_to_secs.o
 musl += time/__secs_to_tm.o
 musl += time/__tm_to_secs.o
 libc += time/__tz.o
-$(out)/libc/time/__tz.o: CFLAGS += --include musl/src/include/sys/mman.h
 musl += time/__year_to_secs.o
 musl += time/asctime.o
-$(out)/musl/src/time/asctime.o: CFLAGS += --include musl/src/include/time.h
 #musl += time/asctime_r.o C_LOCALE
 musl += time/ctime.o
 musl += time/ctime_r.o
 musl += time/difftime.o
 musl += time/getdate.o
 musl += time/gmtime.o
-$(out)/musl/src/time/gmtime.o: CFLAGS += --include musl/src/include/time.h
 musl += time/gmtime_r.o
 musl += time/localtime.o
-$(out)/musl/src/time/localtime.o: CFLAGS += --include musl/src/include/time.h
 musl += time/localtime_r.o
 musl += time/mktime.o
-#musl += time/strftime.o
+#musl += time/strftime.o CURRENT_LOCALE
 musl += time/strptime.o
 musl += time/time.o
-$(out)/musl/src/time/time.o: CFLAGS += --include musl/src/include/time.h
 musl += time/timegm.o
-#musl += time/wcsftime.o
+#musl += time/wcsftime.o CURRENT_LOCALE
 libc += time/ftime.o # verbatim copy of the file as in 4b15d9f46a2b@musl
 $(out)/libc/time/ftime.o: CFLAGS += -Ilibc/include
 
@@ -1670,8 +1659,7 @@ musl += unistd/tcsetpgrp.o
 musl += unistd/setpgrp.o
 
 musl += regex/fnmatch.o
-#musl += regex/glob.o
-#$(out)/musl/src/regex/glob.o: CFLAGS += --include musl/src/include/string.h _BSD_SOURCE
+musl += regex/glob.o
 musl += regex/regcomp.o
 $(out)/musl/src/regex/regcomp.o: CFLAGS += -UNDEBUG
 musl += regex/regexec.o
@@ -1719,11 +1707,9 @@ endif
 
 musl += crypt/crypt_blowfish.o
 musl += crypt/crypt.o
-$(out)/musl/src/crypt/crypt.o: CFLAGS += --include musl/src/include/crypt.h
 musl += crypt/crypt_des.o
 musl += crypt/crypt_md5.o
 musl += crypt/crypt_r.o
-$(out)/musl/src/crypt/crypt_r.o: CFLAGS += --include musl/src/include/crypt.h
 musl += crypt/crypt_sha256.o
 musl += crypt/crypt_sha512.o
 musl += crypt/encrypt.o
