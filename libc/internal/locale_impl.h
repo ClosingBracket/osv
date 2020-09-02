@@ -15,4 +15,7 @@ typedef struct __locale_struct *__locale_t;
 
 typedef __locale_t locale_t;
 
+extern __thread locale_t __current_locale;
+#define CURRENT_LOCALE (__current_locale)
+
 #endif
