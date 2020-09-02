@@ -1622,7 +1622,7 @@ libc += time/__tz.o
 $(out)/libc/time/__tz.o: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
 musl += time/__year_to_secs.o
 musl += time/asctime.o
-#musl += time/asctime_r.o C_LOCALE
+musl += time/asctime_r.o
 musl += time/ctime.o
 musl += time/ctime_r.o
 musl += time/difftime.o
@@ -1636,7 +1636,7 @@ musl += time/strftime.o
 musl += time/strptime.o
 musl += time/time.o
 musl += time/timegm.o
-#musl += time/wcsftime.o mbstowcs
+musl += time/wcsftime.o
 musl += time/ftime.o
 $(out)/libc/time/ftime.o: CFLAGS += -Ilibc/include
 
@@ -1893,7 +1893,7 @@ libgcc_s_dir := ../../$(aarch64_gccbase)/lib64
 endif
 
 $(out)/bootfs.bin: scripts/mkbootfs.py $(bootfs_manifest) $(bootfs_manifest_dep) $(tools:%=$(out)/%) \
-		$(out)/zpool.so $(out)/zfs.so $(out)/libenviron.so $(out)/libvdso.so
+		$(out)/zpool.so $(out)/zfs.so $(out)/libvdso.so
 	$(call quiet, olddir=`pwd`; cd $(out); "$$olddir"/scripts/mkbootfs.py -o bootfs.bin -d bootfs.bin.d -m "$$olddir"/$(bootfs_manifest) \
 		-D libgcc_s_dir=$(libgcc_s_dir), MKBOOTFS $@)
 
