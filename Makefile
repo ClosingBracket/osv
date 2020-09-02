@@ -1006,7 +1006,7 @@ environ_musl += env/unsetenv.c
 
 musl += ctype/__ctype_b_loc.o
 
-#musl += errno/strerror.o LCTRANS
+musl += errno/strerror.o
 libc += errno/strerror.o
 
 musl += locale/catclose.o
@@ -1329,7 +1329,7 @@ libc += network/inet_ntop.o
 musl += network/proto.o
 libc += network/if_indextoname.o
 libc += network/if_nametoindex.o
-#musl += network/gai_strerror.o LCTRANS_CUR
+musl += network/gai_strerror.o
 musl += network/h_errno.o
 musl += network/getservbyname_r.o
 musl += network/getservbyname.o
@@ -1569,7 +1569,7 @@ musl += string/strpbrk.o
 musl += string/strrchr.o
 musl += string/strsep.o
 libc += string/stresep.o
-#musl += string/strsignal.o LCTRANS_CUR
+musl += string/strsignal.o
 musl += string/strspn.o
 musl += string/strstr.o
 musl += string/strtok.o
@@ -1664,7 +1664,7 @@ musl += regex/regcomp.o
 $(out)/musl/src/regex/regcomp.o: CFLAGS += -UNDEBUG
 musl += regex/regexec.o
 $(out)/musl/src/regex/regexec.o: CFLAGS += -UNDEBUG
-#musl += regex/regerror.o LCTRANS_CUR
+musl += regex/regerror.o
 musl += regex/tre-mem.o
 $(out)/musl/src/regex/tre-mem.o: CFLAGS += -UNDEBUG
 
