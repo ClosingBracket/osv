@@ -989,12 +989,12 @@ musl += dirent/alphasort.o
 musl += dirent/scandir.o
 
 libc += env/__environ.o
-#musl += env/clearenv.o
-#musl += env/getenv.o
+musl += env/clearenv.o
+musl += env/getenv.o
 libc += env/secure_getenv.o
-#musl += env/putenv.o
-#musl += env/setenv.o
-#musl += env/unsetenv.o
+musl += env/putenv.o
+musl += env/setenv.o
+musl += env/unsetenv.o
 
 environ_libc += env/__environ.c
 environ_musl += env/clearenv.c
@@ -1014,8 +1014,8 @@ musl += locale/catgets.o
 #musl += locale/catopen.o
 #musl += locale/duplocale.o
 #libc += locale/freelocale.o
-#musl += locale/iconv.o
-#musl += locale/intl.o
+#musl += locale/iconv.o UTF8_LOCALE
+#musl += locale/intl.o -> got split into many other files
 #musl += locale/langinfo.o
 musl += locale/localeconv.o
 #musl += locale/setlocale.o
@@ -1893,7 +1893,7 @@ libgcc_s_dir := ../../$(aarch64_gccbase)/lib64
 endif
 
 $(out)/bootfs.bin: scripts/mkbootfs.py $(bootfs_manifest) $(bootfs_manifest_dep) $(tools:%=$(out)/%) \
-		$(out)/zpool.so $(out)/zfs.so $(out)/libvdso.so
+		$(out)/zpool.so $(out)/zfs.so $(out)/libenviron.so $(out)/libvdso.so
 	$(call quiet, olddir=`pwd`; cd $(out); "$$olddir"/scripts/mkbootfs.py -o bootfs.bin -d bootfs.bin.d -m "$$olddir"/$(bootfs_manifest) \
 		-D libgcc_s_dir=$(libgcc_s_dir), MKBOOTFS $@)
 
