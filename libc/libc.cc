@@ -34,6 +34,7 @@ char *program_invocation_short_name;
 
 weak_alias(program_invocation_name, __progname_full);
 weak_alias(program_invocation_short_name, __progname);
+//weak_alias(__errno_location, ___errno_location) __attribute__((__visibility__("hidden")));
 
 int libc_error(int err)
 {
@@ -46,6 +47,11 @@ int libc_error(int err)
 int __thread errno;
 
 int* __errno_location()
+{
+    return &errno;
+}
+
+extern "C" int* ___errno_location() //TODO: Get rid of it
 {
     return &errno;
 }

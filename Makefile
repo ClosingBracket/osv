@@ -1003,6 +1003,7 @@ environ_libc += env/secure_getenv.c
 environ_musl += env/putenv.c
 environ_musl += env/setenv.c
 environ_musl += env/unsetenv.c
+environ_musl += string/strchrnul.c
 
 musl += ctype/__ctype_b_loc.o
 
@@ -1904,6 +1905,9 @@ $(out)/bsd/%.o: COMMON += -DSMP -D'__FBSDID(__str__)=extern int __bogus__'
 environ_sources = $(addprefix libc/, $(environ_libc))
 environ_sources += $(addprefix musl/src/, $(environ_musl))
 
+$(out)/libenviron.so: pre-include-api = -isystem include/api/internal_musl_headers -isystem musl/src/include
+$(out)/libenviron.so: source-dialects =
+
 $(out)/libenviron.so: $(environ_sources)
 	$(makedir)
 	 $(call quiet, $(CC) $(CFLAGS) -shared -o $(out)/libenviron.so $(environ_sources), CC libenviron.so)
@@ -1931,7 +1935,7 @@ libgcc_s_dir := ../../$(aarch64_gccbase)/lib64
 endif
 
 $(out)/bootfs.bin: scripts/mkbootfs.py $(bootfs_manifest) $(bootfs_manifest_dep) $(tools:%=$(out)/%) \
-		$(out)/zpool.so $(out)/zfs.so $(out)/libvdso.so
+		$(out)/zpool.so $(out)/zfs.so $(out)/libenviron.so $(out)/libvdso.so
 	$(call quiet, olddir=`pwd`; cd $(out); "$$olddir"/scripts/mkbootfs.py -o bootfs.bin -d bootfs.bin.d -m "$$olddir"/$(bootfs_manifest) \
 		-D libgcc_s_dir=$(libgcc_s_dir), MKBOOTFS $@)
 
