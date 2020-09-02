@@ -1011,14 +1011,14 @@ libc += errno/strerror.o
 
 musl += locale/catclose.o
 musl += locale/catgets.o
-#musl += locale/catopen.o ‘PATH_MAX’ undeclared
-#musl += locale/duplocale.o
-#libc += locale/freelocale.o
+libc += locale/catopen.o # 1.1.24 has completely new implementation that does not compile; for now just copy from 0.9.12
+libc += locale/duplocale.o # 1.1.24 LC_GLOBAL_LOCALE) old = &libc.global_locale ADN does not compile; for now just copy from 0.9.12
+libc += locale/freelocale.o
 musl += locale/iconv.o
 #musl += locale/intl.o -> got split into many other files
-#musl += locale/langinfo.o -> ‘struct __locale_struct’ has no member named ‘cat’
+libc += locale/langinfo.o #-> ‘struct __locale_struct’ has no member named ‘cat’; for now copied from 1.1.24 and changed to drop references to cat field in __locale_struct
 musl += locale/localeconv.o
-#musl += locale/setlocale.o
+libc += locale/setlocale.o # 1.1.24 has completely new implementation that does not compile; for now just copy from 0.9.12
 musl += locale/strcoll.o
 musl += locale/strfmon.o
 libc += locale/strtod_l.o
