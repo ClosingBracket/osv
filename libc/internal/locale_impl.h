@@ -24,5 +24,6 @@ extern __thread locale_t __current_locale;
 
 extern locale_t __c_locale_ptr;
 #define C_LOCALE (__c_locale_ptr)
+#define UTF8_LOCALE (__c_locale_ptr) // This should point to different locale struct but for now to get things going
 
 #endif

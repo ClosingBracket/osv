@@ -62,6 +62,7 @@ struct __FILE_s {
 
 	bool no_locking;
 	mutex_t mutex;
+	locale_t locale;
 };
 
 hidden FILE **__ofl_lock(void);
