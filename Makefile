@@ -939,7 +939,7 @@ environ_musl =
 ifeq ($(arch),x64)
 musl_arch = x86_64
 else
-musl_arch = notsup
+musl_arch = aarch64
 endif
 
 libc += internal/_chk_fail.o
@@ -1315,6 +1315,8 @@ libc += misc/__longjmp_chk.o
 
 musl += signal/killpg.o
 musl += signal/siginterrupt.o
+musl += signal/sigrtmin.o
+musl += signal/sigrtmax.o
 
 musl += multibyte/btowc.o
 musl += multibyte/internal.o
@@ -1398,10 +1400,8 @@ musl += process/execl.o
 libc += process/waitpid.o
 musl += process/wait.o
 
-libc += arch/$(arch)/setjmp/setjmp.o
-libc += arch/$(arch)/setjmp/longjmp.o
-libc += arch/$(arch)/setjmp/sigrtmax.o
-libc += arch/$(arch)/setjmp/sigrtmin.o
+musl += setjmp/$(musl_arch)/setjmp.o
+musl += setjmp/$(musl_arch)/longjmp.o
 libc += arch/$(arch)/setjmp/siglongjmp.o
 libc += arch/$(arch)/setjmp/sigsetjmp.o
 libc += arch/$(arch)/setjmp/block.o
@@ -1735,14 +1735,11 @@ libc += mallopt.o
 
 libc += linux/makedev.o
 
-ifneq ($(musl_arch), notsup)
 musl += fenv/fegetexceptflag.o
 musl += fenv/feholdexcept.o
 musl += fenv/fesetexceptflag.o
+musl += fenv/fesetround.o
 musl += fenv/$(musl_arch)/fenv.o
-else
-musl += fenv/fenv.o
-endif
 
 musl += crypt/crypt_blowfish.o
 musl += crypt/crypt.o
