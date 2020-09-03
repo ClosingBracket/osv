@@ -1414,6 +1414,7 @@ endif
 
 musl += stdio/__fclose_ca.o
 libc += stdio/__fdopen.o
+$(out)/libc/stdio/__fdopen.o: CFLAGS += --include libc/syscall_to_function.h
 musl += stdio/__fmodeflags.o
 libc += stdio/__fopen_rb_ca.o
 libc += stdio/__fprintf_chk.o
@@ -1433,6 +1434,7 @@ musl += stdio/__towrite.o
 musl += stdio/__uflow.o
 libc += stdio/__vfprintf_chk.o
 libc += stdio/ofl.o
+musl += stdio/ofl_add.o
 musl += stdio/asprintf.o
 musl += stdio/clearerr.o
 musl += stdio/dprintf.o

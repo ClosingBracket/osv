@@ -68,6 +68,7 @@ struct __FILE_s {
 hidden FILE **__ofl_lock(void);
 hidden void __ofl_unlock(void);
 hidden void __stdio_exit_needed(void);
+hidden FILE *__ofl_add(FILE *f);
 
 size_t __stdio_read(FILE *, unsigned char *, size_t);
 size_t __stdio_write(FILE *, const unsigned char *, size_t);
