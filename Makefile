@@ -1394,7 +1394,7 @@ musl += prng/srand48.o
 libc += random.o
 
 libc += process/execve.o
-libc += process/execle.o
+musl += process/execle.o
 musl += process/execv.o
 musl += process/execl.o
 libc += process/waitpid.o
