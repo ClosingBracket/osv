@@ -9,6 +9,9 @@
  * address.
  */
 
+/* errno */
+___errno_location = __errno_location;
+
 /* network */
 __res_init = res_init;
 
@@ -54,3 +57,5 @@ stat64 = stat;
 fstat64 = fstat;
 lstat64 = lstat;
 fstatat64 = fstatat;
+
+__lseek = lseek;
