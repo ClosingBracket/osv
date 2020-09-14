@@ -1793,14 +1793,13 @@ TEST(STDIO_TEST, fmemopen_zero_length) {
   ASSERT_EQ(0, fclose(fp));
 }
 
-/*
 TEST(STDIO_TEST, fmemopen_zero_length_buffer_overrun) {
   char buf[2] = "x";
   ASSERT_EQ('x', buf[0]);
   FILE* fp = fmemopen(buf, 0, "w");
   ASSERT_EQ('x', buf[0]);
   ASSERT_EQ(0, fclose(fp));
-}*/
+}
 
 TEST(STDIO_TEST, fmemopen_write_only_allocated) {
   // POSIX says fmemopen "may fail if the mode argument does not include a '+'".
@@ -1857,8 +1856,14 @@ TEST(STDIO_TEST, open_memstream) {
 }
 
 /*
+static inline void AssertCloseOnExec(int fd, bool close_on_exec) {
+  int flags = fcntl(fd, F_GETFD);
+  ASSERT_NE(flags, -1);
+  ASSERT_EQ(close_on_exec ? FD_CLOEXEC : 0, flags & FD_CLOEXEC);
+}
+
 TEST(STDIO_TEST, fdopen_CLOEXEC) {
-  int fd = open("/proc/version", O_RDONLY);
+  int fd = open("/proc/meminfo", O_RDONLY);
   ASSERT_TRUE(fd != -1);
 
   // This fd doesn't have O_CLOEXEC...
@@ -1874,7 +1879,7 @@ TEST(STDIO_TEST, fdopen_CLOEXEC) {
 }
 
 TEST(STDIO_TEST, freopen_CLOEXEC) {
-  FILE* fp = fopen("/proc/version", "r");
+  FILE* fp = fopen("/proc/meminfo", "r");
   ASSERT_TRUE(fp != nullptr);
 
   // This FILE* doesn't have O_CLOEXEC...
@@ -2240,17 +2245,19 @@ TEST(STDIO_TEST, sprintf_30445072) {
 
 TEST(STDIO_TEST, printf_m) {
   char buf[BUFSIZ];
+  /* Both 0 and -1 are handled differently on musl side than glibc
   errno = 0;
   snprintf(buf, sizeof(buf), "<%m>");
   ASSERT_STREQ("<Success>", buf);
   errno = -1;
   snprintf(buf, sizeof(buf), "<%m>");
-  ASSERT_STREQ("<Unknown error -1>", buf);
+  ASSERT_STREQ("<Unknown error -1>", buf);*/
   errno = EINVAL;
   snprintf(buf, sizeof(buf), "<%m>");
   ASSERT_STREQ("<Invalid argument>", buf);
 }
 
+/*
 TEST(STDIO_TEST, printf_m_does_not_clobber_strerror) {
   char buf[BUFSIZ];
   const char* m = strerror(-1);
@@ -2259,21 +2266,23 @@ TEST(STDIO_TEST, printf_m_does_not_clobber_strerror) {
   snprintf(buf, sizeof(buf), "<%m>");
   ASSERT_STREQ("<Unknown error -2>", buf);
   ASSERT_STREQ("Unknown error -1", m);
-}
+}*/
 
 TEST(STDIO_TEST, wprintf_m) {
   wchar_t buf[BUFSIZ];
+  /* Both 0 and -1 are handled differently on musl side than glibc
   errno = 0;
   swprintf(buf, sizeof(buf), L"<%m>");
   BOOST_REQUIRE(std::wstring(L"<Success>") == buf);
   errno = -1;
   swprintf(buf, sizeof(buf), L"<%m>");
-  BOOST_REQUIRE(std::wstring(L"<Unknown error -1>") == buf);
+  BOOST_REQUIRE(std::wstring(L"<Unknown error -1>") == buf);*/
   errno = EINVAL;
   swprintf(buf, sizeof(buf), L"<%m>");
   BOOST_REQUIRE(std::wstring(L"<Invalid argument>") == buf);
 }
 
+/*
 TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   wchar_t buf[BUFSIZ];
   const char* m = strerror(-1);
@@ -2282,7 +2291,7 @@ TEST(STDIO_TEST, wprintf_m_does_not_clobber_strerror) {
   swprintf(buf, sizeof(buf), L"<%m>");
   BOOST_REQUIRE(std::wstring(L"<Unknown error -2>") == buf);
   ASSERT_STREQ("Unknown error -1", m);
-}
+}*/
 
 TEST(STDIO_TEST, fopen_append_mode_and_ftell) {
   TemporaryFile tf;
