@@ -523,44 +523,44 @@ static void CheckInfNan(int snprintf_fn(T*, size_t, const T*, ...),
   // NaN.
 
   snprintf_fn(buf, sizeof(buf), fmt, nanf(""));
-  EXPECT_STREQ(nan_, buf);// << fmt;
+  BOOST_TEST(nan_ == buf);
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_TRUE(isnan(f));
 
   snprintf_fn(buf, sizeof(buf), fmt, -nanf(""));
-  EXPECT_STREQ(minus_nan, buf);// << fmt;
+  BOOST_TEST(minus_nan == buf);// << fmt;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_TRUE(isnan(f));
 
   snprintf_fn(buf, sizeof(buf), fmt_plus, nanf(""));
-  EXPECT_STREQ(plus_nan, buf);// << fmt_plus;
+  BOOST_TEST(plus_nan == buf);// << fmt_plus;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_TRUE(isnan(f));
 
   snprintf_fn(buf, sizeof(buf), fmt_plus, -nanf(""));
-  EXPECT_STREQ(minus_nan, buf);// << fmt_plus;
+  BOOST_TEST(minus_nan == buf);// << fmt_plus;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_TRUE(isnan(f));
 
   // Inf.
 
   snprintf_fn(buf, sizeof(buf), fmt, HUGE_VALF);
-  EXPECT_STREQ(inf_, buf);// << fmt;
+  BOOST_TEST(inf_ == buf);// << fmt;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_EQ(HUGE_VALF, f);
 
   snprintf_fn(buf, sizeof(buf), fmt, -HUGE_VALF);
-  EXPECT_STREQ(minus_inf, buf);// << fmt;
+  BOOST_TEST(minus_inf == buf);// << fmt;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_EQ(-HUGE_VALF, f);
 
   snprintf_fn(buf, sizeof(buf), fmt_plus, HUGE_VALF);
-  EXPECT_STREQ(plus_inf, buf);// << fmt_plus;
+  BOOST_TEST(plus_inf == buf);// << fmt_plus;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_EQ(HUGE_VALF, f);
 
   snprintf_fn(buf, sizeof(buf), fmt_plus, -HUGE_VALF);
-  EXPECT_STREQ(minus_inf, buf);// << fmt_plus;
+  BOOST_TEST(minus_inf == buf);// << fmt_plus;
   EXPECT_EQ(1, sscanf_fn(buf, fmt, &f));
   EXPECT_EQ(-HUGE_VALF, f);
 
@@ -608,8 +608,6 @@ TEST(STDIO_TEST, snprintf_sscanf_inf_nan) {
               "[-NAN]", "[NAN]", "[+NAN]");
 }
 
-/* Fails with '/tests/tst-stdio.so: failed looking up symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_ (boost::test_tools::tt_detail::equal_impl(wchar_t const*, wchar_t const*))'
- * Fix same way as with  wstring -> use BOOST_REQUIRE( .. == ..)
 TEST(STDIO_TEST, swprintf_swscanf_inf_nan) {
   CheckInfNan(swprintf, swscanf, L"%s",
               L"[%a]", L"[%+a]",
@@ -643,7 +641,7 @@ TEST(STDIO_TEST, swprintf_swscanf_inf_nan) {
               L"[%G]", L"[%+G]",
               L"[-INF]", L"[INF]", L"[+INF]",
               L"[-NAN]", L"[NAN]", L"[+NAN]");
-}*/
+}
 
 TEST(STDIO_TEST, swprintf) {
   constexpr size_t nchars = 32;
@@ -1105,7 +1103,7 @@ static void CheckScanfM(int sscanf_fn(const T1*, const T1*, ...),
   if (expected_string == nullptr) {
     ASSERT_EQ(nullptr, result);
   } else {
-    ASSERT_STREQ(expected_string, result);// << fmt;
+    BOOST_TEST(expected_string == result);
   }
   free(result);
 }
@@ -1182,12 +1180,11 @@ TEST(STDIO_TEST, sscanf_ms) {
   CheckScanfM(sscanf, "hello world", "%30ms", 1, "hello");
 }*/
 
-/* Failed up loooking symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_
 TEST(STDIO_TEST, sscanf_mls) {
   CheckScanfM(sscanf, "hello", "%mls", 1, L"hello");
   CheckScanfM(sscanf, "hello", "%4mls", 1, L"hell");
   CheckScanfM(sscanf, "hello world", "%30mls", 1, L"hello");
-}*/
+}
 
 /* Fails with 'page fault outside application, addr: 0x0000006f6c6c6000
 [registers]
@@ -1199,12 +1196,11 @@ TEST(STDIO_TEST, sscanf_m_ccl) {
   CheckScanfM(sscanf, "hello world", "%30m[a-z]", 1, "hello");
 }*/
 
-/* Failed up loooking symbol _ZN5boost10test_tools9tt_detail10equal_implEPKwS3_
 TEST(STDIO_TEST, sscanf_ml_ccl) {
   CheckScanfM(sscanf, "hello", "%ml[a-z]", 1, L"hello");
   CheckScanfM(sscanf, "hello", "%4ml[a-z]", 1, L"hell");
   CheckScanfM(sscanf, "hello world", "%30ml[a-z]", 1, L"hello");
-}*/
+}
 
 TEST(STDIO_TEST, sscanf_ls) {
   wchar_t w[32] = {};
