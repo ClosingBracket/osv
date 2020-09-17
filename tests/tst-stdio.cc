@@ -2412,7 +2412,6 @@ TEST(STDIO_TEST, fseek_64bit) {
   ASSERT_EQ(0, fclose(fp));
 }
 
-/*
 // POSIX requires that fseek/fseeko fail with EOVERFLOW if the new file offset
 // isn't representable in long/off_t.
 TEST(STDIO_TEST, fseek_overflow_32bit) {
@@ -2434,7 +2433,7 @@ TEST(STDIO_TEST, fseek_overflow_32bit) {
   ASSERT_EQ(0x200000000, ftello64(fp));
 
   fclose(fp);
-}*/
+}
 
 /*@wkozaczuk This test fails completely on OSv so disable it for now
 TEST(STDIO_TEST, dev_std_files) {
