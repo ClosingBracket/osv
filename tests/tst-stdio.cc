@@ -1850,7 +1850,6 @@ TEST(STDIO_TEST, open_memstream) {
   free(p);
 }
 
-/*
 static inline void AssertCloseOnExec(int fd, bool close_on_exec) {
   int flags = fcntl(fd, F_GETFD);
   ASSERT_NE(flags, -1);
@@ -1880,13 +1879,12 @@ TEST(STDIO_TEST, freopen_CLOEXEC) {
   // This FILE* doesn't have O_CLOEXEC...
   AssertCloseOnExec(fileno(fp), false);
 
-  fp = freopen("/proc/version", "re", fp);
+  fp = freopen("/proc/meminfo", "re", fp);
 
   // ...but the new one does.
   AssertCloseOnExec(fileno(fp), true);
-
   fclose(fp);
-}*/
+}
 
 TEST(STDIO_TEST, fopen64_freopen64) {
   FILE* fp = fopen64("/proc/meminfo", "r");
