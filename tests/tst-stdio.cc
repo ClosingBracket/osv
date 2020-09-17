@@ -1170,15 +1170,11 @@ TEST(STDIO_TEST, sscanf_mlc) {
 //#pragma clang diagnostic pop
 }*/
 
-/* Fails with 'page fault outside application, addr: 0x0000006f6c6c6000
-[registers]
-RIP: 0x0000000040489303 <strcmp+3>
-'
 TEST(STDIO_TEST, sscanf_ms) {
   CheckScanfM(sscanf, "hello", "%ms", 1, "hello");
   CheckScanfM(sscanf, "hello", "%4ms", 1, "hell");
   CheckScanfM(sscanf, "hello world", "%30ms", 1, "hello");
-}*/
+}
 
 TEST(STDIO_TEST, sscanf_mls) {
   CheckScanfM(sscanf, "hello", "%mls", 1, L"hello");
@@ -1186,15 +1182,11 @@ TEST(STDIO_TEST, sscanf_mls) {
   CheckScanfM(sscanf, "hello world", "%30mls", 1, L"hello");
 }
 
-/* Fails with 'page fault outside application, addr: 0x0000006f6c6c6000
-[registers]
-RIP: 0x0000000040489303 <strcmp+3>
-'
 TEST(STDIO_TEST, sscanf_m_ccl) {
   CheckScanfM(sscanf, "hello", "%m[a-z]", 1, "hello");
   CheckScanfM(sscanf, "hello", "%4m[a-z]", 1, "hell");
   CheckScanfM(sscanf, "hello world", "%30m[a-z]", 1, "hello");
-}*/
+}
 
 TEST(STDIO_TEST, sscanf_ml_ccl) {
   CheckScanfM(sscanf, "hello", "%ml[a-z]", 1, L"hello");
