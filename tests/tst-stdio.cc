@@ -385,7 +385,7 @@ TEST(STDIO_TEST, snprintf_C) { // Synonym for %lc.
   EXPECT_STREQ("<a>", buf);
 }
 
-/* TODO: Fails with page fault outside 
+/* TODO: Fails with page fault outside - possibly bug in musl that has to do with wchar_t handling
 TEST(STDIO_TEST, snprintf_ls) {
   char buf[BUFSIZ];
   wchar_t* ws = nullptr;
@@ -398,7 +398,7 @@ TEST(STDIO_TEST, snprintf_ls) {
   EXPECT_STREQ("<hi>", buf);
 }*/
 
-/* TODO: Fails with page fault outside 
+/* TODO: Fails with page fault outside - possibly bug in musl that has to do with wchar_t handling
 TEST(STDIO_TEST, snprintf_S) { // Synonym for %ls.
   char buf[BUFSIZ];
   wchar_t* ws = nullptr;
@@ -1108,7 +1108,6 @@ static void CheckScanfM(int sscanf_fn(const T1*, const T1*, ...),
   free(result);
 }
 
-/* signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x409b2428)
 TEST(STDIO_TEST, sscanf_mc) {
   char* p1 = nullptr;
   char* p2 = nullptr;
@@ -1126,23 +1125,18 @@ TEST(STDIO_TEST, sscanf_mc) {
   ASSERT_EQ('l', p1[3]);
   free(p1);
 
+/*@wkozaczuk Fails on OSv - musl bug?
   p1 = nullptr;
-  ASSERT_EQ(1, sscanf("hello world", "%30mc", &p1));
+  ASSERT_EQ(1, sscanf("hello world", "%30mc", &p1));//signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x409b2428)
   ASSERT_EQ('h', p1[0]);
   ASSERT_EQ('e', p1[1]);
   ASSERT_EQ('l', p1[2]);
   ASSERT_EQ('l', p1[3]);
   ASSERT_EQ('o', p1[4]);
-  free(p1);
-}*/
+  free(p1);*/
+}
 
-/* Fails with fatal error: in "STDIO_TEST_sscanf_mlc": signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x409b2428)
 TEST(STDIO_TEST, sscanf_mlc) {
-  // This is so useless that clang doesn't even believe it exists...
-//#pragma clang diagnostic push
-//#pragma clang diagnostic ignored "-Wformat-invalid-specifier"
-//#pragma clang diagnostic ignored "-Wformat-extra-args"
-
   wchar_t* p1 = nullptr;
   wchar_t* p2 = nullptr;
   ASSERT_EQ(2, sscanf("hello", "%mlc%mlc", &p1, &p2));
@@ -1159,16 +1153,16 @@ TEST(STDIO_TEST, sscanf_mlc) {
   ASSERT_EQ(L'l', p1[3]);
   free(p1);
 
+/*@wkozaczuk Fails on OSv - musl bug?
   p1 = nullptr;
-  ASSERT_EQ(1, sscanf("hello world", "%30mlc", &p1));
+  ASSERT_EQ(1, sscanf("hello world", "%30mlc", &p1)); //signal: SIGSEGV, si_code: 0 (memory access violation at address: 0x409cd428)
   ASSERT_EQ(L'h', p1[0]);
   ASSERT_EQ(L'e', p1[1]);
   ASSERT_EQ(L'l', p1[2]);
   ASSERT_EQ(L'l', p1[3]);
   ASSERT_EQ(L'o', p1[4]);
-  free(p1);
-//#pragma clang diagnostic pop
-}*/
+  free(p1);*/
+}
 
 TEST(STDIO_TEST, sscanf_ms) {
   CheckScanfM(sscanf, "hello", "%ms", 1, "hello");
