@@ -1,5 +1,12 @@
 Version 1.1.24
 
+libc modules natively implemented in OSv (no musl)
+* thread
+* malloc
+* mman
+* ldso (dynamic linker)
+* sched
+
 577 files from musl as is.
 ``` grep -P '^musl \+=' Makefile```
 
@@ -15,7 +22,7 @@ Following modules from musl/src:
 * math (all, but `finitel.c` from musl)
 * misc
 * multibyte (all from musl)
-* network
+* network (most are implemented natively or come from freebsd)
 * prng
 * process
 * regex (all from musl)
