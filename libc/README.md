@@ -4,30 +4,28 @@ Version 1.1.24
 ``` grep -P '^musl \+=' Makefile```
 
 Following modules from musl/src:
-```
-crypt
-ctype
-ctype
-dirent
-env
-errno
-fenv
-locale
-math
-misc
-multibyte
-network
-prng
-process
-regex
-setjmp/x86_64
-setjmp/aarch64
-signal
-stdio
-stdlib
-string
-temp
-termios
-time
-unistd
-```
+
+* crypt (all from musl)
+* ctype (all from musl)
+* dirent (all from musl)
+* env
+* errno
+* fenv (x86 from musl)
+* locale
+* math (all, but `finitel.c` from musl)
+* misc
+* multibyte (all from musl)
+* network
+* prng
+* process
+* regex (all from musl)
+* setjmp/x86_64 (all from musl)
+* setjmp/aarch64 (all from musl)
+* signal (most from musl + `libc/signal.cc`)
+* stdio
+* stdlib
+* string
+* temp (all from musl)
+* termios (all from musl)
+* time (most from musl)
+* unistd 
