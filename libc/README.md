@@ -28,7 +28,7 @@ Following modules from musl/src:
 * dirent (all from musl)
 * env - ADD readme describing 2 files under `libc/env`
 * errno - ADD readme describing `libc/errno/strerror.c`
-* fenv (x86 from musl) - DELETE `libc/fenv/aarch64/fenv.s` - all from musl?
+* fenv (all from musl)
 * locale - ADD readme describing the files under `libc/locale` - one big MESS
 * math (all, but `finitel.c` from musl)
 * misc - ADD readme describing the files under `libc/misc` (most (all?) are implemented natively or from other places, `getopt.c`?)
