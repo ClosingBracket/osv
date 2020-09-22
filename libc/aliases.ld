@@ -45,6 +45,17 @@ __dup3 = dup3;
 /* string */
 __strtok_r = strtok_r;
 __strndup = strndup;
+__stpcpy = stpcpy;
+__stpncpy = stpncpy;
+__strdup = strdup;
+
+/* temp */
+__mktemp = mktemp;
+
+/* time */
+__clock_gettime = clock_gettime;
+__gmtime_r = gmtime_r;
+__strftime_l = strftime_l;
 
 /* vfs */
 statfs64 = statfs;
