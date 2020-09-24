@@ -57,3 +57,5 @@ Symlinks to musl files under `libc/`
 Internal musl files under `libc/`
 
 TODO (as far as upgrade goes).
+
+Possibly syslog.c might ever get updated.

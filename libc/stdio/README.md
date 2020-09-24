@@ -1,0 +1,59 @@
+All files but *_chk.c originate from musl and have been somewhat adapted
+
+Not updated yet:
+group 1)
+Comparing to 0.9.12 have been change to replace 'f->lock < 0' with 'f->no_locking' in ifs
+----------
+getc.c - this and below have changed in 1.1.24 to delegate to do_getc() (defined in getc.h)
+fgetc.c
+putc.c - this and below have changed in 1.1.24 to delegate to do_putc() (defined in putc.h)
+fputc.c
+To upgrade to 1.1.24, the problem is that do_getc()/do_putc() in *tc.h files
+delegate to locking_getc()/locking_putc() that use MAYBE_WAITERS macro
+(see musl commit dd8f02b7dce53d6b1c4282439f1636a2d63bee01 and 9dd19122565c70bc6e0fff35724c91a61209a629)
+and it is not clear if/how update that for OSv.
+
+group 2)
+---------
+In 1.1.24 most of the changes have been to code structure seems like and it is not clear
+whether we should update it as well and how. Please see musl commit d8f2efa708a027132d443f45a8c98a0c7c1b2d77
+(in essence makes static variables for stdin, stdout and stderr as hidden. What impact could it make to us?
+stdin.c
+stdout.c
+stderr.c
+
+group 3)
+----------
+__lockfile.c
+flockfile.c
+ftrylockfile.c
+funlockfile.c
+
+group 4)
+__fopen_rb_ca.c - removes O_LARGEFILE
+__stdio_read.c - has a fix on OSv side, has some fixes on musl side
+remove.c - check for errno == EPERM, does not seem to need to be upgraded
+
+getchar.c - symlinks to 0.9.12 copy
+putchar.c - symlinks to 0.9.12 copy
+
+Up to date with musl 1.1.24: (TODO: document diffs)
+------------------------------
+__fdopen.c - updated
+fmemopen.c - updated
+ofl.c - completely new file from new musl
+open_memstream.c - updated
+open_wmemstream.c - updated
+sscanf.c - added __attribute__((nothrow)); to weak_alias; only removed one include (#include "libc.h") in 1.1.24
+vdprintf.c - not changed in musl 1.1.24
+vfprintf.c - updated
+vsnprintf.c - updated
+vsscanf.c - updated
+vswprintf.c - updated
+vswscanf.c - only removed one include (#include "libc.h") in 1.1.24
+
+stdio_impl.h - modified (HOW?)
+
+__fprintf_chk.c
+__fread_chk.c
+__vfprintf_chk.c
