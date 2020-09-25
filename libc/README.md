@@ -1,3 +1,14 @@
+# Intro
+The files in this subdirectory and musl C source files referenced in the [main Makefile](/Makefile) constitute subset of libc implementation in OSv. Most of the network related functions (`bind()`, `listen()`, `accept()`, `socket()`, etc) are actually located under `bsd/` part of the tree like [`/bsd/sys/kern/uipc_syscalls_wrap.cc`](/bsd/sys/kern/uipc_syscalls_wrap.cc). Please note that our libc implementation aims to be **glibc** (GNU libc) compatible even though much of the implementation comes from musl. For more details please read the [Linux ABI Compatibility](wiki/OSv-Linux-ABI-Compatibility) and the [Components of OSv](/wiki/Components-of-OSv) wikis.
+
+Please note that because OSv is a unikernel, much of its libc functionality has been implemented from scratch (all the C++ files in this directory). In ideal world the source files would either come from musl *as-is* or be implemented natively. But in reality some of the files in this directory originate from musl and have been adapted to make it work with OSv internals.
+
+Reasons:
+
+# History
+
+# State
+
 Version 1.1.24. Aims to be glibc compatible. But inherently (unless changed in specific places) is musl compatible (for musl-based) Linux like Apline.
 
 Original commit
@@ -59,3 +70,5 @@ Internal musl files under `libc/`
 TODO (as far as upgrade goes).
 
 Possibly syslog.c might ever get updated.
+
+# Upgrades
