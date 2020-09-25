@@ -1,9 +1,9 @@
 # Intro
-The files in this subdirectory and musl C source files referenced in the [main Makefile](/Makefile) constitute subset of libc implementation in OSv. Most of the network related functions (`bind()`, `listen()`, `accept()`, `socket()`, etc) are actually located under `bsd/` part of the tree like [`/bsd/sys/kern/uipc_syscalls_wrap.cc`](/bsd/sys/kern/uipc_syscalls_wrap.cc). Please note that our libc implementation aims to be **glibc** (GNU libc) compatible even though much of the implementation comes from musl. For more details please read the [Linux ABI Compatibility](wiki/OSv-Linux-ABI-Compatibility) and the [Components of OSv](/wiki/Components-of-OSv) wikis.
+The files in this subdirectory and musl C source files referenced in the [main Makefile](/Makefile) constitute the subset of libc implementation in OSv. Most of the network related functions (`bind()`, `listen()`, `accept()`, `socket()`, etc) are actually located under the `bsd/` part of the tree (see  [`/bsd/sys/kern/uipc_syscalls_wrap.cc`](/bsd/sys/kern/uipc_syscalls_wrap.cc) as an example). Please note that our libc implementation aims to be **glibc** (GNU libc) compatible even though much of the implementation comes from musl. For more details please read the [Linux ABI Compatibility](https://github.com/cloudius-systems/osv/wiki/OSv-Linux-ABI-Compatibility) and the [Components of OSv](https://github.com/cloudius-systems/osv/wiki/Components-of-OSv) wikis.
 
-Please note that because OSv is a unikernel, much of its libc functionality has been implemented from scratch (all the C++ files in this directory). In ideal world the source files would either come from musl *as-is* or be implemented natively. But in reality some of the files in this directory originate from musl and have been adapted to make it work with OSv internals.
-
-Reasons:
+Please note that because OSv is a unikernel, much of its libc functionality has been implemented from scratch (all the C++ files in this directory). In ideal world the source files would either come from musl *as-is* or be implemented natively. But in reality some of the files in this directory originate from musl and have been adapted to make it work with OSv internals for following major reasons:
+* `syscall()` invocations in many `stdio`, `stdlib`, `network` functions have been replaced with direct local functions like `SYS_open(filename, flags, ...)` to `open(filename, flags, ...)` (see [syscall_to_function.h](libc/syscall_to_function.h) for details).
+* the locking logic in some of the files in musl stdio have been tweaked to use OSv mutexes
 
 # History
 
