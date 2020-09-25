@@ -6,69 +6,55 @@ Please note that because OSv is a unikernel, much of its libc functionality has 
 * the locking logic in some of the files in musl stdio have been tweaked to use OSv mutexes
 
 # History
-
-# State
-
-Version 1.1.24. Aims to be glibc compatible. But inherently (unless changed in specific places) is musl compatible (for musl-based) Linux like Apline.
-
 Original commit
 
 Previous is 0.9.12
 
-libc modules natively implemented in OSv (no musl)
-* thread
+# State
+The current version of musl that OSv uses is 1.1.24. Most of the musl C files (`grep -P '^musl \+=' Makefile` - 577 files at this point) are directly referenced in the main makefile via a [`musl/`](/musl) symlink that currently points to the [`/musl_1.1.24`](/musl_1.1.24) git subproject. Some of the musl files are also symlinked from [`/libc`](/libc) subdirectory. Please also note that most header files under [`/include/api`](/include/api) symlink to the the musl copies under [`musl/include`](/musl/include) directory, but some are actually modified copies of original musl files. The internal musl headers under [`/include/api/internal_musl_headers`](/include/api/internal_musl_headers) symlink to files under [`musl/src/include`](/musl/src/include].
+
+All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) have also been implemented natively.
+
+Following libc modules have been natively implemented in OSv as C++ files and in no way originate from musl:
+* ldso (dynamic linker)
 * malloc
 * mman
-* ldso (dynamic linker)
 * sched
+* thread
 
-MUSL headers (most symlinks):
-* include/api
-* inlcude/api/internal...
-Which are not?
+Following libc modules orginate from musl `as-is`:
+* crypt
+* ctype
+* dirent
+* math (all but `finitel.c` which is missing in musl)
+* multibyte
+* regex
+* temp
+* termios
+* time
 
-All C++ (`*.cc/*.hh`) files under `libc/` are natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) are also implemented natively.
-
-577 files from musl as is.
-``` grep -P '^musl \+=' Makefile```
-
-Following modules from musl/src:
-
-* crypt (all from musl)
-* ctype (all from musl)
-* dirent (all from musl)
 * env - ADD readme describing 2 files under `libc/env`
 * errno - ADD readme describing `libc/errno/strerror.c`
 * fenv (x86 from musl) - DELETE `libc/fenv/aarch64/fenv.s` - all from musl?
 * locale - ADD readme describing the files under `libc/locale` - one big MESS
-* math (all, but `finitel.c` from musl)
 * misc - ADD readme describing the files under `libc/misc` (most (all?) are implemented natively or from other places, `getopt.c`?)
-* multibyte (all from musl)
 * network (most are implemented natively or come from freebsd) - ADD readme describing files under `libc/network`
 * prng - ADD readme describing `libc/prng/random.c`
 * process - ADD readme describing 2 files under `libc/process`
-* regex (all from musl)
 * setjmp/x86_64 (all from musl)
 * setjmp/aarch64 (all from musl)
 * signal (most from musl + `libc/signal.cc`)
 * stdio - ADD readme describing the files under `libc/stdio` 
 * stdlib - ADD readme describing 4 files under `libc/stdlib` 
 * string - ADD readme describing 4 files under `libc/string` (non `_chk.c`)
-* temp (all from musl)
-* termios (all from musl)
-* time (most from musl)
 * unistd - ADD readme describing the files under `libc/unistd` (anything?)
 
 Files that should never change (besides C++) - TODO (list them)
 
 Files in `libc/` subject to musl upgrade.
 
-Symlinks to musl files under `libc/`
-
-Internal musl files under `libc/`
-
-TODO (as far as upgrade goes).
-
 Possibly syslog.c might ever get updated.
 
 # Upgrades
+
+TODO (as far as upgrade goes).
