@@ -38,7 +38,7 @@ char *__nl_langinfo_l(nl_item item, locale_t loc)
 	/* _NL_LOCALE_NAME extension */
 	if (idx == 65535 && cat < LC_ALL)
 		return "C";
-	
+
 	switch (cat) {
 	case LC_NUMERIC:
 		if (idx > 1) return "";

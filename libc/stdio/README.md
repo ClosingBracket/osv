@@ -24,6 +24,10 @@ stderr.c
 
 group 3)
 ----------
+Most of the changes comparing to musl copies they came from have to do with using
+'mutex_*(&f->mutex)' instead of 'a_cas(&f->lock...'
+Musl changes between 0.9.12 and 1.1.24 are mostly around this commit c21f750727515602a9e84f2a190ee8a0a2aeb2a1
+to replace waiters counter with a lock field bit.
 __lockfile.c
 flockfile.c
 ftrylockfile.c
