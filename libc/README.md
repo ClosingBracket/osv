@@ -15,7 +15,7 @@ The current version of musl that OSv uses is 1.1.24. Most of the musl C files (`
 
 All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) have also been implemented natively.
 
-Following libc modules have been natively implemented in OSv as C++ files and in no way originate from musl:
+Following libc modules have been natively implemented in OSv as C++ files and do NOT originate from musl:
 * ldso (dynamic linker)
 * malloc
 * mman
@@ -33,21 +33,21 @@ Following libc modules orginate from musl `as-is`:
 * termios
 * time
 
-* env - ADD readme describing 2 files under `libc/env`
-* errno - ADD readme describing `libc/errno/strerror.c`
-* fenv (x86 from musl) - DELETE `libc/fenv/aarch64/fenv.s` - all from musl?
-* locale - ADD readme describing the files under `libc/locale` - one big MESS
-* misc - ADD readme describing the files under `libc/misc` (most (all?) are implemented natively or from other places, `getopt.c`?)
-* network (most are implemented natively or come from freebsd) - ADD readme describing files under `libc/network`
-* prng - ADD readme describing `libc/prng/random.c`
-* process - ADD readme describing 2 files under `libc/process`
-* setjmp/x86_64 (all from musl)
-* setjmp/aarch64 (all from musl)
-* signal (most from musl + `libc/signal.cc`)
-* stdio - ADD readme describing the files under `libc/stdio` 
-* stdlib - ADD readme describing 4 files under `libc/stdlib` 
-* string - ADD readme describing 4 files under `libc/string` (non `_chk.c`)
-* unistd - ADD readme describing the files under `libc/unistd` (anything?)
+Some files in the folowing libc modules originate from musl `as-is` or have been adapted from original musl sources or are original OSc implementations or originate from other open source projects: 
+* [arch](/libc/arch/README.md)
+* [env](/libc/env/README.md)
+* [errno](/libc/errno/README.md)
+* [fenv](/libc/fenv/README.md)
+* [locale](/libc/locale/README.md)
+* [misc](/libc/misc/README.md)
+* [network](/libc/network/README.md)
+* [prng](/libc/prng/README.md)
+* [process](/libc/process/README.md)
+* [signal](/libc/signal/README.md)
+* [stdio](/libc/stdio/README.md)
+* [stdlib](/libc/stdlib/README.md)
+* [string](/libc/string/README.md)
+* [unistd](/libc/unistd/README.md)
 
 Files that should never change (besides C++) - TODO (list them)
 
