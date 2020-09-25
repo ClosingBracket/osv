@@ -15,17 +15,18 @@ The current version of musl that OSv uses is 1.1.24. Most of the musl C files (`
 
 All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) have also been implemented natively.
 
-Following libc modules have been natively implemented in OSv as C++ files and do NOT originate from musl:
+**Following libc modules have been natively implemented in OSv as C++ files and do NOT originate from musl**:
 * ldso (dynamic linker)
 * malloc
 * mman
 * sched
 * thread
 
-Following libc modules orginate from musl `as-is`:
+**Following libc modules orginate from musl `as-is`**:
 * crypt
 * ctype
 * dirent
+* fenv
 * math (all but `finitel.c` which is missing in musl)
 * multibyte
 * regex
@@ -33,11 +34,10 @@ Following libc modules orginate from musl `as-is`:
 * termios
 * time
 
-Some files in the folowing libc modules originate from musl `as-is` or have been adapted from original musl sources or are original OSc implementations or originate from other open source projects: 
+**Some files in the folowing libc modules originate from musl `as-is` or have been adapted from original musl sources or are original OSc implementations or originate from other open source projects**: 
 * [arch](/libc/arch/README.md)
 * [env](/libc/env/README.md)
 * [errno](/libc/errno/README.md)
-* [fenv](/libc/fenv/README.md)
 * [locale](/libc/locale/README.md)
 * [misc](/libc/misc/README.md)
 * [network](/libc/network/README.md)
