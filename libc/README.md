@@ -13,13 +13,15 @@ Previous is 0.9.12
 # State
 The current version of musl that OSv uses is 1.1.24. Most of the musl C files (`grep -P '^musl \+=' Makefile` - 577 files at this point) are directly referenced in the main makefile via a [`musl/`](/musl) symlink that currently points to the [`/musl_1.1.24`](/musl_1.1.24) git subproject. Some of the musl files are also symlinked from [`/libc`](/libc) subdirectory. Please also note that most header files under [`/include/api`](/include/api) symlink to the the musl copies under [`musl/include`](/musl/include) directory, but some are actually modified copies of original musl files. The internal musl headers under [`/include/api/internal_musl_headers`](/include/api/internal_musl_headers) symlink to files under [`musl/src/include`](/musl/src/include].
 
-All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) have also been implemented natively.
+All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv. Also all FORTIFY functions for glibc compatibility (files ending with `_chk.c`) have been implemented natively.
 
 **Following libc modules have been natively implemented in OSv as C++ files and do NOT originate from musl**:
 * ldso (dynamic linker)
 * malloc
 * mman
+* process
 * sched
+* signal (some implementation is from musl `as is`)
 * thread
 
 **Following libc modules orginate from musl `as-is`**:
@@ -34,26 +36,24 @@ All C++ (`*.cc/*.hh`) files under `libc/` have been natively implemented in OSv.
 * termios
 * time
 
-**Some files in the folowing libc modules originate from musl `as-is` or have been adapted from original musl sources or are original OSc implementations or originate from other open source projects**: 
-* [arch](/libc/arch/README.md)
-* [env](/libc/env/README.md)
-* [errno](/libc/errno/README.md)
-* [locale](/libc/locale/README.md)
-* [misc](/libc/misc/README.md)
-* [network](/libc/network/README.md)
-* [prng](/libc/prng/README.md)
-* [process](/libc/process/README.md)
-* [signal](/libc/signal/README.md)
-* [stdio](/libc/stdio/README.md)
-* [stdlib](/libc/stdlib/README.md)
-* [string](/libc/string/README.md)
-* [unistd](/libc/unistd/README.md)
+**Some files in the folowing libc modules originate from musl `as-is` or have been adapted from original musl sources or are original OSv implementations or originate from other open source projects**: 
+* [arch](/libc/arch/)
+* [env](/libc/env/)
+* [errno](/libc/errno/)
+* [locale](/libc/locale/)
+* [misc](/libc/misc/)
+* [network](/libc/network/)
+* [prng](/libc/prng/)
+* [stdio](/libc/stdio/)
+* [stdlib](/libc/stdlib/)
+* [string](/libc/string/)
+* [unistd](/libc/unistd/)
 
 Files that should never change (besides C++) - TODO (list them)
 
 Files in `libc/` subject to musl upgrade.
 
-Possibly syslog.c might ever get updated.
+Possibly syslog.c might need to get updated.
 
 # Upgrades
 
