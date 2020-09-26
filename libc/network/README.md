@@ -1,5 +1,3 @@
-30 files are from musl 'as is' (`grep -P '^musl \+= network' Makefile`)
-
 Possibly upgrade files in `libc/network` folder when merging ipv6 branch into master.
 
 * `freeaddrinfo.o` - symlink to musl 0.9.12, in 1.1.24 more than LOCK, mess with changes to ai_buf struct (affects `getaddrinfo.c`_
@@ -15,3 +13,5 @@ These changed between 0.9.12, in 1.1.24 and these changes seem to have been at l
 * `if_nametoindex.c` - ... AND `strncpy` vs `strlcpy`
 
 Ideally can be addressed without copying into osv tree by using socket and syscall macro overrides. The strncpy vs strlcpy situation is more tricky.
+
+30 files are from musl 'as is' (`grep -P '^musl \+= network' Makefile`)
