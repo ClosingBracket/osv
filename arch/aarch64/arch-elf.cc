@@ -6,7 +6,9 @@
  */
 
 #include <osv/elf.hh>
+#include <osv/sched.hh>
 
+extern "C" size_t __tlsdesc_static(size_t *);
 namespace elf {
 
 bool arch_init_reloc_dyn(struct init_table *t, u32 type, u32 sym,
@@ -65,6 +67,41 @@ bool object::arch_relocate_jump_slot(symbol_module& sym, void *addr, Elf64_Sxwor
         *static_cast<void**>(addr) = sym.relocated_addr() + addend;
         return true;
     } else {
+        return false;
+    }
+}
+
+bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword addend)
+{
+    if (sym.symbol) {
+        //TODO: Differentiate between DL_NEEDED (static TLS, initial-exec) and dynamic TLS (dlopen)
+        *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
+        *(static_cast<size_t*>(addr) + 1) = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + 16;
+        printf("arch_relocate_tls_desc: offset:%ld\n", (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + 16);
+        /*
+        ulong tls_offset;
+        if (sm.obj->is_executable()) {
+            // If this is an executable (pie or position-dependant one)
+            // then the variable is located in the reserved slot of the TLS
+            // right where the kernel TLS lives
+            // So the offset is negative aligned size of this ELF TLS block
+            tls_offset = sm.obj->get_aligned_tls_size();
+        } else {
+            // If shared library, the variable is located in one of TLS
+            // blocks that are part of the static TLS before kernel part
+            // so the offset needs to shift by sum of kernel and size of the user static
+            // TLS so far
+            sm.obj->alloc_static_tls();
+            tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+        }
+        *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;*/
+        return true;
+    } else {
+        // TODO: Which case does this handle?
+        //alloc_static_tls();
+        //ls_descauto tls_offset = static_tls_end() + sched::kernel_tls_size();
+        //*static_cast<u64*>(addr) = addend - tls_offset;
+        //*static_cast<void**>(addr) = sym.relocated_addr() + addend;
         return false;
     }
 }

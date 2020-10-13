@@ -92,9 +92,31 @@ void thread::setup_tcb()
     void* p = malloc(sched::tls.size + 1024);
     memset(p, 0, sched::tls.size + 1024);
 
+/*
+    void* user_tls_data;
+    size_t user_tls_size = 0;
+
+    if (_app_runtime) {
+        auto obj = _app_runtime->app.lib();
+        assert(obj);
+        user_tls_size = obj->initial_tls_size();
+        user_tls_data = obj->initial_tls();
+    }
+
+    auto kernel_tls_size = sched::tls.size;
+    auto total_tls_size = kernel_tls_size + user_tls_size + 16;
+    //debug_early_u64("__kernel TLS size:", kernel_tls_size);
+
+    void* p = malloc(total_tls_size);
+    memset(p, 0, total_tls_size);*/
+
     _tcb = (thread_control_block *)p;
     _tcb[0].tls_base = &_tcb[1];
     memcpy(&_tcb[1], sched::tls.start, sched::tls.filesize);
+    /*if (user_tls_size) {
+        debug_early_u64("__user TLS size:", user_tls_size);
+        memcpy(&_tcb[1] + kernel_tls_size, user_tls_data, user_tls_size);
+    }*/
 }
 
 void thread::free_tcb()

@@ -31,7 +31,7 @@
 
 #include "arch.hh"
 
-#define ELF_DEBUG_ENABLED 0
+#define ELF_DEBUG_ENABLED 1
 
 #if ELF_DEBUG_ENABLED
 #define elf_debug(format,...) kprintf("ELF [tid:%d, %s]: " format, sched::thread::current()->id(), _pathname.c_str(), ##__VA_ARGS__)
@@ -762,6 +762,31 @@ void object::relocate_rela()
 }
 
 extern "C" { void __elf_resolve_pltgot(void); }
+extern "C" { size_t __tlsdesc_dynamic(size_t *); }
+/*
+extern "C"
+size_t __tlsdesc_dynamic__(size_t *desc)
+{
+    auto mod_id = desc[0];
+    auto offset = desc[1];
+
+    printf("--> __tlsdesc_dynamic: mod_id=%d, offset:%d\n", mod_id, offset);
+
+    //ulong mod_id = 2;
+    mod_id = 2;
+    auto tls = sched::thread::current()->get_tls(mod_id);
+    if (tls) {
+        //printf("--> __tlsdesc_dynamic, RET: mod_id=%ld, offset:%ld\n", mod_id, offset);
+        return 0x680;//offset;
+    } else {
+        // This module's TLS block hasn't yet been allocated for this thread:
+        object *obj = get_program()->tls_object(mod_id);
+        assert(mod_id == obj->module_index());
+        obj->setup_tls();
+        //printf("--> __tlsdesc_dynamic, SETUP: mod_id=%ld, offset:%ld\n", mod_id, offset);
+        return 0x680;//offset;
+    }
+}*/
 
 void object::relocate_pltgot()
 {
@@ -786,27 +811,41 @@ void object::relocate_pltgot()
     for (auto p = rel; p < rel + nrel; ++p) {
         auto info = p->r_info;
         u32 type = info & 0xffffffff;
-        assert(type == ARCH_JUMP_SLOT);
-        void *addr = _base + p->r_offset;
-        if (bind_now) {
-            // If on-load binding is requested (instead of the default lazy
-            // binding), try to resolve all the PLT entries now.
-            // If symbol cannot be resolved warn about it instead of aborting
+        assert(type == ARCH_JUMP_SLOT || type == ARCH_TLSDESC);
+#ifdef AARCH64_PORT_STUB
+        if (type == ARCH_TLSDESC) {
+            void *addr = _base + p->r_offset;
             u32 sym = info >> 32;
-            auto _sym = symbol(sym, true);
-            if (arch_relocate_jump_slot(_sym, addr, p->r_addend))
-                  continue;
-        }
-        if (original_plt) {
-            // Restore the link to the original plt.
-            // We know the JUMP_SLOT entries are in plt order, and that
-            // each plt entry is 16 bytes.
-            *static_cast<void**>(addr) = original_plt + (p-rel)*16;
+            auto _sym = symbol(sym, false);
+            elf_debug("Setting TLS descriptor for module [%ld], value: %ld, addend: %ld\n",
+                _module_index, _sym.symbol->st_value, p->r_addend);
+            if (arch_relocate_tls_desc(_sym, addr, p->r_addend))
+                continue;
         } else {
-            // The JUMP_SLOT entry already points back to the PLT, just
-            // make sure it is relocated relative to the object base.
-            *static_cast<u64*>(addr) += reinterpret_cast<u64>(_base);
+#endif
+            void *addr = _base + p->r_offset;
+            if (bind_now) {
+                // If on-load binding is requested (instead of the default lazy
+                // binding), try to resolve all the PLT entries now.
+                // If symbol cannot be resolved warn about it instead of aborting
+                u32 sym = info >> 32;
+                auto _sym = symbol(sym, true);
+                if (arch_relocate_jump_slot(_sym, addr, p->r_addend))
+                    continue;
+            }
+            if (original_plt) {
+                // Restore the link to the original plt.
+                // We know the JUMP_SLOT entries are in plt order, and that
+                // each plt entry is 16 bytes.
+                *static_cast<void**>(addr) = original_plt + (p-rel)*16;
+            } else {
+                // The JUMP_SLOT entry already points back to the PLT, just
+                // make sure it is relocated relative to the object base.
+                *static_cast<u64*>(addr) += reinterpret_cast<u64>(_base);
+            }
+#ifdef AARCH64_PORT_STUB
         }
+#endif
     }
     elf_debug("Relocated %d PLT symbols in DT_JMPREL\n", nrel);
 

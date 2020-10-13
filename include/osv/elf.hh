@@ -202,6 +202,8 @@ enum {
       // processor-specific use.
     DT_HIPROC = 0x7FFFFFFF, //
     DT_GNU_HASH = 0x6ffffef5,
+    DT_TLSDESC_PLT = 0x6ffffef6,
+    DT_TLSDESC_GOT = 0x6ffffef7,
 };
 
 enum {
@@ -454,6 +456,7 @@ protected:
     bool arch_relocate_rela(u32 type, u32 sym, void *addr,
                             Elf64_Sxword addend);
     bool arch_relocate_jump_slot(symbol_module& sym, void *addr, Elf64_Sxword addend);
+    bool arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword addend);
     size_t static_tls_end() {
         if (is_core() || is_executable()) {
             return 0;

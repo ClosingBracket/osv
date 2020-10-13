@@ -866,6 +866,7 @@ objects += arch/$(arch)/hypercall.o
 objects += arch/$(arch)/memset.o
 objects += arch/$(arch)/memcpy.o
 objects += arch/$(arch)/memmove.o
+objects += arch/$(arch)/tlsdesc.o
 objects += $(libfdt)
 endif
 

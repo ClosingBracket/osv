@@ -81,6 +81,7 @@ void setup_tls(elf::init_table inittab)
 
     extern char tcb0[]; // defined by linker script
     arch_setup_tls(tcb0, tls_data);
+    debug_early_u64("__ TLS size: ", tls_data.size);
 }
 
 extern "C" {
