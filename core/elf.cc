@@ -762,31 +762,6 @@ void object::relocate_rela()
 }
 
 extern "C" { void __elf_resolve_pltgot(void); }
-extern "C" { size_t __tlsdesc_dynamic(size_t *); }
-/*
-extern "C"
-size_t __tlsdesc_dynamic__(size_t *desc)
-{
-    auto mod_id = desc[0];
-    auto offset = desc[1];
-
-    printf("--> __tlsdesc_dynamic: mod_id=%d, offset:%d\n", mod_id, offset);
-
-    //ulong mod_id = 2;
-    mod_id = 2;
-    auto tls = sched::thread::current()->get_tls(mod_id);
-    if (tls) {
-        //printf("--> __tlsdesc_dynamic, RET: mod_id=%ld, offset:%ld\n", mod_id, offset);
-        return 0x680;//offset;
-    } else {
-        // This module's TLS block hasn't yet been allocated for this thread:
-        object *obj = get_program()->tls_object(mod_id);
-        assert(mod_id == obj->module_index());
-        obj->setup_tls();
-        //printf("--> __tlsdesc_dynamic, SETUP: mod_id=%ld, offset:%ld\n", mod_id, offset);
-        return 0x680;//offset;
-    }
-}*/
 
 void object::relocate_pltgot()
 {
@@ -811,19 +786,9 @@ void object::relocate_pltgot()
     for (auto p = rel; p < rel + nrel; ++p) {
         auto info = p->r_info;
         u32 type = info & 0xffffffff;
+        void *addr = _base + p->r_offset;
         assert(type == ARCH_JUMP_SLOT || type == ARCH_TLSDESC);
-#ifdef AARCH64_PORT_STUB
-        if (type == ARCH_TLSDESC) {
-            void *addr = _base + p->r_offset;
-            u32 sym = info >> 32;
-            auto _sym = symbol(sym, false);
-            elf_debug("Setting TLS descriptor for module [%ld], value: %ld, addend: %ld\n",
-                _module_index, _sym.symbol->st_value, p->r_addend);
-            if (arch_relocate_tls_desc(_sym, addr, p->r_addend))
-                continue;
-        } else {
-#endif
-            void *addr = _base + p->r_offset;
+        if (type == ARCH_JUMP_SLOT) {
             if (bind_now) {
                 // If on-load binding is requested (instead of the default lazy
                 // binding), try to resolve all the PLT entries now.
@@ -843,9 +808,14 @@ void object::relocate_pltgot()
                 // make sure it is relocated relative to the object base.
                 *static_cast<u64*>(addr) += reinterpret_cast<u64>(_base);
             }
-#ifdef AARCH64_PORT_STUB
+        } else {
+            u32 sym = info >> 32;
+            auto _sym = symbol(sym, false);
+            elf_debug("Setting TLS descriptor for module [%ld], value: %ld, addend: %ld\n",
+                _module_index, _sym.symbol->st_value, p->r_addend);
+            if (arch_relocate_tls_desc(_sym, addr, p->r_addend))
+                continue;
         }
-#endif
     }
     elf_debug("Relocated %d PLT symbols in DT_JMPREL\n", nrel);
 
@@ -1261,6 +1231,7 @@ bool object::is_core()
 
 void object::init_static_tls()
 {
+    elf_debug("In init_static_tls for %s\n", this->pathname().c_str());
     std::unordered_set<object*> deps;
     collect_dependencies(deps);
     bool static_tls = false;
@@ -1269,12 +1240,14 @@ void object::init_static_tls()
             continue;
         }
         static_tls |= obj->_static_tls;
+        elf_debug("Static TLS size for %s: %ld\n", obj->pathname().c_str(), obj->static_tls_end());
         _initial_tls_size = std::max(_initial_tls_size, obj->static_tls_end());
         // Align initial_tls_size to 64 bytes, to not break the 64-byte
         // alignment of the TLS segment defined in loader.ld.
         _initial_tls_size = align_up(_initial_tls_size, (size_t)64);
     }
     if (!static_tls) {
+        elf_debug("No static TLS for %s\n", this->pathname().c_str());
         _initial_tls_size = 0;
         return;
     }

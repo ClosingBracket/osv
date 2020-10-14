@@ -125,6 +125,7 @@ void arch_setup_free_memory()
     console::mmio_isa_serial_console::memory_map();
 }
 
+//extern unsigned sched::preempt_counter;
 void arch_setup_tls(void *tls, const elf::tls_data& info)
 {
     struct thread_control_block *tcb;
@@ -138,6 +139,8 @@ void arch_setup_tls(void *tls, const elf::tls_data& info)
 
     /* check that the tls variable preempt_counter is correct */
     assert(sched::get_preempt_counter() == 1);
+    debug_early_u64("-> arch_setup_tls:  tls_base:        ", (ulong)(void*)tcb[0].tls_base);
+    debug_early_u64("-> arch_setup_tls: &preempt_counter: ", (ulong)(void*)&sched::preempt_counter);
 }
 
 void arch_init_premain()

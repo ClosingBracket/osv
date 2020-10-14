@@ -75,9 +75,10 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
 {
     if (sym.symbol) {
         //TODO: Differentiate between DL_NEEDED (static TLS, initial-exec) and dynamic TLS (dlopen)
+        sym.obj->alloc_static_tls();
         *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
-        *(static_cast<size_t*>(addr) + 1) = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + 16;
-        printf("arch_relocate_tls_desc: offset:%ld\n", (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + 16);
+        *(static_cast<size_t*>(addr) + 1) = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size();
+        printf("arch_relocate_tls_desc: offset:%ld\n", (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size());
         /*
         ulong tls_offset;
         if (sm.obj->is_executable()) {
@@ -109,12 +110,32 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
 void object::prepare_initial_tls(void* buffer, size_t size,
                                  std::vector<ptrdiff_t>& offsets)
 {
-    abort();
+    if (!_static_tls) {
+        return;
+    }
+    auto offset = sched::kernel_tls_size() + _static_tls_offset;
+    auto ptr = static_cast<char*>(buffer) + offset;
+    memcpy(ptr, _tls_segment, _tls_init_size);
+    memset(ptr + _tls_init_size, 0, _tls_uninit_size);
+
+    offsets.resize(std::max(_module_index + 1, offsets.size()));
+    offsets[_module_index] = offset;
 }
 
 void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)
 {
-    abort();
+    if (!_static_tls && !is_executable()) {
+        return;
+    }
+
+    offsets.resize(std::max(_module_index + 1, offsets.size()));
+    offsets[_module_index] = 0;
+}
+
+void object::copy_local_tls(void* to_addr)
+{
+    memcpy(to_addr, _tls_segment, _tls_init_size); //file size - 48 (0x30) for example and 80 (0x50) for httpserver
+    memset(to_addr + _tls_init_size, 0, _tls_uninit_size);
 }
 
 }
