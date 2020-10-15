@@ -72,7 +72,7 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
                 printf("--> arch_relocate_rela: static_tls_offset: %ld\n", sm.obj->static_tls_offset());
                 tls_offset = sm.obj->static_tls_offset() + sched::kernel_tls_size();
             }
-            *static_cast<u64*>(addr) = sm.symbol->st_value + addend + tls_offset;
+            *static_cast<u64*>(addr) = sm.symbol->st_value + addend + tls_offset + sizeof(thread_control_block);
         }
         else {
            printf("______> BOLO2\n");
@@ -101,7 +101,7 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
         //TODO: Differentiate between DL_NEEDED (static TLS, initial-exec) and dynamic TLS (dlopen)
         sym.obj->alloc_static_tls();
         *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
-        auto offset = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + sym.obj->static_tls_offset();
+        auto offset = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + sym.obj->static_tls_offset() + sizeof(thread_control_block);
         *(static_cast<size_t*>(addr) + 1) = offset;
         printf("arch_relocate_tls_desc: offset:%ld\n", offset);
         /*
