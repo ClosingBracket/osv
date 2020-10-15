@@ -5,8 +5,6 @@
  * BSD license as described in the LICENSE file in the top-level directory.
  */
 
-#include <cstdio>
-
 // ex2 and ex3 have different attributes defined here than in tst-tls.cc
 // That's on purpose, no matter what TLS access model is used in the end
 // the same part of memory should be accessed.
@@ -26,5 +24,4 @@ void external_library()
     // These 2 below get handled by get _tls_get_addr() function in core/elf.cc
     v1++;
     v5++;
-    printf("-> In external_library\n");
 }

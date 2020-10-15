@@ -52,7 +52,6 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         *static_cast<void**>(addr) = _base + addend;
         break;
     case R_AARCH64_TLS_TPREL64:
-        //*static_cast<void**>(addr) = symbol(sym).relocated_addr() + addend;
         if (sym) {
             auto sm = symbol(sym);
             ulong tls_offset;
@@ -75,7 +74,8 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
             *static_cast<u64*>(addr) = sm.symbol->st_value + addend + tls_offset + sizeof(thread_control_block);
         }
         else {
-           printf("______> BOLO2\n");
+           ulong tls_offset = _static_tls_offset + sched::kernel_tls_size();
+            *static_cast<u64*>(addr) = addend + tls_offset + sizeof(thread_control_block);
         }
         break;
     default:
