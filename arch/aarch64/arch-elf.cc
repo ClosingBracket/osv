@@ -100,35 +100,27 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
 {
     if (sym.symbol) {
         //TODO: Differentiate between DL_NEEDED (static TLS, initial-exec) and dynamic TLS (dlopen)
-        sym.obj->alloc_static_tls();
-        *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
-        auto offset = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + sym.obj->static_tls_offset() + sizeof(thread_control_block);
-        *(static_cast<size_t*>(addr) + 1) = offset;
-        printf("arch_relocate_tls_desc: offset:%ld\n", offset);
-        /*
         ulong tls_offset;
-        if (sm.obj->is_executable()) {
+        if (sym.obj->is_executable()) {
             // If this is an executable (pie or position-dependant one)
             // then the variable is located in the reserved slot of the TLS
             // right where the kernel TLS lives
             // So the offset is negative aligned size of this ELF TLS block
-            tls_offset = sm.obj->get_aligned_tls_size();
+            tls_offset = 0;
         } else {
             // If shared library, the variable is located in one of TLS
             // blocks that are part of the static TLS before kernel part
             // so the offset needs to shift by sum of kernel and size of the user static
             // TLS so far
-            sm.obj->alloc_static_tls();
-            tls_offset = sm.obj->static_tls_end() + sched::kernel_tls_size();
+            sym.obj->alloc_static_tls();
+            tls_offset = sym.obj->static_tls_offset() + sched::kernel_tls_size();
         }
-        *static_cast<u64*>(addr) = sm.symbol->st_value + addend - tls_offset;*/
+        *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
+        auto offset = (size_t)sym.symbol->st_value + addend + tls_offset + sizeof(thread_control_block);
+        *(static_cast<size_t*>(addr) + 1) = offset;
+        printf("arch_relocate_tls_desc: offset:%ld\n", offset);
         return true;
     } else {
-        // TODO: Which case does this handle?
-        //alloc_static_tls();
-        //ls_descauto tls_offset = static_tls_end() + sched::kernel_tls_size();
-        //*static_cast<u64*>(addr) = addend - tls_offset;
-        //*static_cast<void**>(addr) = sym.relocated_addr() + addend;
         printf("______> BOLO1\n");
         return false;
     }
