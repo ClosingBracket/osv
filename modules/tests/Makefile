@@ -37,6 +37,7 @@ ifeq ($(arch),aarch64)
   export STRIP=$(CROSS_PREFIX)strip
 
   aarch64_libdir := $(dir $(shell find $(aarch64_gccbase)/ -name libstdc++.so))
+  aarch64_libdir2 := $(dir $(shell find $(aarch64_gccbase)/ -name libgcc_s.so.1))
   LDFLAGS = -L$(aarch64_libdir)
 
   aarch64-gcc-inc-base := $(dir $(shell find $(aarch64_gccbase)/ -name vector | grep -v -e debug/vector$$ -e profile/vector$$ -e experimental/vector$$))
@@ -115,7 +116,7 @@ $(out)/tests/tst-getopt-pie.o: $(src)/tests/tst-getopt.cc
 	$(makedir)
 	$(call quiet, $(CXX) $(CXXFLAGS) -c -o $@ $<, CXX tests/tst-getopt-pie.cc)
 $(out)/tests/tst-getopt-pie.so: $(out)/tests/tst-getopt-pie.o
-	$(call quiet, $(CXX) $(CXXFLAGS) $(LDFLAGS) -pie -o $@ $< $(LIBS), LD tests/tst-getopt-pie.so)
+	$(call quiet, $(CXX) $(CXXFLAGS) $(LDFLAGS) -fpie -o $@ $< $(LIBS), LD tests/tst-getopt-pie.so)
 
 $(out)/tests/tst-non-pie.so: CXXFLAGS:=$(subst -fPIC,-no-pie,$(CXXFLAGS))
 $(out)/tests/tst-non-pie.so: $(src)/tests/tst-non-pie.cc
@@ -188,7 +189,7 @@ ifeq ($(arch),x64)
 tests += libtls.so libtls_gold.so tst-tls.so tst-tls-gold.so tst-tls-pie.so \
 	tst-syscall.so tst-ifaddrs.so tst-mmx-fpu.so
 else
-tests += libtls.so libtls_gold.so tst-tls.so tst-tls-gold.so# tst-tls-pie.so
+tests += libtls.so libtls_gold.so tst-tls.so tst-tls-gold.so tst-tls-pie.so
 endif
 
 tests += testrunner.so
@@ -223,7 +224,7 @@ $(out)/tests/tst-tls-pie.so: \
 		$(out)/tests/tst-tls-pie.o \
 		$(out)/tests/libtls.so
 	$(makedir)
-	$(call quiet, cd $(out); $(CXX) $(CXXFLAGS) $(LDFLAGS) -pthread -lgcc -pie -o $@ $< $(LIBS) tests/libtls.so, LD tests/tst-tls-pie.so)
+	$(call quiet, cd $(out); $(CXX) $(CXXFLAGS) $(LDFLAGS) -pthread -fpie -o $@ $< $(LIBS) tests/libtls.so $(aarch64_libdir2)/libgcc_s.so.1, LD tests/tst-tls-pie.so)
 
 $(out)/tests/libtls_gold.so: COMMON += -fuse-ld=gold
 $(out)/tests/libtls_gold.so: $(out)/tests/libtls.o
