@@ -74,6 +74,7 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
             *static_cast<u64*>(addr) = sm.symbol->st_value + addend + tls_offset + sizeof(thread_control_block);
         }
         else {
+           alloc_static_tls();
            ulong tls_offset = _static_tls_offset + sched::kernel_tls_size();
             *static_cast<u64*>(addr) = addend + tls_offset + sizeof(thread_control_block);
         }
