@@ -52,7 +52,31 @@ bool object::arch_relocate_rela(u32 type, u32 sym, void *addr,
         *static_cast<void**>(addr) = _base + addend;
         break;
     case R_AARCH64_TLS_TPREL64:
-        *static_cast<void**>(addr) = symbol(sym).relocated_addr() + addend;
+        //*static_cast<void**>(addr) = symbol(sym).relocated_addr() + addend;
+        if (sym) {
+            auto sm = symbol(sym);
+            ulong tls_offset;
+            if (sm.obj->is_executable()) {
+                // TODO: Update comments below
+                // If this is an executable (pie or position-dependant one)
+                // then the variable is located in the reserved slot of the TLS
+                // right where the kernel TLS lives
+                // So the offset is negative aligned size of this ELF TLS block
+                tls_offset = 0;
+            } else {
+                // If shared library, the variable is located in one of TLS
+                // blocks that are part of the static TLS before kernel part
+                // so the offset needs to shift by sum of kernel and size of the user static
+                // TLS so far
+                sm.obj->alloc_static_tls();
+                printf("--> arch_relocate_rela: static_tls_offset: %ld\n", sm.obj->static_tls_offset());
+                tls_offset = sm.obj->static_tls_offset() + sched::kernel_tls_size();
+            }
+            *static_cast<u64*>(addr) = sm.symbol->st_value + addend + tls_offset;
+        }
+        else {
+           printf("______> BOLO2\n");
+        }
         break;
     default:
         return false;
@@ -77,8 +101,9 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
         //TODO: Differentiate between DL_NEEDED (static TLS, initial-exec) and dynamic TLS (dlopen)
         sym.obj->alloc_static_tls();
         *static_cast<size_t*>(addr) = (size_t)__tlsdesc_static;
-        *(static_cast<size_t*>(addr) + 1) = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size();
-        printf("arch_relocate_tls_desc: offset:%ld\n", (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size());
+        auto offset = (size_t)sym.symbol->st_value + addend + sched::kernel_tls_size() + sym.obj->static_tls_offset();
+        *(static_cast<size_t*>(addr) + 1) = offset;
+        printf("arch_relocate_tls_desc: offset:%ld\n", offset);
         /*
         ulong tls_offset;
         if (sm.obj->is_executable()) {
@@ -103,6 +128,7 @@ bool object::arch_relocate_tls_desc(symbol_module& sym, void *addr, Elf64_Sxword
         //ls_descauto tls_offset = static_tls_end() + sched::kernel_tls_size();
         //*static_cast<u64*>(addr) = addend - tls_offset;
         //*static_cast<void**>(addr) = sym.relocated_addr() + addend;
+        printf("______> BOLO1\n");
         return false;
     }
 }
@@ -113,13 +139,16 @@ void object::prepare_initial_tls(void* buffer, size_t size,
     if (!_static_tls) {
         return;
     }
-    auto offset = sched::kernel_tls_size() + _static_tls_offset;
+    //auto offset = sched::kernel_tls_size() + _static_tls_offset;
+    auto offset = _static_tls_offset;
     auto ptr = static_cast<char*>(buffer) + offset;
     memcpy(ptr, _tls_segment, _tls_init_size);
     memset(ptr + _tls_init_size, 0, _tls_uninit_size);
 
     offsets.resize(std::max(_module_index + 1, offsets.size()));
     offsets[_module_index] = offset;
+    printf("--> prepare_initial_tls: size: %ld\n", size);
+    printf("--> prepare_initial_tls: val:  %ld\n", *((int*)ptr));
 }
 
 void object::prepare_local_tls(std::vector<ptrdiff_t>& offsets)

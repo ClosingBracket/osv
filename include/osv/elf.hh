@@ -463,6 +463,7 @@ protected:
         }
         return _static_tls_offset + get_tls_size();
     }
+    size_t static_tls_offset() { return _static_tls_offset; }
 private:
     std::atomic<void*> _visibility_thread;
     std::atomic<VisibilityLevel> _visibility_level;

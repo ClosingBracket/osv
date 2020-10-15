@@ -154,6 +154,7 @@ void thread::setup_tcb()
     assert(align_check(user_tls_size, (size_t)64));
 
     auto total_tls_size = kernel_tls_size + user_tls_size;
+    //debug_early_u64( "___ setup_tcb: total_tls_size: ", total_tls_size);
     void* p = aligned_alloc(64, total_tls_size + sizeof(*_tcb));
     _tcb = (thread_control_block *)p;
     _tcb[0].tls_base = &_tcb[1];
@@ -167,6 +168,9 @@ void thread::setup_tcb()
     // Next goes user TLS data
     if (user_tls_size) {
         memcpy(kernel_tls + kernel_tls_size, user_tls_data, user_tls_size);
+        debug_early_u64( "___ setup_tcb: kernel_tls_size: ", kernel_tls_size);
+        debug_early_u64( "___ setup_tcb: user_tls_size:   ", user_tls_size);
+        debug_early_u64( "--- setup_tcb: val: ", *((int*)(kernel_tls + kernel_tls_size)));
     }
 
     if (executable_tls_size) {
