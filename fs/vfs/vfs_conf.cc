@@ -51,7 +51,9 @@ extern struct vfsops devfs_vfsops;
 extern struct vfsops nfs_vfsops;
 extern struct vfsops procfs_vfsops;
 extern struct vfsops sysfs_vfsops;
-//extern struct vfsops zfs_vfsops;
+#ifdef ZFS_ENABLE
+extern struct vfsops zfs_vfsops;
+#endif
 //extern struct vfsops virtiofs_vfsops;
 
 extern int ramfs_init(void);
@@ -61,7 +63,9 @@ extern int devfs_init(void);
 extern int nfs_init(void);
 extern int procfs_init(void);
 extern int sysfs_init(void);
-//extern "C" int zfs_init(void);
+#ifdef ZFS_ENABLE
+extern "C" int zfs_init(void);
+#endif
 
 /*
  * VFS switch table
@@ -72,6 +76,9 @@ const struct vfssw vfssw[] = {
 	{"nfs",		nfs_init,	&nfs_vfsops},
 	{"procfs",	procfs_init,	&procfs_vfsops},
 	{"sysfs",	sysfs_init,	&sysfs_vfsops},
+	#ifdef ZFS_ENABLE
+	{"zfs",		zfs_init,	&zfs_vfsops},
+	#endif
 	{"rofs", 	rofs_init, 	&rofs_vfsops},
 //	{"virtiofs", 	virtiofs_init, 	&virtiofs_vfsops},
 	{nullptr,	fs_noop,	nullptr},

@@ -236,7 +236,8 @@ public:
         return for_each_pte([] (mmu::hw_ptep<0> pte) { return mmu::clear_pte(pte).dirty(); }, std::logical_or<bool>(), false);
     }
 };
-/*
+
+#ifdef ZFS_ENABLE
 class cached_page_arc;
 
 static unsigned drop_arc_read_cached_page(cached_page_arc* cp, bool flush = true);
@@ -294,16 +295,24 @@ public:
 
 static bool operator==(const cached_page_arc::arc_map::value_type& l, const cached_page_arc* r) {
     return l.second == r;
-}*/
+}
+#endif
 
-//std::unordered_multimap<arc_buf_t*, cached_page_arc*> cached_page_arc::arc_cache_map;
+#ifdef ZFS_ENABLE
+std::unordered_multimap<arc_buf_t*, cached_page_arc*> cached_page_arc::arc_cache_map;
 //Map used to store read cache pages for ZFS filesystem interacting with ARC
-//static std::unordered_map<hashkey, cached_page_arc*> arc_read_cache;
+static std::unordered_map<hashkey, cached_page_arc*> arc_read_cache;
 //Map used to store read cache pages for non-ZFS filesystems
+#endif
+
 static std::unordered_map<hashkey, cached_page*> read_cache;
 static std::unordered_map<hashkey, cached_page_write*> write_cache;
 static std::deque<cached_page_write*> write_lru;
-//static mutex arc_read_lock; // protects against parallel access to the ARC read cache
+
+#ifdef ZFS_ENABLE
+static mutex arc_read_lock; // protects against parallel access to the ARC read cache
+#endif
+
 static mutex read_lock; // protects against parallel access to the read cache
 static mutex write_lock; // protect against parallel access to the write cache
 
@@ -323,13 +332,15 @@ static void add_read_mapping(cached_page *cp, mmu::hw_ptep<0> ptep)
 {
     cp->map(ptep);
 }
-/*
+
+#ifdef ZFS_ENABLE
 TRACEPOINT(trace_add_read_mapping, "buf=%p, addr=%p, ptep=%p", void*, void*, void*);
 static void add_arc_read_mapping(cached_page_arc *cp, mmu::hw_ptep<0> ptep)
 {
     trace_add_read_mapping(cp->arcbuf(), cp->addr(), ptep.release());
     add_read_mapping(cp, ptep);
-}*/
+}
+#endif
 
 template<typename T>
 static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_page* cp, mmu::hw_ptep<0> ptep)
@@ -339,13 +350,15 @@ static void remove_read_mapping(std::unordered_map<hashkey, T>& cache, cached_pa
         delete cp;
     }
 }
-/*
+
+#ifdef ZFS_ENABLE
 TRACEPOINT(trace_remove_mapping, "buf=%p, addr=%p, ptep=%p", void*, void*, void*);
 static void remove_arc_read_mapping(cached_page_arc* cp, mmu::hw_ptep<0> ptep)
 {
     trace_remove_mapping(cp->arcbuf(), cp->addr(), ptep.release());
     remove_read_mapping(arc_read_cache, cp, ptep);
-}*/
+}
+#endif
 
 void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
@@ -374,7 +387,8 @@ void remove_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
         mmu::flush_tlb_all();
     }
 }
-/*
+
+#ifdef ZFS_ENABLE
 void remove_arc_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
 {
     SCOPE_LOCK(arc_read_lock);
@@ -382,7 +396,8 @@ void remove_arc_read_mapping(hashkey& key, mmu::hw_ptep<0> ptep)
     if (cp) {
         remove_arc_read_mapping(cp, ptep);
     }
-}*/
+}
+#endif
 
 template<typename T>
 static unsigned drop_read_cached_page(std::unordered_map<hashkey, T>& cache, cached_page* cp, bool flush)
@@ -398,11 +413,13 @@ static unsigned drop_read_cached_page(std::unordered_map<hashkey, T>& cache, cac
 
     return flushed;
 }
-/*
+
+#ifdef ZFS_ENABLE
 static unsigned drop_arc_read_cached_page(cached_page_arc* cp, bool flush)
 {
     return drop_read_cached_page(arc_read_cache, cp, flush);
-}*/
+}
+#endif
 
 static void drop_read_cached_page(hashkey& key)
 {
@@ -412,7 +429,8 @@ static void drop_read_cached_page(hashkey& key)
         drop_read_cached_page(read_cache, cp, true);
     }
 }
-/*
+
+#ifdef ZFS_ENABLE
 TRACEPOINT(trace_drop_read_cached_page, "buf=%p, addr=%p", void*, void*);
 static void drop_arc_read_cached_page(hashkey& key)
 {
@@ -440,7 +458,8 @@ void map_arc_buf(hashkey *key, arc_buf_t* ab, void *page)
     cached_page_arc* pc = new cached_page_arc(*key, page, ab);
     arc_read_cache.emplace(*key, pc);
     arc_share_buf(ab);
-}*/
+}
+#endif
 
 void map_read_cached_page(hashkey *key, void *page)
 {
@@ -508,7 +527,9 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
                 // page is moved from read cache to write cache
                 // drop read page if exists, removing all mappings
                 if (IS_ZFS(st.st_dev)) {
-  //                  drop_arc_read_cached_page(key);
+                    #ifdef ZFS_ENABLE
+                    drop_arc_read_cached_page(key);
+                    #endif
                 } else {
                     // ROFS (at least for now)
                     drop_read_cached_page(key);
@@ -516,7 +537,9 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
             } else {
                 // remove mapping to read cache page if exists
                 if (IS_ZFS(st.st_dev)) {
-  //                  remove_arc_read_mapping(key, ptep);
+                    #ifdef ZFS_ENABLE
+                    remove_arc_read_mapping(key, ptep);
+                    #endif
                 } else {
                     // ROFS (at least for now)
                     remove_read_mapping(key, ptep);
@@ -535,14 +558,15 @@ bool get(vfs_file* fp, off_t offset, mmu::hw_ptep<0> ptep, mmu::pt_element<0> pt
         // read fault and page is not in write cache yet, return one from ARC, mark it cow
         do {
             if (IS_ZFS(st.st_dev)) {
-/*
+                #ifdef ZFS_ENABLE
                 WITH_LOCK(arc_read_lock) {
                     cached_page_arc* cp = find_in_cache(arc_read_cache, key);
                     if (cp) {
                         add_arc_read_mapping(cp, ptep);
                         return mmu::write_pte(cp->addr(), ptep, mmu::pte_mark_cow(pte, true));
                     }
-                }*/
+                }
+                #endif
             }
             else {
                 // ROFS (at least for now)
@@ -605,14 +629,16 @@ bool release(vfs_file* fp, void *addr, off_t offset, mmu::hw_ptep<0> ptep)
     }
 
     if (IS_ZFS(st.st_dev)) {
-        /*WITH_LOCK(arc_read_lock) {
+        #ifdef ZFS_ENABLE
+        WITH_LOCK(arc_read_lock) {
             cached_page_arc* rcp = find_in_cache(arc_read_cache, key);
             if (rcp && mmu::virt_to_phys(rcp->addr()) == old.addr()) {
                 // page is in ARC read cache
                 remove_arc_read_mapping(rcp, ptep);
                 return false;
             }
-        }*/
+        }
+        #endif
     } else {
         // ROFS (at least for now)
         WITH_LOCK(read_lock) {
@@ -655,7 +681,7 @@ void sync(vfs_file* fp, off_t start, off_t end)
         dirty.pop();
     }
 }
-/*
+#ifdef ZFS_ENABLE
 TRACEPOINT(trace_access_scanner, "scanned=%u, cleared=%u, %%cpu=%g", unsigned, unsigned, double);
 static class access_scanner {
     static constexpr double _max_cpu = 20;
@@ -750,7 +776,7 @@ private:
 } s_access_scanner;
 
 constexpr double access_scanner::_max_cpu;
-constexpr double access_scanner::_min_cpu;*/
-
+constexpr double access_scanner::_min_cpu;
+#endif
 
 }
